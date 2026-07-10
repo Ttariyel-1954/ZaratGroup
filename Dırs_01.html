@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarat ERP · Faza 2 · Dərs 1 — Giriş və Tam Memarlıq</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --panel:#121b2e; --panel2:#17233a; --raised:#1c2942;
+  --text:#e7ecf3; --muted:#8a97ab; --line:rgba(255,255,255,0.09);
+  --amber:#f2a72e; --amber-dim:#7a5a1f;
+  --cyan:#35c9c9; --cyan-dim:#1b5f5f;
+  --green:#52d17c; --green-dim:#245c39;
+  --red:#ef5b5b; --red-dim:#6e2626;
+  --violet:#a29bea;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Inter',sans-serif; line-height:1.65; font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.mono{ font-family:'Space Grotesk',sans-serif; }
+code, pre, .code-font{ font-family:'JetBrains Mono',monospace; }
+
+.progressbar{
+  position:sticky; top:0; z-index:50;
+  background:rgba(11,18,32,0.92); backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line);
+  padding:14px 32px;
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+}
+.progressbar .tag{
+  font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber);
+  font-weight:600; white-space:nowrap;
+}
+.dots{ display:flex; gap:6px; flex-wrap:wrap; }
+.dot{ width:22px; height:6px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); }
+.dot.done{ background:var(--green-dim); border-color:var(--green); }
+.dot.active{ background:var(--amber); border-color:var(--amber); }
+
+.telemetry{ display:flex; gap:0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
+.telem-cell{ flex:1; min-width:150px; padding:14px 20px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.telem-cell:last-child{ border-right:none; }
+.telem-label{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.led{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2.6s infinite ease-in-out; }
+.led.warn{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.telem-val{ font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; }
+.telem-unit{ font-size:12px; color:var(--muted); font-weight:400; }
+
+main{ max-width:920px; margin:0 auto; padding:0 32px 80px; }
+.hero{ padding:56px 0 32px; border-bottom:1px solid var(--line); }
+.eyebrow{ color:var(--cyan); font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:14px; }
+.hero h1{ font-size:38px; font-weight:600; margin:0 0 16px; line-height:1.15; }
+.hero p.lead{ font-size:17px; color:var(--muted); max-width:680px; margin:0; }
+
+section{ padding:48px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+.sec-num{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:14px; font-weight:600; }
+h2{ font-size:24px; font-weight:600; margin:0; }
+h3{ font-size:17px; font-weight:600; margin:28px 0 10px; color:var(--cyan); }
+p{ color:#d3dae5; margin:0 0 14px; }
+.muted{ color:var(--muted); }
+
+.callout{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 20px; margin:20px 0; font-size:15px; }
+.callout.cyan{ border-left-color:var(--cyan); }
+.callout.violet{ border-left-color:var(--violet); }
+.callout .callout-label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); font-weight:600; margin-bottom:6px; }
+.callout.cyan .callout-label{ color:var(--cyan); }
+.callout.violet .callout-label{ color:var(--violet); }
+
+table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+th{ text-align:left; padding:10px 14px; background:var(--panel2); color:var(--amber); font-size:12px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
+td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#d3dae5; }
+tr:last-child td{ border-bottom:none; }
+td.k{ color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:13.5px; white-space:nowrap; }
+
+.codewrap{ margin:18px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); }
+.codebar{ background:var(--panel2); padding:9px 16px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; }
+.codebar .dots3{ display:flex; gap:5px; }
+.codebar .dots3 span{ width:8px; height:8px; border-radius:50%; background:#3a4560; }
+pre{ margin:0; padding:18px 20px; background:#0d1526; overflow-x:auto; font-size:13.5px; color:#c9d4e6; }
+pre .c1{ color:var(--muted); }
+pre .c2{ color:var(--amber); }
+pre .c3{ color:var(--green); }
+pre .c4{ color:var(--cyan); }
+
+.checklist{ list-style:none; padding:0; margin:18px 0; }
+.checklist li{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15px; color:#d3dae5; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist .box{ width:17px; height:17px; border:1.5px solid var(--cyan); border-radius:4px; flex-shrink:0; margin-top:3px; }
+
+.tree{ font-family:'JetBrains Mono',monospace; font-size:13.5px; color:#c9d4e6; background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px; line-height:1.9; white-space:pre; overflow-x:auto; }
+.tree .folder{ color:var(--amber); }
+.tree .file{ color:var(--cyan); }
+.tree .comment{ color:var(--muted); }
+
+.lessongrid{ display:grid; grid-template-columns:1fr; gap:10px; margin:18px 0; }
+.lrow{ display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:14px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 16px; }
+.lrow.now{ border-color:var(--amber); }
+.lnum{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:15px; font-weight:600; }
+.ltitle{ font-size:14.5px; color:var(--text); }
+.ltitle .sub{ display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+.ltag{ font-size:10.5px; padding:3px 9px; border-radius:20px; border:1px solid var(--line); color:var(--muted); white-space:nowrap; }
+.ltag.now{ color:var(--amber); border-color:var(--amber); }
+
+.nextcard{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-top:20px; }
+.nextcard .tag2{ font-size:12px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:8px; }
+.nextcard h3{ margin:0 0 8px; color:var(--text); font-size:19px; }
+
+footer{ text-align:center; padding:40px 0; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="progressbar">
+  <span class="tag">Zarat ERP · Faza 2 — Zavod Rəqəmsallaşdırılması</span>
+  <div class="dots">
+    <div class="dot active"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <span class="mono" style="font-size:12px;color:var(--muted);margin-left:auto;">Dərs 1 / 10 · v2 — MQTT + FastAPI daxil edilib</span>
+</div>
+
+<div class="telemetry">
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Silo temperaturu</span><span class="telem-val" id="t1">24.3<span class="telem-unit"> °C</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Rütubət (yem qarışığı)</span><span class="telem-val" id="t2">12.8<span class="telem-unit"> %</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led warn"></span>Yem çəkisi (dozator)</span><span class="telem-val" id="t3">418<span class="telem-unit"> kg</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Vibrasiya (mühərrik)</span><span class="telem-val" id="t4">2.1<span class="telem-unit"> mm/s</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Elektrik yükü</span><span class="telem-val" id="t5">37.4<span class="telem-unit"> kW</span></span></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Faza 2 · Dərs 1 / 10 · genişləndirilmiş versiya</div>
+    <h1>Giriş və tam memarlıq</h1>
+    <p class="lead">Bu, Dərs 1-in tam və genişləndirilmiş versiyasıdır. Sensor məlumatlarının zavod sahəsindən çıxıb mərkəzi ERP-yə çatana qədər keçdiyi bütün yolu — MQTT broker, FastAPI xidməti, lokal və mərkəzi bazalar daxil olmaqla — sıfırdan qururuq. Sonda tam işlək layihə qovluğu yaradılacaq və 10 dərsin hər biri öz yerini tapacaq.</p>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Faza 1-dən Faza 2-yə keçid</h2></div>
+    <p>Faza 1-də Zarat Group-un <strong>strukturunu</strong> rəqəmsallaşdırdıq: təşkilat, tərəf-müqabillər, məhsullar, maliyyə hesabları — müəssisənin «kim, nə, harada» sualına cavab verən <em>master data</em>. Bu məlumat nisbətən statikdir: bir işçi qəbul olunur, bir anbar açılır.</p>
+    <p>Faza 2 fərqli təbiətli məlumatla işləyir: zavodun fiziki proseslərindən <strong>fasiləsiz axan</strong> göstəricilər — temperatur, rütubət, çəki, vibrasiya, enerji. Bu, ERP-nin «canlı» damarıdır. Mənbə insan deyil, <strong>maşındır</strong> və axın kəsilmir.</p>
+    <div class="callout cyan">
+      <div class="callout-label">Niyə vacibdir</div>
+      Siyəzən yem fabrikində qarışdırıcının temperaturu həddi aşarsa, bunu dərhal bilmək lazımdır — 5 dəqiqə sonra deyil. Ona görə Faza 2-nin özəyi sənəd yazıb-oxumaq deyil, <strong>davamlı hadisə axınının (event stream) etibarlı idarə olunmasıdır.</strong>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Tam memarlıq — beş mərhələli axın</h2></div>
+    <p>Sistemi beş aydın mərhələyə bölürük. Hər mərhələ öz məsuliyyətini daşıyır; biri müvəqqəti dayansa belə, digərləri işini davam etdirir. Bu, sənaye IoT sistemlərində <strong>«edge-first, loosely coupled»</strong> adlanan yanaşmadır — komponentlər bir-birinə sıx bağlı deyil, mesaj vasitəsilə ünsiyyət qurur.</p>
+
+    <svg viewBox="0 0 860 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;margin:22px 0;" role="img" aria-label="Beş mərhələli memarlıq: sensorlar, MQTT broker, FastAPI, zavod edge bazası, mərkəzi baza">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#5a6b85"/>
+        </marker>
+      </defs>
+
+      <rect x="10" y="30" width="840" height="1" fill="#1c2942"/>
+      <text x="10" y="20" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="11">ZAVOD SAHƏSİ · SİYƏZƏN</text>
+
+      <rect x="20" y="50" width="150" height="66" rx="8" fill="#17233a" stroke="#f2a72e" stroke-width="1.3"/>
+      <text x="95" y="78" fill="#f2a72e" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" text-anchor="middle">Sensorlar</text>
+      <text x="95" y="95" fill="#8a97ab" font-family="Inter, sans-serif" font-size="10.5" text-anchor="middle">süni siqnal, dərs 3</text>
+
+      <path d="M170,83 L215,83" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <text x="192" y="75" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">publish</text>
+
+      <rect x="220" y="50" width="160" height="66" rx="8" fill="#17233a" stroke="#35c9c9" stroke-width="1.3"/>
+      <text x="300" y="76" fill="#35c9c9" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" text-anchor="middle">MQTT Broker</text>
+      <text x="300" y="92" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">Mosquitto · dərs 4</text>
+      <text x="300" y="105" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">topic: zavod/siyezen/*</text>
+
+      <path d="M380,83 L425,83" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <text x="402" y="75" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">subscribe</text>
+
+      <rect x="430" y="50" width="160" height="66" rx="8" fill="#17233a" stroke="#a29bea" stroke-width="1.3"/>
+      <text x="510" y="76" fill="#a29bea" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" text-anchor="middle">FastAPI</text>
+      <text x="510" y="92" fill="#8a97ab" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">validasiya · dərs 5</text>
+      <text x="510" y="105" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">edge xidməti</text>
+
+      <path d="M510,116 L510,155" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+      <rect x="10" y="135" width="840" height="1" fill="#1c2942"/>
+
+      <rect x="415" y="160" width="190" height="66" rx="8" fill="#17233a" stroke="#52d17c" stroke-width="1.3"/>
+      <text x="510" y="186" fill="#52d17c" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" text-anchor="middle">Zavod Edge DB</text>
+      <text x="510" y="202" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="10.5" text-anchor="middle">zavod_edge_db · port 5434</text>
+      <text x="510" y="216" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">PostgreSQL@18 · dərs 2</text>
+
+      <path d="M415,193 C300,193 260,193 260,235" stroke="#5a6b85" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+      <text x="260" y="250" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">anomaliya</text>
+      <text x="260" y="262" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">aşkarlama</text>
+      <rect x="190" y="235" width="140" height="46" rx="8" fill="#17233a" stroke="#ef5b5b" stroke-width="1.3"/>
+      <text x="260" y="262" fill="#ef5b5b" font-family="Inter, sans-serif" font-size="10.5" font-weight="600" text-anchor="middle" dy="-14">Xəbərdarlıq</text>
+      <text x="260" y="270" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">dərs 6</text>
+
+      <path d="M605,193 C700,193 730,193 730,240" stroke="#5a6b85" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+      <rect x="655" y="240" width="150" height="46" rx="8" fill="#17233a" stroke="#f2a72e" stroke-width="1.3"/>
+      <text x="730" y="260" fill="#f2a72e" font-family="Inter, sans-serif" font-size="10.5" font-weight="600" text-anchor="middle">Sync servis</text>
+      <text x="730" y="274" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">outbox · dərs 7-8</text>
+
+      <rect x="10" y="300" width="840" height="1" fill="#1c2942"/>
+      <text x="10" y="295" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="11">MƏRKƏZİ OFİS · BAKI</text>
+
+      <path d="M730,286 L730,330" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <rect x="645" y="335" width="170" height="60" rx="8" fill="#17233a" stroke="#7f77dd" stroke-width="1.3"/>
+      <text x="730" y="362" fill="#a29bea" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="600" text-anchor="middle">zarat_erp_2</text>
+      <text x="730" y="379" fill="#8a97ab" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">port 5432</text>
+
+      <path d="M730,395 L730,435" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <rect x="620" y="440" width="220" height="30" rx="6" fill="#17233a" stroke="#5a6b85" stroke-width="1"/>
+      <text x="730" y="459" fill="#c9d4e6" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">R Shiny Dashboard · dərs 9</text>
+    </svg>
+
+    <p class="muted" style="font-size:13.5px;">Diaqram: sensor siqnalı əvvəlcə MQTT vasitəsilə yayımlanır, FastAPI onu tutub yoxlayır və zavod bazasına yazır. Anomaliya aşkarlansa xəbərdarlıq yaranır. Ayrı bir sinxronizasiya servisi məlumatı vaxtaşırı mərkəzi bazaya köçürür — şəbəkə kəsilsə belə, zavod öz işinə davam edir.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>MQTT nədir və niyə seçdik?</h2></div>
+    <p>MQTT (Message Queuing Telemetry Transport) — az enerji sərf edən və zəif internet bağlantısına malik cihazlar üçün nəzərdə tutulmuş yüngül mesaj protokoludur. Zavod şəraitində sensorlar bir-biri ilə birbaşa danışmır — ortada <strong>Broker</strong> adlı vasitəçi server dayanır.</p>
+    <table>
+      <tr><th>Anlayış</th><th>Nə deməkdir</th><th>Zarat üçün nümunə</th></tr>
+      <tr><td class="k">Broker</td><td>Bütün mesajları qəbul edib müvafiq abunəçilərə ötürən mərkəzi server</td><td>Mosquitto — zavod kompüterində işə düşür</td></tr>
+      <tr><td class="k">Topic</td><td>Mesajların kateqoriya üzrə axdığı kanal</td><td><code>zavod/siyezen/temperatur</code>, <code>zavod/siyezen/rutubet</code></td></tr>
+      <tr><td class="k">Publish</td><td>Mesaj göndərmək</td><td>Temperatur sensoru hər 2 saniyədə oxunuşunu yayımlayır</td></tr>
+      <tr><td class="k">Subscribe</td><td>Mesajı dinləmək</td><td>FastAPI xidməti <code>zavod/siyezen/#</code> mövzusuna abunə olur</td></tr>
+      <tr><td class="k">QoS</td><td>Çatdırılma zəmanəti səviyyəsi (0/1/2)</td><td>Temperatur → QoS 0 (itsə problem deyil), Xəbərdarlıq → QoS 1-2</td></tr>
+      <tr><td class="k">Last Will</td><td>Cihaz qəflətən oflayn olarsa, broker avtomatik xəbər verir</td><td>Sensor 14 cavab verməyəndə dərhal bilinir</td></tr>
+    </table>
+    <div class="callout cyan">
+      <div class="callout-label">Niyə birbaşa yazmırıq</div>
+      Sensor birbaşa PostgreSQL-ə yazsaydı, hər sensor bazanın parolunu bilməli, bağlantı məntiqini idarə etməli olardı. MQTT bu mürəkkəbliyi aradan qaldırır: sensor sadəcə <em>«mən bu ədədi gördüm»</em> deyir, qalanını broker və FastAPI həll edir.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>FastAPI nədir və rolu nədir?</h2></div>
+    <p>FastAPI — Python üzərində müasir veb-çərçivədir. Verilənlər bazası deyil; MQTT-dən gələn xam mesajlar ilə PostgreSQL arasında <strong>etibarlı vasitəçi</strong> rolunu oynayır.</p>
+    <table>
+      <tr><th>FastAPI nə edir</th><th>Niyə birbaşa yazmırıq</th></tr>
+      <tr><td>Gələn məlumatı yoxlayır (temperatur ağlabatan aralıqdadırmı?)</td><td>Xarab sensor mənfi çəki və ya 999°C göndərə bilər — bu, bazanı zibilləyər</td></tr>
+      <tr><td>Cihazın qeydiyyatdan keçib-keçmədiyini yoxlayır</td><td>Naməlum cihazdan gələn məlumat sistemi çaşdıra bilər</td></tr>
+      <tr><td>Anomaliya aşkarlansa dərhal reaksiya verir</td><td>Sadə INSERT skripti bunu edə bilməz</td></tr>
+      <tr><td>Avtomatik API sənədləşməsi yaradır (Swagger)</td><td>Gələcək inteqrasiyalar (dashboard, mobil) üçün hazır interfeys</td></tr>
+      <tr><td>JWT/API Key ilə təhlükəsizlik təmin edir</td><td>Dərs 10-da tam işlənəcək</td></tr>
+    </table>
+    <div class="callout violet">
+      <div class="callout-label">Miqyas qeydi</div>
+      Orijinal sənəddə FastAPI-nin Kafka-ya hadisə göndərməsi və çoxsaylı AI agentləri (Inventory, Production, Finance Agent) işə salması da göstərilir. Bu, tam müəssisə səviyyəsində, bir neçə zavod və modul arasında hadisə paylaşımı üçün nəzərdə tutulub. Bizim Faza 2-də tək bir zavodun sensor axını üçün bu, artıq mürəkkəblikdir — Kafka və çoxagentli aşkarlama sxemini **Faza 3**-ə saxlayırıq. Hazırda FastAPI birbaşa <code>zavod_edge_db</code>-yə yazır və xəbərdarlıq funksiyasını özü icra edir.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Texnoloji qərarların tam siyahısı</h2></div>
+    <table>
+      <tr><th>Komponent</th><th>Seçim</th><th>Səbəb</th></tr>
+      <tr><td class="k">Zavod bazası</td><td><code>zavod_edge_db</code>, PostgreSQL@18, port 5434</td><td>Mərkəzi <code>zarat_erp_2</code>-dən tam təcrid — 7 iyul insidentindən sonra prinsipial qərar</td></tr>
+      <tr><td class="k">Mesaj brokeri</td><td>Mosquitto (MQTT)</td><td>Yüngül, bir zavod miqyası üçün kifayət qədər güclü, EMQX/HiveMQ-dan asan qurulur</td></tr>
+      <tr><td class="k">Sensor simulyatoru</td><td>Python 3.14, obyekt-yönümlü sinif hər sensor tipi üçün</td><td>Real Modbus/OPC-UA sensoru gələcəkdə eyni MQTT interfeysinə qoşulacaq — kod dəyişməz qalır</td></tr>
+      <tr><td class="k">Toplama xidməti</td><td>FastAPI + <code>paho-mqtt</code> (subscriber)</td><td>Validasiya, autentifikasiya, gələcək genişlənmə üçün struktur</td></tr>
+      <tr><td class="k">Sinxronizasiya</td><td>Outbox modeli, <code>sync_status</code> sütunu ilə</td><td>Şəbəkə kəsiləndə heç nə itmir, avtomatik təkrar cəhd</td></tr>
+      <tr><td class="k">Monitorinq</td><td>R Shiny (Faza 1 ilə eyni stek)</td><td>Artıq mövcud dashboard infrastrukturuna inteqrasiya asandır</td></tr>
+      <tr><td class="k">Servis idarəetməsi</td><td>launchd (Mac, inkişaf) → systemd (zavod, istehsalat)</td><td>Dərs 10-da real avadanlığa keçid ediləcək</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>10 dərsin tam planı</h2></div>
+    <div class="lessongrid">
+      <div class="lrow now"><span class="lnum">01</span><div class="ltitle">Giriş və tam memarlıq<span class="sub">bu dərs — MQTT, FastAPI, üç qat, qovluq strukturu</span></div><span class="ltag now">indi</span></div>
+      <div class="lrow"><span class="lnum">02</span><div class="ltitle">Lokal baza sxemi<span class="sub">zavod_edge_db: cihaz reyestri, sensor tipləri, vaxt-seriyalı cədvəllər</span></div><span class="ltag">növbəti</span></div>
+      <div class="lrow"><span class="lnum">03</span><div class="ltitle">Süni sensor simulyatoru<span class="sub">Python sinifləri, realist siqnal generasiyası</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">04</span><div class="ltitle">MQTT broker qurulumu<span class="sub">Mosquitto, topic strukturu, publish/subscribe testi</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">05</span><div class="ltitle">FastAPI toplama xidməti<span class="sub">MQTT subscriber, validasiya, zavod_edge_db-yə yazma</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">06</span><div class="ltitle">Anomaliya aşkarlama və xəbərdarlıq<span class="sub">həddlər, real-vaxt alert məntiqi</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">07</span><div class="ltitle">Mərkəzi sinxronizasiya<span class="sub">outbox pattern, zavod_edge_db → zarat_erp_2</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">08</span><div class="ltitle">Offline dayanıqlılıq<span class="sub">şəbəkə kəsintisi, növbə, avtomatik bərpa</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">09</span><div class="ltitle">Canlı monitorinq paneli<span class="sub">R Shiny dashboard, real-vaxt qrafiklər</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">10</span><div class="ltitle">Təhlükəsizlik, servis idarəetməsi, tam test<span class="sub">JWT/API Key, systemd, uçdan-uca test, yerləşdirmə</span></div><span class="ltag">planda</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>İşlək layihə qovluğu — tam struktur</h2></div>
+    <p>Terminalı açın və aşağıdakı əmri işlədin. Bu, Stolun üzərində (<code>~/Desktop</code>) bütün Faza 2 strukturunu — 10 dərs qovluğu, ortaq konfiqurasiya və jurnal qovluqları daxil — bir dəfəyə yaradacaq.</p>
+
+    <div class="tree">~/Desktop/Zarat_Faza2_Zavod/
+├── <span class="folder">Ders_01_Giris_Memarliq/</span>          <span class="comment"># bu dərs — memarlıq sənədi</span>
+├── <span class="folder">Ders_02_Lokal_DB_Sxem/</span>           <span class="comment"># zavod_edge_db DDL-ləri</span>
+├── <span class="folder">Ders_03_Sensor_Simulyator/</span>       <span class="comment"># süni sensor mənbələri (Python)</span>
+├── <span class="folder">Ders_04_MQTT_Broker/</span>             <span class="comment"># Mosquitto qurulumu, topic-lər</span>
+├── <span class="folder">Ders_05_FastAPI_Toplama/</span>         <span class="comment"># MQTT subscriber + FastAPI servisi</span>
+├── <span class="folder">Ders_06_Anomaliya_Alert/</span>         <span class="comment"># həddlər, xəbərdarlıq məntiqi</span>
+├── <span class="folder">Ders_07_Merkezi_Sync/</span>            <span class="comment"># outbox, zavod → mərkəzi baza</span>
+├── <span class="folder">Ders_08_Offline_Queue/</span>           <span class="comment"># şəbəkə kəsintisinə davamlılıq</span>
+├── <span class="folder">Ders_09_Dashboard/</span>               <span class="comment"># canlı monitorinq paneli</span>
+├── <span class="folder">Ders_10_Tehlukesizlik_Deployment/</span> <span class="comment"># auth, systemd, tam test</span>
+├── <span class="folder">_MUSHTEREK/</span>                      <span class="comment"># ortaq .env, MQTT topic sxemi, config</span>
+├── <span class="folder">_LOG/</span>                            <span class="comment"># hər addımın icra qeydləri</span>
+└── <span class="file">README.md</span></div>
+
+    <div class="codewrap">
+      <div class="codebar"><span>terminal</span><div class="dots3"><span></span><span></span><span></span></div></div>
+      <pre><span class="c1"># nə edirik: Faza 2 üçün tam qovluq ağacını bir dəfəyə, Stolun üzərində yaradırıq</span>
+<span class="c1"># niyə: hər dərs öz yerini əvvəlcədən bilsin, sonra heç nə köçürməyə ehtiyac qalmasın</span>
+
+cd ~/Desktop
+mkdir -p Zarat_Faza2_Zavod/{Ders_01_Giris_Memarliq,Ders_02_Lokal_DB_Sxem,\
+Ders_03_Sensor_Simulyator,Ders_04_MQTT_Broker,Ders_05_FastAPI_Toplama,\
+Ders_06_Anomaliya_Alert,Ders_07_Merkezi_Sync,Ders_08_Offline_Queue,\
+Ders_09_Dashboard,Ders_10_Tehlukesizlik_Deployment,_MUSHTEREK,_LOG}
+
+cd Zarat_Faza2_Zavod
+touch README.md
+ls -la</pre>
+    </div>
+
+    <h3>README.md — layihənin qısa pasportu</h3>
+    <p>Eyni qovluqda <code>README.md</code> faylını açın və aşağıdakı məzmunu yapışdırın:</p>
+    <div class="codewrap">
+      <div class="codebar"><span>README.md</span><div class="dots3"><span></span><span></span><span></span></div></div>
+      <pre><span class="c2"># Zarat ERP — Faza 2: Zavod Rəqəmsallaşdırılması</span>
+
+<span class="c3">## Məqsəd</span>
+Siyəzən yem fabrikinin fiziki proseslərindən (temperatur, rütubət,
+çəki, vibrasiya, enerji) real-vaxt məlumat toplamaq, MQTT və FastAPI
+vasitəsilə emal edib lokal bazada saxlamaq və mərkəzi Zarat ERP-yə
+(zarat_erp_2) sinxronlaşdırmaq.
+
+<span class="c3">## Memarlıq</span>
+Sensorlar (süni)
+   │ publish (MQTT)
+   ▼
+MQTT Broker — Mosquitto
+   │ subscribe
+   ▼
+FastAPI (validasiya, edge xidməti)
+   │
+   ▼
+zavod_edge_db (PostgreSQL@18, port 5434)
+   │
+   ▼
+Sync servis (outbox) ──► zarat_erp_2 (port 5432) ──► Dashboard
+
+<span class="c3">## Status</span>
+- [x] Dərs 1 — Giriş və tam memarlıq
+- [ ] Dərs 2 — Lokal baza sxemi
+- [ ] Dərs 3 — Sensor simulyatoru
+- [ ] Dərs 4 — MQTT broker qurulumu
+- [ ] Dərs 5 — FastAPI toplama xidməti
+- [ ] Dərs 6 — Anomaliya aşkarlama və xəbərdarlıq
+- [ ] Dərs 7 — Mərkəzi sinxronizasiya
+- [ ] Dərs 8 — Offline dayanıqlılıq
+- [ ] Dərs 9 — Canlı monitorinq paneli
+- [ ] Dərs 10 — Təhlükəsizlik, servis idarəetməsi, tam test
+
+<span class="c3">## Qeyd</span>
+Kafka və çoxagentli (Inventory/Production/Finance Agent) memarlıq
+şüurlu şəkildə Faza 3-ə saxlanılıb — tək zavod miqyasında artıqdır.
+Bütün DB adları, port nömrələri və qovluq strukturu bu sənəddə
+kanonikdir. Dəyişiklik olarsa, əvvəlcə burada yenilə.</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Dərs 1 — yoxlama siyahısı</h2></div>
+    <ul class="checklist">
+      <li><span class="box"></span>~/Desktop/Zarat_Faza2_Zavod/ qovluğu və 12 alt-qovluq yaranıb</li>
+      <li><span class="box"></span>README.md yazılıb və məzmun uyğundur</li>
+      <li><span class="box"></span>Bu HTML faylı Ders_01_Giris_Memarliq/ qovluğuna qoyulub</li>
+      <li><span class="box"></span>Beş mərhələli axın aydındır: Sensor → MQTT → FastAPI → zavod_edge_db → mərkəzi baza</li>
+      <li><span class="box"></span>MQTT-nin əsas anlayışları (broker, topic, publish/subscribe, QoS) aydındır</li>
+      <li><span class="box"></span>FastAPI-nin rolu aydındır: sadə INSERT deyil, validasiya + qapı funksiyası</li>
+      <li><span class="box"></span>Port fərqi yadda saxlanılıb: zavod_edge_db = 5434, zarat_erp_2 = 5432</li>
+      <li><span class="box"></span>Kafka/AI agentlərinin şüurlu şəkildə Faza 3-ə saxlandığı aydındır</li>
+    </ul>
+  </section>
+
+  <div class="nextcard">
+    <div class="tag2">Növbəti — Dərs 2</div>
+    <h3>Lokal baza sxemi</h3>
+    <p class="muted" style="margin:0;">zavod_edge_db daxilində cihaz reyestri (hər sensor öz ID-si, tipi, yeri ilə), sensor tipləri lüğəti, ölçü vahidləri və vaxt-seriyalı xam məlumat cədvəlini (aylıq partitioning ilə) quracağıq — Faza 1-də istifadə etdiyimiz eyni DDL üslubunda, FastAPI-nin birbaşa yazacağı struktur olaraq.</p>
+  </div>
+
+</main>
+
+<footer>Zarat ERP · Faza 2 · Dərs 1 / 10 · v2 — hazır olduqda "davam et" yazın</footer>
+
+<script>
+const cells = [
+  {id:'t1', base:24.3, jit:0.4, dec:1, unit:' °C'},
+  {id:'t2', base:12.8, jit:0.3, dec:1, unit:' %'},
+  {id:'t3', base:418, jit:6, dec:0, unit:' kg'},
+  {id:'t4', base:2.1, jit:0.3, dec:1, unit:' mm/s'},
+  {id:'t5', base:37.4, jit:1.1, dec:1, unit:' kW'}
+];
+function tick(){
+  cells.forEach(c=>{
+    const v = c.base + (Math.random()-0.5)*2*c.jit;
+    const el = document.getElementById(c.id);
+    if(el) el.innerHTML = v.toFixed(c.dec) + '<span class="telem-unit">'+c.unit+'</span>';
+  });
+}
+setInterval(tick, 2200);
+</script>
+
+</body>
+</html>

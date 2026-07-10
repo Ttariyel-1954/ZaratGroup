@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarat ERP · Faza 2 · Dərs 1 — Layihə Strukturu və Mühitin Qurulması</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --panel:#121b2e; --panel2:#17233a; --raised:#1c2942;
+  --text:#e7ecf3; --muted:#8a97ab; --line:rgba(255,255,255,0.09);
+  --amber:#f2a72e; --cyan:#35c9c9; --green:#52d17c; --red:#ef5b5b; --violet:#a29bea;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.65; font-size:16px; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,.mono{ font-family:'Space Grotesk',sans-serif; }
+code, pre{ font-family:'JetBrains Mono',monospace; }
+p code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.88em; color:var(--cyan); }
+li code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.88em; color:var(--cyan); }
+td code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.85em; color:var(--cyan); }
+
+.progressbar{ position:sticky; top:0; z-index:50; background:rgba(11,18,32,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:14px 32px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.progressbar .tag{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); font-weight:600; white-space:nowrap; }
+.dots{ display:flex; gap:6px; flex-wrap:wrap; }
+.dot{ width:22px; height:6px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); }
+.dot.active{ background:var(--amber); border-color:var(--amber); }
+
+.telemetry{ display:flex; gap:0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
+.telem-cell{ flex:1; min-width:150px; padding:14px 20px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.telem-cell:last-child{ border-right:none; }
+.telem-label{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.led{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2.6s infinite ease-in-out; }
+.led.warn{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.telem-val{ font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; }
+.telem-unit{ font-size:12px; color:var(--muted); font-weight:400; }
+
+main{ max-width:920px; margin:0 auto; padding:0 32px 80px; }
+.hero{ padding:56px 0 32px; border-bottom:1px solid var(--line); }
+.eyebrow{ color:var(--cyan); font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:14px; }
+.hero h1{ font-size:36px; font-weight:600; margin:0 0 16px; line-height:1.15; }
+.hero p.lead{ font-size:17px; color:var(--muted); max-width:700px; margin:0; }
+
+section{ padding:48px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+.sec-num{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:14px; font-weight:600; }
+h2{ font-size:24px; font-weight:600; margin:0; }
+h3{ font-size:17px; font-weight:600; margin:30px 0 10px; color:var(--cyan); }
+h4{ font-size:15px; font-weight:600; margin:22px 0 8px; color:var(--violet); }
+p{ color:#d3dae5; margin:0 0 14px; }
+.muted{ color:var(--muted); }
+strong{ color:#eef2f8; font-weight:600; }
+
+.callout{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 20px; margin:20px 0; font-size:15px; }
+.callout.cyan{ border-left-color:var(--cyan); }
+.callout.violet{ border-left-color:var(--violet); }
+.callout.red{ border-left-color:var(--red); }
+.callout.green{ border-left-color:var(--green); }
+.callout .callout-label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); font-weight:600; margin-bottom:6px; }
+.callout.cyan .callout-label{ color:var(--cyan); }
+.callout.violet .callout-label{ color:var(--violet); }
+.callout.red .callout-label{ color:var(--red); }
+.callout.green .callout-label{ color:var(--green); }
+
+table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+th{ text-align:left; padding:10px 14px; background:var(--panel2); color:var(--amber); font-size:12px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
+td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#d3dae5; }
+tr:last-child td{ border-bottom:none; }
+td.k{ color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:13.5px; white-space:nowrap; }
+
+/* ===== CODE BLOCK with copy button ===== */
+.codewrap{ margin:18px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); background:#0d1526; }
+.codebar{ background:var(--panel2); padding:8px 14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; }
+.codebar .fname{ color:var(--cyan); }
+.copybtn{ background:var(--raised); border:1px solid var(--line); color:var(--text); font-family:'Inter',sans-serif; font-size:12px; font-weight:500; padding:5px 12px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; }
+.copybtn:hover{ background:var(--cyan); color:#04212b; border-color:var(--cyan); }
+.copybtn.copied{ background:var(--green); color:#04211a; border-color:var(--green); }
+.copybtn svg{ width:13px; height:13px; }
+pre{ margin:0; padding:18px 20px; overflow-x:auto; font-size:13px; line-height:1.7; color:#c9d4e6; white-space:pre; }
+pre .cm{ color:var(--muted); }
+
+.checklist{ list-style:none; padding:0; margin:18px 0; }
+.checklist li{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15px; color:#d3dae5; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist .box{ width:17px; height:17px; border:1.5px solid var(--cyan); border-radius:4px; flex-shrink:0; margin-top:3px; }
+
+.tree{ font-family:'JetBrains Mono',monospace; font-size:13px; color:#c9d4e6; background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px; line-height:1.85; white-space:pre; overflow-x:auto; }
+.tree .folder{ color:var(--amber); }
+.tree .file{ color:var(--cyan); }
+.tree .comment{ color:var(--muted); }
+.tree .root{ color:var(--green); font-weight:600; }
+
+.lessongrid{ display:grid; grid-template-columns:1fr; gap:9px; margin:18px 0; }
+.lrow{ display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:14px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 16px; }
+.lrow.now{ border-color:var(--amber); }
+.lnum{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:15px; font-weight:600; }
+.ltitle{ font-size:14.5px; color:var(--text); }
+.ltitle .sub{ display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+.ltag{ font-size:10.5px; padding:3px 9px; border-radius:20px; border:1px solid var(--line); color:var(--muted); white-space:nowrap; }
+.ltag.now{ color:var(--amber); border-color:var(--amber); }
+
+.vercard{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0; }
+.vc{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+.vc .vlabel{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+.vc .vver{ font-family:'JetBrains Mono',monospace; font-size:17px; font-weight:600; color:var(--green); margin-top:5px; }
+.vc .vnote{ font-size:11.5px; color:var(--muted); margin-top:3px; }
+
+.nextcard{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-top:20px; }
+.nextcard .tag2{ font-size:12px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:8px; }
+.nextcard h3{ margin:0 0 8px; color:var(--text); font-size:19px; }
+
+.step-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--bg); background:var(--amber); padding:2px 10px; border-radius:20px; font-weight:600; margin-bottom:10px; }
+
+footer{ text-align:center; padding:40px 0; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="progressbar">
+  <span class="tag">Zarat ERP · Faza 2 — Zavod Rəqəmsallaşdırılması</span>
+  <div class="dots">
+    <div class="dot active"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <span class="mono" style="font-size:12px;color:var(--muted);margin-left:auto;">Dərs 1 / 10</span>
+</div>
+
+<div class="telemetry">
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Silo temperaturu</span><span class="telem-val" id="t1">24.3<span class="telem-unit"> °C</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Rütubət (yem qarışığı)</span><span class="telem-val" id="t2">12.8<span class="telem-unit"> %</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led warn"></span>Yem çəkisi (dozator)</span><span class="telem-val" id="t3">418<span class="telem-unit"> kg</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Vibrasiya (mühərrik)</span><span class="telem-val" id="t4">2.1<span class="telem-unit"> mm/s</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Elektrik yükü</span><span class="telem-val" id="t5">37.4<span class="telem-unit"> kW</span></span></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Faza 2 · Dərs 1 / 10</div>
+    <h1>Layihə strukturu və mühitin qurulması</h1>
+    <p class="lead">Bu dərsdə üç iş görürük: (1) Faza 2-nin memarlığını başa düşürük, (2) Stolun üzərində peşəkar layihə strukturu qururuq — dərslər onun yalnız bir hissəsidir (<code>_KURS/</code>), (3) bütün lazımi proqramların versiyalarını yoxlayıb quraşdırırıq. Hər kod blokunun sağ küncündə <strong>«Kopyala»</strong> düyməsi var — bir kliklə təmiz kod buferə düşür.</p>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Faza 2 nədir və Faza 1-dən nə ilə fərqlənir?</h2></div>
+    <p>Faza 1-də Zarat Group-un <strong>strukturunu</strong> rəqəmsallaşdırdıq: təşkilat, tərəf-müqabillər, məhsullar, maliyyə hesabları — «kim, nə, harada» sualına cavab verən <em>master data</em>. Bu məlumat statikdir.</p>
+    <p>Faza 2 fərqli təbiətli məlumatla işləyir: zavodun fiziki proseslərindən <strong>fasiləsiz axan</strong> göstəricilər — temperatur, rütubət, çəki, vibrasiya, enerji. Mənbə insan deyil, <strong>maşındır</strong>. Yuxarıdakı canlı panel bu dərsin sonunda quracağımız sistemin kiçik modelidir.</p>
+    <div class="callout cyan">
+      <div class="callout-label">Konkret nümunə</div>
+      Siyəzən yem fabrikində qarışdırıcının temperaturu təhlükəli həddi keçərsə, bunu 5 dəqiqə sonra deyil, <strong>dərhal</strong> bilmək lazımdır. Faza 2-nin memarlığı məhz bu real-vaxt tələbi üzərində qurulur.
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Tam memarlıq — sensor məlumatının yolu</h2></div>
+    <p>Sensordan gələn bir ədəd mərkəzi ERP-yə çatana qədər beş mərhələdən keçir. Hər mərhələ öz işini görür; biri müvəqqəti dayansa belə, sistem bütövlükdə çökmür.</p>
+
+    <svg viewBox="0 0 860 470" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;margin:22px 0;" role="img" aria-label="Beş mərhələli memarlıq diaqramı">
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5a6b85"/></marker></defs>
+      <rect x="10" y="28" width="840" height="1" fill="#1c2942"/>
+      <text x="10" y="20" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="11">ZAVOD SAHƏSİ · SİYƏZƏN</text>
+      <rect x="20" y="48" width="150" height="64" rx="8" fill="#17233a" stroke="#f2a72e" stroke-width="1.3"/>
+      <text x="95" y="76" fill="#f2a72e" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" text-anchor="middle">Sensorlar</text>
+      <text x="95" y="93" fill="#8a97ab" font-family="Inter, sans-serif" font-size="10.5" text-anchor="middle">süni siqnal · dərs 3</text>
+      <path d="M170,80 L214,80" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <text x="192" y="72" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">publish</text>
+      <rect x="220" y="48" width="158" height="64" rx="8" fill="#17233a" stroke="#35c9c9" stroke-width="1.3"/>
+      <text x="299" y="72" fill="#35c9c9" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" text-anchor="middle">MQTT Broker</text>
+      <text x="299" y="88" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">Mosquitto · dərs 4</text>
+      <text x="299" y="101" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">zavod/siyezen/*</text>
+      <path d="M378,80 L422,80" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <text x="400" y="72" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">subscribe</text>
+      <rect x="428" y="48" width="158" height="64" rx="8" fill="#17233a" stroke="#a29bea" stroke-width="1.3"/>
+      <text x="507" y="72" fill="#a29bea" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" text-anchor="middle">FastAPI</text>
+      <text x="507" y="88" fill="#8a97ab" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">validasiya · dərs 5</text>
+      <text x="507" y="101" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">edge xidməti</text>
+      <path d="M507,112 L507,150" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <rect x="10" y="130" width="840" height="1" fill="#1c2942"/>
+      <rect x="412" y="155" width="190" height="64" rx="8" fill="#17233a" stroke="#52d17c" stroke-width="1.3"/>
+      <text x="507" y="180" fill="#52d17c" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" text-anchor="middle">Zavod Edge DB</text>
+      <text x="507" y="196" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="10.5" text-anchor="middle">zavod_edge_db · 5434</text>
+      <text x="507" y="209" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">PostgreSQL@18 · dərs 2</text>
+      <path d="M412,187 C310,187 270,187 270,228" stroke="#5a6b85" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+      <rect x="195" y="230" width="150" height="44" rx="8" fill="#17233a" stroke="#ef5b5b" stroke-width="1.3"/>
+      <text x="270" y="252" fill="#ef5b5b" font-family="Inter, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Xəbərdarlıq</text>
+      <text x="270" y="266" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">dərs 6</text>
+      <path d="M602,187 C700,187 728,187 728,232" stroke="#5a6b85" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+      <rect x="653" y="232" width="150" height="44" rx="8" fill="#17233a" stroke="#f2a72e" stroke-width="1.3"/>
+      <text x="728" y="252" fill="#f2a72e" font-family="Inter, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Sync servis</text>
+      <text x="728" y="266" fill="#8a97ab" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">outbox · dərs 7-8</text>
+      <rect x="10" y="298" width="840" height="1" fill="#1c2942"/>
+      <text x="10" y="292" fill="#8a97ab" font-family="JetBrains Mono, monospace" font-size="11">MƏRKƏZİ OFİS · BAKI</text>
+      <path d="M728,276 L728,320" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <rect x="643" y="325" width="170" height="56" rx="8" fill="#17233a" stroke="#7f77dd" stroke-width="1.3"/>
+      <text x="728" y="350" fill="#a29bea" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="600" text-anchor="middle">zarat_erp_2</text>
+      <text x="728" y="367" fill="#8a97ab" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">port 5432</text>
+      <path d="M728,381 L728,420" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <rect x="618" y="425" width="220" height="30" rx="6" fill="#17233a" stroke="#5a6b85" stroke-width="1"/>
+      <text x="728" y="444" fill="#c9d4e6" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">R Shiny Dashboard · dərs 9</text>
+    </svg>
+
+    <table>
+      <tr><th>Mərhələ</th><th>Alət</th><th>İşi</th></tr>
+      <tr><td class="k">1. Sensor</td><td>Python simulyator</td><td>Fiziki göstəricini oxuyub yayımlayır (real sensor gələcəkdə eyni yerə qoşulur)</td></tr>
+      <tr><td class="k">2. Broker</td><td>Mosquitto (MQTT)</td><td>Bütün mesajları qəbul edib abunəçilərə paylayan «poçt şöbəsi»</td></tr>
+      <tr><td class="k">3. FastAPI</td><td>Python + paho-mqtt</td><td>Mesajı yoxlayır, qapı rolunu oynayır — yalnız təmiz məlumat keçir</td></tr>
+      <tr><td class="k">4. Edge DB</td><td>PostgreSQL@18</td><td>Zavodun öz lokal bazası — məlumat əvvəlcə burada saxlanır</td></tr>
+      <tr><td class="k">5. Sync</td><td>Python servis</td><td>Məlumatı vaxtaşırı mərkəzi <code>zarat_erp_2</code>-yə köçürür</td></tr>
+    </table>
+
+    <div class="callout violet">
+      <div class="callout-label">Miqyas qeydi — Kafka və AI agentlər</div>
+      Sənaye materiallarında bu axına Kafka və çoxsaylı AI agent də əlavə edilir. Bu, bir neçə zavod arasında hadisə paylaşımı üçündür. Bizim məqsədimiz <strong>tək bir zavodun</strong> sensor axını olduğundan, onları şüurlu şəkildə <strong>Faza 3</strong>-ə saxlayırıq.
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Tam layihə strukturu</h2></div>
+    <p>Biz sadəcə «dərslər qovluğu» yaratmırıq — <strong>həqiqi bir proqram layihəsi</strong> qururuq. Dərslər onun yalnız bir alt-qovluğudur (<code>_KURS/</code>). Qalan qovluqlar real kodun, bazaların, servislərin və konfiqurasiyanın yaşadığı yerdir.</p>
+
+    <div class="tree"><span class="root">~/Desktop/Zarat_Faza2_Zavod/</span>
+│
+├── <span class="folder">00_env/</span>                      <span class="comment"># Python virtual mühit (venv) — dərs 1</span>
+├── <span class="folder">01_config/</span>                   <span class="comment"># konfiqurasiya bir yerdə</span>
+│   ├── <span class="file">.env</span>                     <span class="comment"># parollar, portlar (git-ə düşmür)</span>
+│   ├── <span class="file">.env.numune</span>              <span class="comment"># nümunə — komandaya paylaşılan</span>
+│   ├── <span class="file">mosquitto.conf</span>           <span class="comment"># MQTT ayarları — dərs 4</span>
+│   └── <span class="file">topics.md</span>                <span class="comment"># MQTT topic sxemi</span>
+├── <span class="folder">02_db/</span>                       <span class="comment"># baza DDL-ləri</span>
+│   ├── <span class="folder">edge/</span>                    <span class="comment"># zavod_edge_db sxemi — dərs 2</span>
+│   └── <span class="folder">merkez/</span>                  <span class="comment"># mərkəzə sinxron cədvəllər — dərs 7</span>
+├── <span class="folder">03_src/</span>                      <span class="comment"># bütün Python mənbə kodu</span>
+│   ├── <span class="folder">sensorlar/</span>               <span class="comment"># süni sensor sinifləri — dərs 3</span>
+│   ├── <span class="folder">toplama/</span>                 <span class="comment"># FastAPI + MQTT subscriber — dərs 5</span>
+│   ├── <span class="folder">alert/</span>                   <span class="comment"># anomaliya aşkarlama — dərs 6</span>
+│   ├── <span class="folder">sync/</span>                    <span class="comment"># mərkəzə sinxronizasiya — dərs 7-8</span>
+│   └── <span class="file">__init__.py</span>
+├── <span class="folder">04_dashboard/</span>                <span class="comment"># R Shiny monitorinq paneli — dərs 9</span>
+├── <span class="folder">05_servisler/</span>                <span class="comment"># launchd / systemd — dərs 10</span>
+├── <span class="folder">06_test/</span>                     <span class="comment"># uçdan-uca testlər — dərs 10</span>
+│
+├── <span class="folder">_KURS/</span>                       <span class="comment"># ◄── DƏRSLƏR BURADADIR (1-10)</span>
+│   ├── <span class="file">Ders_01_Struktur_Muhit.html</span>
+│   ├── <span class="file">Ders_02_Edge_DB_Sxem.html</span>
+│   └── <span class="file">... (10-a qədər)</span>
+├── <span class="folder">_LOG/</span>                        <span class="comment"># hər addımın icra qeydləri</span>
+│
+├── <span class="file">requirements.txt</span>             <span class="comment"># Python asılılıqları (versiyalı)</span>
+├── <span class="file">.gitignore</span>
+└── <span class="file">README.md</span>                    <span class="comment"># layihənin pasportu</span></div>
+
+    <div class="callout green">
+      <div class="callout-label">Niyə bu struktur?</div>
+      Rəqəmlə başlayan qovluqlar (<code>00_</code>, <code>01_</code>…) həmişə düzgün sırada görünür. Kod, konfiqurasiya və sənədlər ayrıdır. Yeni mühəndis 5 dəqiqəyə harada nə olduğunu tapır — real şirkət təcrübəsidir.
+    </div>
+
+    <h3>Strukturu bir əmrlə yaradaq</h3>
+    <p>Terminalı açın (Spotlight → «Terminal»). Aşağıdakı blokun sağ küncündəki <strong>Kopyala</strong> düyməsini basın, sonra Terminalda ⌘V ilə yapışdırıb Enter basın:</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — struktur yaradılması</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># nə edirik: Stolun üzərində tam layihə ağacını qururuq
+# niyə: hər fayl və qovluq öz yerini əvvəlcədən bilsin
+
+cd ~/Desktop
+
+mkdir -p Zarat_Faza2_Zavod/{00_env,01_config,02_db/edge,02_db/merkez,03_src/sensorlar,03_src/toplama,03_src/alert,03_src/sync,04_dashboard,05_servisler,06_test,_KURS,_LOG}
+
+cd Zarat_Faza2_Zavod
+
+# boş başlanğıc faylları
+touch README.md requirements.txt .gitignore
+touch 03_src/__init__.py
+touch 01_config/topics.md
+
+# yoxlayaq: struktur düzgün yarandımı?
+find . -type d | sort</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;">Son əmr (<code>find</code>) bütün qovluqları göstərəcək — yuxarıdakı ağacla müqayisə edin.</p>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Proqram versiyalarının yoxlanması</h2></div>
+    <p>Kod yazmağa başlamazdan əvvəl maşınınızda hansı alətlərin hansı versiyada olduğunu bilməliyik. «Yoxla, sonra dəyiş» prinsipi — mövcud olanı silmirik, əvvəlcə vəziyyəti öyrənirik.</p>
+
+    <p>Bu layihədə istifadə edəcəyimiz aktual versiyalar (iyul 2026):</p>
+    <div class="vercard">
+      <div class="vc"><div class="vlabel">PostgreSQL</div><div class="vver">18.x</div><div class="vnote">Homebrew, Apple Silicon</div></div>
+      <div class="vc"><div class="vlabel">Python</div><div class="vver">3.14.x</div><div class="vnote">/opt/homebrew/bin</div></div>
+      <div class="vc"><div class="vlabel">FastAPI</div><div class="vver">0.139.0</div><div class="vnote">Pydantic v2 tələb edir</div></div>
+      <div class="vc"><div class="vlabel">paho-mqtt</div><div class="vver">2.1.0</div><div class="vnote">VERSION2 callback API</div></div>
+      <div class="vc"><div class="vlabel">Mosquitto</div><div class="vver">2.x</div><div class="vnote">Homebrew</div></div>
+      <div class="vc"><div class="vlabel">uvicorn</div><div class="vver">0.34+</div><div class="vnote">ASGI server</div></div>
+    </div>
+
+    <h3>Addım 1 — mövcud alətləri yoxlayaq</h3>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — versiya yoxlanışı</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># nə edirik: hansı alət var, hansı versiyada — öyrənirik
+# niyə: heç nə silmədən mövcud vəziyyəti anlayırıq
+
+echo "===== Homebrew ====="
+brew --version
+
+echo "===== Python ====="
+python3 --version
+which python3
+
+echo "===== PostgreSQL ====="
+/opt/homebrew/opt/postgresql@18/bin/psql --version
+
+echo "===== Mosquitto (MQTT broker) ====="
+mosquitto -h 2>/dev/null | head -1 || echo "Mosquitto QURULMAYIB"</code></pre>
+    </div>
+
+    <div class="callout">
+      <div class="callout-label">Gözlənilən nəticə</div>
+      Homebrew, Python 3.14 və PostgreSQL 18 artıq quraşdırılıb (Faza 1-dən). Mosquitto yəqin «QURULMAYIB» yazacaq — bunu növbəti addımda quracağıq.
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Mosquitto (MQTT broker) quraşdırılması</h2></div>
+    <p>Əgər yoxlama Mosquitto-nun olmadığını göstərdisə, indi quraşdırırıq. Bu, zavodun «poçt şöbəsi» olacaq.</p>
+
+    <span class="step-badge">Addım 2</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — Mosquitto qurulumu</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># nə edirik: MQTT brokerini quraşdırırıq
+# niyə: sensorlarla FastAPI arasında mesaj daşıyıcı lazımdır
+
+brew install mosquitto
+
+# yoxlayaq: quruldumu?
+mosquitto --help | head -1
+
+# brokeri sınaq üçün əl ilə işə salaq (CTRL+C ilə dayanır)
+mosquitto -v</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;"><code>mosquitto -v</code> «verbose» rejimdə broker fəaliyyətini ekranda göstərir. İndi dayandırın (CTRL+C) — tam konfiqurasiyanı Dərs 4-də edəcəyik.</p>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Python virtual mühiti və asılılıqlar</h2></div>
+    <p>Python paketlərini birbaşa sistemə yükləmək düzgün deyil — bir layihə digərinin versiyalarını poza bilər. Ona görə hər layihə üçün ayrıca <strong>virtual mühit</strong> (venv) yaradırıq — yalnız bu layihəyə aid təcrid olunmuş Python nüsxəsi.</p>
+
+    <span class="step-badge">Addım 3</span>
+    <h3>requirements.txt faylını yaradaq</h3>
+    <p>Layihə kök qovluğunda <code>requirements.txt</code> faylını açın (məsələn <code>open -e requirements.txt</code>) və aşağıdakını yapışdırın:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">requirements.txt</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># Zarat Faza 2 — Python asılılıqları (iyul 2026)
+# versiyalar sabitlənib ki, hər maşında eyni işləsin
+
+fastapi==0.139.0
+uvicorn[standard]==0.34.3
+paho-mqtt==2.1.0
+psycopg[binary]==3.2.9
+pydantic==2.11.7
+python-dotenv==1.1.1
+httpx==0.28.1</code></pre>
+    </div>
+    <table>
+      <tr><th>Paket</th><th>Nə üçün</th></tr>
+      <tr><td class="k">fastapi</td><td>Toplama xidmətinin veb-çərçivəsi (validasiya, API)</td></tr>
+      <tr><td class="k">uvicorn</td><td>FastAPI-ni işə salan ASGI server</td></tr>
+      <tr><td class="k">paho-mqtt</td><td>MQTT brokerinə qoşulmaq (subscribe/publish)</td></tr>
+      <tr><td class="k">psycopg</td><td>Python-dan PostgreSQL-ə qoşulmaq (v3)</td></tr>
+      <tr><td class="k">pydantic</td><td>Gələn məlumatın modeli və yoxlanması</td></tr>
+      <tr><td class="k">python-dotenv</td><td>.env faylından parol/port oxumaq</td></tr>
+      <tr><td class="k">httpx</td><td>Sync servisin mərkəzə REST sorğusu (dərs 7)</td></tr>
+    </table>
+
+    <span class="step-badge">Addım 4</span>
+    <h3>Virtual mühiti yaradaq və paketləri quraşdıraq</h3>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — venv və quraşdırma</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># layihə kök qovluğunda olduğunuzdan əmin olun
+cd ~/Desktop/Zarat_Faza2_Zavod
+
+# nə edirik: 00_env qovluğunda təcrid olunmuş Python mühiti
+python3 -m venv 00_env
+
+# mühiti aktivləşdiririk — terminal önündə (00_env) görünəcək
+source 00_env/bin/activate
+
+# pip-i yeniləyək
+pip install --upgrade pip
+
+# bütün asılılıqları requirements.txt-dən quraşdıraq
+pip install -r requirements.txt
+
+# yoxlayaq: nə quruldu?
+pip list | grep -E "fastapi|uvicorn|paho|psycopg|pydantic"</code></pre>
+    </div>
+
+    <div class="callout cyan">
+      <div class="callout-label">Vacib — hər dəfə işə başlayanda</div>
+      Yeni Terminal pəncərəsi açanda mühit deaktiv olur. Həmişə əvvəlcə: <code>cd ~/Desktop/Zarat_Faza2_Zavod</code> sonra <code>source 00_env/bin/activate</code>. Önündə <code>(00_env)</code> göründükdə hazırsınız. Çıxmaq: <code>deactivate</code>.
+    </div>
+
+    <span class="step-badge">Addım 5</span>
+    <h3>Quraşdırmanı Python ilə təsdiqləyək</h3>
+    <p>Paketlərin həqiqətən import olunduğunu bir yoxlama skripti ilə təsdiqləyirik:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — import testi</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># (00_env) aktiv olduğundan əmin olun
+
+python3 -c "
+import fastapi, uvicorn, psycopg, pydantic, dotenv, httpx
+import paho.mqtt.client as mqtt
+print('fastapi   :', fastapi.__version__)
+print('pydantic  :', pydantic.__version__)
+print('psycopg   :', psycopg.__version__)
+print('paho-mqtt : OK (VERSION2 callback)')
+print('HAMISI HAZIR')
+"</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      Ekranda versiyalar və «HAMISI HAZIR» görünürsə — Python tərəfi hazırdır. Heç bir <code>ModuleNotFoundError</code> olmamalıdır.
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Konfiqurasiya faylları — .env və .gitignore</h2></div>
+    <p>Parollar və portlar birbaşa koda yazılmır — onları ayrıca <code>.env</code> faylında saxlayırıq. Bu fayl heç vaxt git-ə düşmür.</p>
+
+    <span class="step-badge">Addım 6</span>
+    <h4>01_config/.env — real dəyərlər (gizli)</h4>
+    <p>Faylı yaratmaq üçün: <code>open -e 01_config/.env</code> — açılan pəncərəyə yapışdırın:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">01_config/.env</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># ===== ZAVOD EDGE BAZASI =====
+EDGE_DB_HOST=localhost
+EDGE_DB_PORT=5434
+EDGE_DB_NAME=zavod_edge_db
+EDGE_DB_USER=royatalibova
+EDGE_DB_PASSWORD=
+
+# ===== MQTT BROKER =====
+MQTT_HOST=localhost
+MQTT_PORT=1883
+MQTT_TOPIC_BASE=zavod/siyezen
+
+# ===== MƏRKƏZİ BAZA (sinxronizasiya — dərs 7) =====
+MERKEZ_DB_HOST=localhost
+MERKEZ_DB_PORT=5432
+MERKEZ_DB_NAME=zarat_erp_2
+MERKEZ_DB_USER=royatalibova
+
+# ===== FASTAPI TOPLAMA XİDMƏTİ =====
+API_HOST=0.0.0.0
+API_PORT=8020</code></pre>
+    </div>
+
+    <span class="step-badge">Addım 7</span>
+    <h4>.gitignore — nələr git-ə düşməsin</h4>
+    <p>Faylı yaratmaq: <code>open -e .gitignore</code></p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">.gitignore</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># Python virtual mühit
+00_env/
+__pycache__/
+*.pyc
+
+# Gizli konfiqurasiya
+01_config/.env
+
+# Loglar və müvəqqəti fayllar
+_LOG/*.log
+*.tmp
+
+# macOS
+.DS_Store</code></pre>
+    </div>
+    <div class="callout red">
+      <div class="callout-label">Təhlükəsizlik qaydası</div>
+      <code>.env</code> faylı heç vaxt git-ə, e-poçta və ya söhbətə düşməməlidir — orada real parollar olur. Yalnız parolsuz <code>.env.numune</code> paylaşılır. Bu vərdişi indidən möhkəmlədin.
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>README.md — layihənin pasportu</h2></div>
+    <p>Layihənin kök qovluğunda <code>README.md</code> faylını doldururuq. Bu, hər dəfə işə qayıdanda «hardayıq» sualına cavab verəcək. Faylı açın: <code>open -e README.md</code></p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">README.md</span><button class="copybtn" aria-label="Kopyala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># Zarat ERP — Faza 2: Zavod Rəqəmsallaşdırılması
+
+## Məqsəd
+Siyəzən yem fabrikinin fiziki proseslərindən (temperatur, rütubət,
+çəki, vibrasiya, enerji) real-vaxt məlumat toplamaq; MQTT və FastAPI
+ilə emal edib lokal bazada (zavod_edge_db) saxlamaq; sonra mərkəzi
+Zarat ERP-yə (zarat_erp_2) sinxronlaşdırmaq.
+
+## Memarlıq
+Sensor (süni) -> MQTT Broker (Mosquitto) -> FastAPI (validasiya)
+  -> zavod_edge_db (PostgreSQL@18, 5434) -> Sync -> zarat_erp_2 (5432)
+  -> R Shiny Dashboard
+
+## Mühit
+- PostgreSQL@18 (Homebrew, Apple Silicon)
+- Python 3.14 · virtual mühit: 00_env/
+- Mosquitto (MQTT broker)
+- Asılılıqlar: requirements.txt
+
+## İşə başlamaq
+    cd ~/Desktop/Zarat_Faza2_Zavod
+    source 00_env/bin/activate
+
+## Qovluq strukturu
+- 00_env/       — Python virtual mühit
+- 01_config/    — konfiqurasiya (.env, mosquitto.conf, topics.md)
+- 02_db/        — baza DDL-ləri (edge / merkez)
+- 03_src/       — Python kodu (sensorlar, toplama, alert, sync)
+- 04_dashboard/ — R Shiny paneli
+- 05_servisler/ — launchd/systemd
+- 06_test/      — testlər
+- _KURS/        — HTML dərslər (1-10)
+- _LOG/         — icra qeydləri
+
+## Status
+- [x] Dərs 1 — Layihə strukturu və mühitin qurulması
+- [ ] Dərs 2 — Edge baza sxemi
+- [ ] Dərs 3 — Sensor simulyatoru
+- [ ] Dərs 4 — MQTT broker qurulumu
+- [ ] Dərs 5 — FastAPI toplama xidməti
+- [ ] Dərs 6 — Anomaliya aşkarlama və xəbərdarlıq
+- [ ] Dərs 7 — Mərkəzi sinxronizasiya
+- [ ] Dərs 8 — Offline dayanıqlılıq
+- [ ] Dərs 9 — Canlı monitorinq paneli
+- [ ] Dərs 10 — Təhlükəsizlik və yerləşdirmə
+
+## Qeyd
+Kafka və çoxagentli (Inventory/Production/Finance) memarlıq şüurlu
+şəkildə Faza 3-ə saxlanılıb. Bütün DB adları, portlar və struktur
+bu sənəddə kanonikdir.</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;">Bu HTML dərs faylını da <code>_KURS/</code> qovluğuna <code>Ders_01_Struktur_Muhit.html</code> adı ilə qoyun.</p>
+  </section>
+
+  <!-- 09 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>10 dərsin tam yol xəritəsi</h2></div>
+    <div class="lessongrid">
+      <div class="lrow now"><span class="lnum">01</span><div class="ltitle">Layihə strukturu və mühitin qurulması<span class="sub">struktur, versiya yoxlaması, Mosquitto, venv, konfiqurasiya</span></div><span class="ltag now">indi</span></div>
+      <div class="lrow"><span class="lnum">02</span><div class="ltitle">Edge baza sxemi<span class="sub">zavod_edge_db: cihaz reyestri, sensor tipləri, vaxt-seriyalı cədvəllər</span></div><span class="ltag">növbəti</span></div>
+      <div class="lrow"><span class="lnum">03</span><div class="ltitle">Süni sensor simulyatoru<span class="sub">Python sinifləri, realist siqnal, MQTT-yə publish</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">04</span><div class="ltitle">MQTT broker qurulumu<span class="sub">Mosquitto konfiqurasiyası, topic sxemi, publish/subscribe testi</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">05</span><div class="ltitle">FastAPI toplama xidməti<span class="sub">MQTT subscriber, validasiya, edge bazaya yazma</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">06</span><div class="ltitle">Anomaliya aşkarlama və xəbərdarlıq<span class="sub">həddlər, real-vaxt alert məntiqi</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">07</span><div class="ltitle">Mərkəzi sinxronizasiya<span class="sub">outbox pattern, edge -> zarat_erp_2</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">08</span><div class="ltitle">Offline dayanıqlılıq<span class="sub">şəbəkə kəsintisi, növbə, avtomatik bərpa</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">09</span><div class="ltitle">Canlı monitorinq paneli<span class="sub">R Shiny dashboard, real-vaxt qrafiklər</span></div><span class="ltag">planda</span></div>
+      <div class="lrow"><span class="lnum">10</span><div class="ltitle">Təhlükəsizlik və yerləşdirmə<span class="sub">JWT/API Key, systemd, uçdan-uca test, zavoda köçürmə</span></div><span class="ltag">planda</span></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>Dərs 1 — yoxlama siyahısı</h2></div>
+    <p>Növbəti dərsə keçməzdən əvvəl bunları təsdiqləyin:</p>
+    <ul class="checklist">
+      <li><span class="box"></span><code>~/Desktop/Zarat_Faza2_Zavod/</code> yaranıb və tam struktur mövcuddur (00_env … _LOG)</li>
+      <li><span class="box"></span><code>find . -type d</code> nəticəsi ağacla üst-üstə düşür</li>
+      <li><span class="box"></span>Versiya yoxlaması işlədilib: PostgreSQL 18, Python 3.14 təsdiqlənib</li>
+      <li><span class="box"></span>Mosquitto quraşdırılıb və <code>mosquitto -v</code> işə düşür</li>
+      <li><span class="box"></span>Virtual mühit (00_env) yaradılıb və aktivləşir — önündə <code>(00_env)</code> görünür</li>
+      <li><span class="box"></span><code>pip install -r requirements.txt</code> uğurla tamamlanıb</li>
+      <li><span class="box"></span>Import testi «HAMISI HAZIR» qaytarıb — heç bir ModuleNotFoundError yoxdur</li>
+      <li><span class="box"></span><code>.env</code>, <code>.gitignore</code>, <code>README.md</code> yaradılıb</li>
+      <li><span class="box"></span>Bu HTML faylı <code>_KURS/Ders_01_Struktur_Muhit.html</code> kimi saxlanılıb</li>
+    </ul>
+  </section>
+
+  <div class="nextcard">
+    <div class="tag2">Növbəti — Dərs 2</div>
+    <h3>Edge baza sxemi</h3>
+    <p class="muted" style="margin:0;"><code>zavod_edge_db</code> bazasını 5434 portunda yaradacağıq və içində: cihaz reyestri (hər sensor öz ID-si, tipi, yeri ilə), sensor tipləri lüğəti, ölçü vahidləri və vaxt-seriyalı xam ölçmə cədvəlini (aylıq partitioning ilə) — tam kopyalana bilən <code>02_db/edge/</code> SQL faylları ilə.</p>
+  </div>
+
+</main>
+
+<footer>Zarat ERP · Faza 2 · Dərs 1 / 10 — hazır olduqda "davam et" yazın</footer>
+
+<script>
+// ===== Kopyalama düymələri =====
+document.querySelectorAll('.copybtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var wrap = btn.closest('.codewrap');
+    var code = wrap.querySelector('pre code') || wrap.querySelector('pre');
+    var text = code.innerText;
+    function done(){
+      var orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Kopyalandı';
+      setTimeout(function(){ btn.classList.remove('copied'); btn.innerHTML = orig; }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(text); done(); });
+    } else { fallback(text); done(); }
+  });
+});
+function fallback(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+// ===== Canlı telemetriya =====
+const cells = [
+  {id:'t1', base:24.3, jit:0.4, dec:1, unit:' °C'},
+  {id:'t2', base:12.8, jit:0.3, dec:1, unit:' %'},
+  {id:'t3', base:418, jit:6, dec:0, unit:' kg'},
+  {id:'t4', base:2.1, jit:0.3, dec:1, unit:' mm/s'},
+  {id:'t5', base:37.4, jit:1.1, dec:1, unit:' kW'}
+];
+function tick(){
+  cells.forEach(function(c){
+    var v = c.base + (Math.random()-0.5)*2*c.jit;
+    var el = document.getElementById(c.id);
+    if(el) el.innerHTML = v.toFixed(c.dec) + '<span class="telem-unit">'+c.unit+'</span>';
+  });
+}
+setInterval(tick, 2200);
+</script>
+
+</body>
+</html>

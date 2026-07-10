@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarat ERP · Faza 2 · Dərs 5 — FastAPI Toplama Xidməti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --panel:#121b2e; --panel2:#17233a; --raised:#1c2942;
+  --text:#e7ecf3; --muted:#8a97ab; --line:rgba(255,255,255,0.09);
+  --amber:#f2a72e; --cyan:#35c9c9; --green:#52d17c; --red:#ef5b5b; --violet:#a29bea;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.65; font-size:16px; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,.mono{ font-family:'Space Grotesk',sans-serif; }
+code, pre{ font-family:'JetBrains Mono',monospace; }
+p code, li code, td code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.86em; color:var(--cyan); }
+
+.progressbar{ position:sticky; top:0; z-index:50; background:rgba(11,18,32,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:14px 32px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.progressbar .tag{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); font-weight:600; white-space:nowrap; }
+.dots{ display:flex; gap:6px; flex-wrap:wrap; }
+.dot{ width:22px; height:6px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); }
+.dot.done{ background:#245c39; border-color:var(--green); }
+.dot.active{ background:var(--amber); border-color:var(--amber); }
+
+.telemetry{ display:flex; gap:0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
+.telem-cell{ flex:1; min-width:150px; padding:14px 20px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.telem-cell:last-child{ border-right:none; }
+.telem-label{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.led{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2.6s infinite ease-in-out; }
+.led.warn{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.telem-val{ font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; }
+.telem-unit{ font-size:12px; color:var(--muted); font-weight:400; }
+
+main{ max-width:920px; margin:0 auto; padding:0 32px 80px; }
+.hero{ padding:56px 0 32px; border-bottom:1px solid var(--line); }
+.eyebrow{ color:var(--cyan); font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:14px; }
+.hero h1{ font-size:36px; font-weight:600; margin:0 0 16px; line-height:1.15; }
+.hero p.lead{ font-size:17px; color:var(--muted); max-width:700px; margin:0; }
+
+section{ padding:48px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+.sec-num{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:14px; font-weight:600; }
+h2{ font-size:24px; font-weight:600; margin:0; }
+h3{ font-size:17px; font-weight:600; margin:30px 0 10px; color:var(--cyan); }
+h4{ font-size:15px; font-weight:600; margin:22px 0 8px; color:var(--violet); }
+p{ color:#d3dae5; margin:0 0 14px; }
+.muted{ color:var(--muted); }
+strong{ color:#eef2f8; font-weight:600; }
+
+.callout{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 20px; margin:20px 0; font-size:15px; }
+.callout.cyan{ border-left-color:var(--cyan); }
+.callout.violet{ border-left-color:var(--violet); }
+.callout.red{ border-left-color:var(--red); }
+.callout.green{ border-left-color:var(--green); }
+.callout .callout-label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); font-weight:600; margin-bottom:6px; }
+.callout.cyan .callout-label{ color:var(--cyan); }
+.callout.violet .callout-label{ color:var(--violet); }
+.callout.red .callout-label{ color:var(--red); }
+.callout.green .callout-label{ color:var(--green); }
+
+table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+th{ text-align:left; padding:10px 14px; background:var(--panel2); color:var(--amber); font-size:12px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
+td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#d3dae5; }
+tr:last-child td{ border-bottom:none; }
+td.k{ color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:13px; white-space:nowrap; }
+
+.codewrap{ margin:18px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); background:#0d1526; }
+.codebar{ background:var(--panel2); padding:8px 14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; }
+.codebar .fname{ color:var(--cyan); }
+.copybtn{ background:var(--raised); border:1px solid var(--line); color:var(--text); font-family:'Inter',sans-serif; font-size:12px; font-weight:500; padding:5px 12px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; }
+.copybtn:hover{ background:var(--cyan); color:#04212b; border-color:var(--cyan); }
+.copybtn.copied{ background:var(--green); color:#04211a; border-color:var(--green); }
+.copybtn svg{ width:13px; height:13px; }
+pre{ margin:0; padding:18px 20px; overflow-x:auto; font-size:12.5px; line-height:1.7; color:#c9d4e6; white-space:pre; }
+
+.autochip{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter',sans-serif; color:var(--green); background:rgba(82,209,124,0.12); border:1px solid rgba(82,209,124,0.35); padding:2px 8px; border-radius:20px; margin-left:8px; }
+
+.checklist{ list-style:none; padding:0; margin:18px 0; }
+.checklist li{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15px; color:#d3dae5; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist .box{ width:17px; height:17px; border:1.5px solid var(--cyan); border-radius:4px; flex-shrink:0; margin-top:3px; }
+
+.tree{ font-family:'JetBrains Mono',monospace; font-size:13px; color:#c9d4e6; background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px; line-height:1.85; white-space:pre; overflow-x:auto; }
+.tree .folder{ color:var(--amber); }
+.tree .file{ color:var(--cyan); }
+.tree .comment{ color:var(--muted); }
+.tree .root{ color:var(--green); font-weight:600; }
+
+.nextcard{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-top:20px; }
+.nextcard .tag2{ font-size:12px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:8px; }
+.nextcard h3{ margin:0 0 8px; color:var(--text); font-size:19px; }
+
+.step-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--bg); background:var(--amber); padding:2px 10px; border-radius:20px; font-weight:600; margin-bottom:10px; }
+
+.termout{ background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#8fbf9f; white-space:pre; overflow-x:auto; margin:18px 0; }
+
+footer{ text-align:center; padding:40px 0; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="progressbar">
+  <span class="tag">Zarat ERP · Faza 2 — Zavod Rəqəmsallaşdırılması</span>
+  <div class="dots">
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <span class="mono" style="font-size:12px;color:var(--muted);margin-left:auto;">Dərs 5 / 10</span>
+</div>
+
+<div class="telemetry">
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Silo temperaturu</span><span class="telem-val" id="t1">24.3<span class="telem-unit"> °C</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Rütubət (yem qarışığı)</span><span class="telem-val" id="t2">12.8<span class="telem-unit"> %</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led warn"></span>Yem çəkisi (dozator)</span><span class="telem-val" id="t3">418<span class="telem-unit"> kg</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Vibrasiya (mühərrik)</span><span class="telem-val" id="t4">2.1<span class="telem-unit"> mm/s</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Elektrik yükü</span><span class="telem-val" id="t5">37.4<span class="telem-unit"> kW</span></span></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Faza 2 · Dərs 5 / 10</div>
+    <h1>FastAPI toplama xidməti</h1>
+    <p class="lead">Zəncirin son halqası. Bu xidmət broker-dən bütün sensor mesajlarını dinləyir, hər birini validasiya edir (mənfi çəki, ağlabatmayan temperatur rədd olunur) və yalnız təmiz məlumatı <code>zavod_edge_db</code>-yə yazır. Bununla tam avtomatik zəncir tamamlanır: sensor → MQTT → FastAPI → PostgreSQL.</p>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Xidmət nə edir?</h2></div>
+    <p>FastAPI xidmətinin iki işi var. Birincisi — arxa planda daim MQTT broker-i dinləmək. İkincisi — HTTP interfeysi təqdim etmək (sağlamlıq yoxlaması, statistika). Bu dərsdə hər ikisini qururuq.</p>
+    <table>
+      <tr><th>Addım</th><th>Nə baş verir</th></tr>
+      <tr><td class="k">1. Dinlə</td><td>Xidmət başlayanda MQTT broker-ə qoşulur, <code>zavod/siyezen/#</code>-ə abunə olur</td></tr>
+      <tr><td class="k">2. Al</td><td>Sensor mesajı gələndə JSON parse olunur</td></tr>
+      <tr><td class="k">3. Yoxla</td><td>Pydantic model məlumatı validasiya edir (tip, aralıq)</td></tr>
+      <tr><td class="k">4. Yaz</td><td>Təmiz məlumat <code>olcme</code> cədvəlinə INSERT olunur (sync_status=0)</td></tr>
+      <tr><td class="k">5. Rədd et</td><td>Xarab məlumat bazaya düşmür, log-a yazılır</td></tr>
+    </table>
+    <div class="callout cyan">
+      <div class="callout-label">Niyə FastAPI, sadə skript yox?</div>
+      Sadə subscriber skripti də işləyərdi. Amma FastAPI əlavə üstünlüklər verir: HTTP endpoint-lər (dashboard və mobil üçün hazır interfeys), avtomatik sənədləşmə (Swagger), və gələcəkdə autentifikasiya (Dərs 10). İndi qurduğumuz təməl bütün Faza 2 boyu genişlənəcək.
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Validasiya — nə qəbul, nə rədd?</h2></div>
+    <p>Xarab sensor mənasız dəyər göndərə bilər: mənfi çəki, 999°C temperatur, boş cihaz kodu. Bunlar bazanı «zibilləyər» və sonrakı analitikanı pozar. Validasiya qatı bu keşikçidir.</p>
+    <table>
+      <tr><th>Qayda</th><th>Nümunə — RƏDD</th><th>Nümunə — QƏBUL</th></tr>
+      <tr><td>Cihaz kodu boş olmamalı</td><td>cihaz_kod = ""</td><td>cihaz_kod = "S001"</td></tr>
+      <tr><td>Qiymət ədəd olmalı</td><td>qiymet = "abc"</td><td>qiymet = 24.3</td></tr>
+      <tr><td>Fiziki aralıq (geniş sərhəd)</td><td>qiymet = -9999</td><td>qiymet = 24.3</td></tr>
+      <tr><td>Cihaz bazada mövcud olmalı</td><td>cihaz_kod = "S099"</td><td>cihaz_kod = "S001"</td></tr>
+    </table>
+    <div class="callout violet">
+      <div class="callout-label">İki səviyyə</div>
+      <strong>Format validasiyası</strong> Pydantic ilə (tip düzgündürmü, ədəddirmi). <strong>Məntiq validasiyası</strong> kodda (cihaz bazada varmı, dəyər fiziki aralıqdadırmı). Bu dərsdə hər ikisini qururuq. Dəqiq hədd-aşma xəbərdarlığı isə Dərs 6-nın mövzusudur — burada yalnız «tamamilə mənasız» dəyərləri rədd edirik.
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Fayl 1 — baza qoşulma köməkçisi <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Əvvəlcə <code>zavod_edge_db</code>-yə qoşulmanı idarə edən kiçik bir köməkçi. Bu, <code>.env</code>-dən ayarları oxuyub qoşulma sətri (DSN) qurur.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/toplama/db_komekci.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/toplama/db_komekci.py << 'EOF'
+"""
+zavod_edge_db qosulma komekcisi.
+Fayl: 03_src/toplama/db_komekci.py
+"""
+import os
+from dotenv import load_dotenv
+
+_KONF = os.path.join(os.path.dirname(__file__), "..", "..", "01_config", ".env")
+load_dotenv(_KONF)
+
+
+def edge_dsn() -> str:
+    """zavod_edge_db ucun qosulma setri (DSN) qaytarir."""
+    return (
+        f"host={os.getenv('EDGE_DB_HOST', 'localhost')} "
+        f"port={os.getenv('EDGE_DB_PORT', '5434')} "
+        f"dbname={os.getenv('EDGE_DB_NAME', 'zavod_edge_db')} "
+        f"user={os.getenv('EDGE_DB_USER', 'royatalibova')}"
+    )
+EOF
+
+echo "db_komekci.py yaradildi:"
+ls -la 03_src/toplama/db_komekci.py</code></pre>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Fayl 2 — validasiya modeli <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Pydantic modeli gələn mesajın formatını yoxlayır. Əlavə olaraq cihazın bazada mövcudluğunu yoxlayan köməkçi funksiya da yazırıq.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/toplama/validasiya.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/toplama/validasiya.py << 'EOF'
+"""
+Gelen sensor mesajinin validasiyasi (Pydantic v2).
+Fayl: 03_src/toplama/validasiya.py
+"""
+from pydantic import BaseModel, field_validator
+
+
+class OlcmeMesaj(BaseModel):
+    """MQTT-den gelen bir olcme mesaji."""
+    cihaz_kod: str
+    olcme_vaxti: str
+    qiymet: float
+
+    @field_validator("cihaz_kod")
+    @classmethod
+    def cihaz_kod_bos_olmasin(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("cihaz_kod bos ola bilmez")
+        return v.strip()
+
+    @field_validator("qiymet")
+    @classmethod
+    def qiymet_fiziki_aralig(cls, v: float) -> float:
+        # cox geniş fiziki serhed — yalniz tamamile menasiz deyerleri redd et
+        # deqiq hedd-asma xeberdarligi Ders 6-dadir
+        if v < -1000 or v > 100000:
+            raise ValueError(f"qiymet fiziki araligdan kenardir: {v}")
+        return v
+EOF
+
+echo "validasiya.py yaradildi:"
+ls -la 03_src/toplama/validasiya.py</code></pre>
+    </div>
+    <div class="callout">
+      <div class="callout-label">Pydantic v2 detalı</div>
+      <code>@field_validator</code> Pydantic v2-nin üsuludur (v1-də <code>@validator</code> idi). <code>@classmethod</code> ilə birlikdə işlədilir. Format səhvi olarsa model avtomatik <code>ValidationError</code> qaldırır.
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Fayl 3 — əsas FastAPI xidməti <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>İndi əsas fayl. Bu, MQTT subscriber-i (arxa planda thread-də) və FastAPI HTTP interfeysini birləşdirir. Xidmət başlayanda broker-ə qoşulur, mesaj gələndə validasiya edib bazaya yazır.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/toplama/xidmet.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/toplama/xidmet.py << 'EOF'
+"""
+FastAPI toplama xidmeti — MQTT dinleyir, validasiya edir, bazaya yazir.
+Fayl: 03_src/toplama/xidmet.py
+Ishe salmaq:
+  uvicorn xidmet:app --host 0.0.0.0 --port 8020
+"""
+import os
+import json
+import logging
+from contextlib import asynccontextmanager
+
+import psycopg
+import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
+from fastapi import FastAPI
+from pydantic import ValidationError
+
+from db_komekci import edge_dsn
+from validasiya import OlcmeMesaj
+from mqtt_komekci import MQTT_HOST, MQTT_PORT, TOPIC_BASE
+
+# --- jurnal ---
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s  %(levelname)s  %(message)s")
+log = logging.getLogger("toplama")
+
+# --- statistika (sade sayğaclar) ---
+stat = {"qebul": 0, "yazildi": 0, "redd": 0}
+
+# --- baza qosulmasi (bir defe acilir, tekrar istifade) ---
+_db = None
+
+
+def db_qosul():
+    global _db
+    if _db is None or _db.closed:
+        _db = psycopg.connect(edge_dsn(), autocommit=True)
+    return _db
+
+
+def olcme_yaz(m: OlcmeMesaj):
+    """Tesdiqlenmiş olcmeni bazaya yazir."""
+    conn = db_qosul()
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet)
+               VALUES (%s, %s, %s)""",
+            (m.cihaz_kod, m.olcme_vaxti, m.qiymet),
+        )
+
+
+# ================= MQTT callback-lari (VERSION2) =================
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code == 0:
+        topic = f"{TOPIC_BASE}/#"
+        client.subscribe(topic, qos=0)
+        log.info(f"Broker-e qosuldu, abune: {topic}")
+    else:
+        log.error(f"Broker qosulmasi alinmadi: {reason_code}")
+
+
+def on_message(client, userdata, msg):
+    stat["qebul"] += 1
+    try:
+        data = json.loads(msg.payload.decode())
+        m = OlcmeMesaj(**data)          # <-- format validasiyasi
+        olcme_yaz(m)                    # <-- bazaya yazma
+        stat["yazildi"] += 1
+    except (ValidationError, ValueError) as e:
+        stat["redd"] += 1
+        log.warning(f"REDD ({msg.topic}): {e}")
+    except Exception as e:
+        stat["redd"] += 1
+        log.error(f"XETA ({msg.topic}): {e}")
+
+
+# ================= MQTT clienti =================
+mqtt_client = mqtt.Client(
+    callback_api_version=CallbackAPIVersion.VERSION2,
+    client_id="zarat-toplama",
+)
+mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message
+
+
+# ================= FastAPI lifespan =================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # baslanğic: broker-e qosul, dinlemeye başla
+    mqtt_client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+    mqtt_client.loop_start()
+    log.info("Toplama xidmeti başladi.")
+    yield
+    # bitiş: temiz bağla
+    mqtt_client.loop_stop()
+    mqtt_client.disconnect()
+    log.info("Toplama xidmeti dayandi.")
+
+
+app = FastAPI(title="Zarat Faza 2 — Toplama Xidmeti", lifespan=lifespan)
+
+
+@app.get("/")
+def kok():
+    return {"xidmet": "Zarat toplama", "veziyyet": "işleyir"}
+
+
+@app.get("/saglamliq")
+def saglamliq():
+    return {"status": "ok", "statistika": stat}
+
+
+@app.get("/statistika")
+def statistika():
+    return stat
+EOF
+
+echo "xidmet.py yaradildi:"
+ls -la 03_src/toplama/xidmet.py</code></pre>
+    </div>
+    <div class="callout violet">
+      <div class="callout-label">Necə işləyir</div>
+      <code>lifespan</code> — xidmət başlayanda (yield-dən əvvəl) broker-ə qoşulur, dayananda (yield-dən sonra) təmiz bağlayır. <code>loop_start()</code> MQTT-ni ayrı thread-də işlədir ki, FastAPI HTTP sorğularına da cavab verə bilsin. <code>on_message</code> hər gələn mesajda çağırılır.
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Xidməti işə salaq — tam zəncir</h2></div>
+    <p>İndi bütün sistemi birləşdiririk. Dörd komponent lazımdır. Hər biri ayrı Terminal-da:</p>
+
+    <table>
+      <tr><th>Terminal</th><th>Komponent</th><th>Vəziyyət</th></tr>
+      <tr><td class="k">A</td><td>Zavod DB serveri (5434)</td><td>İşləməlidir</td></tr>
+      <tr><td class="k">B</td><td>MQTT broker (Mosquitto)</td><td>İşləməlidir</td></tr>
+      <tr><td class="k">C</td><td>FastAPI toplama xidməti</td><td>İndi başladırıq</td></tr>
+      <tr><td class="k">D</td><td>Publisher (simulyator)</td><td>Sonra başladırıq</td></tr>
+    </table>
+
+    <span class="step-badge">Terminal A — DB serveri (əgər dayanıbsa)</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal A</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># DB serveri isleyirmi? yoxla
+pg_isready -p 5434 || \
+  pg_ctl -D ~/zavod_pgdata -o "-p 5434" -l ~/zavod_pgdata/server.log start</code></pre>
+    </div>
+
+    <span class="step-badge">Terminal B — broker (əgər dayanıbsa)</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal B</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+mosquitto -c 01_config/mosquitto.conf -v</code></pre>
+    </div>
+
+    <span class="step-badge">Terminal C — FastAPI xidməti</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal C</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+cd 03_src/toplama
+uvicorn xidmet:app --host 0.0.0.0 --port 8020</code></pre>
+    </div>
+    <p>Terminal C belə göstərməlidir:</p>
+    <div class="termout">INFO  Broker-e qosuldu, abune: zavod/siyezen/#
+INFO  Toplama xidmeti başladi.
+INFO:     Uvicorn running on http://0.0.0.0:8020</div>
+
+    <span class="step-badge">Terminal D — publisher</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal D</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+cd 03_src/sensorlar
+python mqtt_publisher.py</code></pre>
+    </div>
+
+    <div class="callout green">
+      <div class="callout-label">İndi nə baş verir?</div>
+      Publisher (D) sensorları oxuyub broker-ə göndərir → broker (B) toplama xidmətinə (C) ötürür → xidmət validasiya edib bazaya (A) yazır. Tam avtomatik zəncir işləyir! Publisher-i bir neçə saniyə işlədib CTRL+C ilə dayandırın.
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Nəticəni yoxlayaq</h2></div>
+    <p>Zəncir işlədikdən sonra iki şeyi yoxlayırıq: (1) xidmətin statistikası, (2) bazaya yazılan məlumat.</p>
+
+    <h3>Statistika — HTTP endpoint vasitəsilə</h3>
+    <p>Yeni Terminal-da (və ya brauzerdə <code>http://localhost:8020/statistika</code>):</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — statistika</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>curl http://localhost:8020/statistika</code></pre>
+    </div>
+    <div class="termout">{"qebul":45,"yazildi":45,"redd":0}</div>
+
+    <h3>Baza — neçə ölçmə yazıldı?</h3>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — baza yoxlaması</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>psql -p 5434 -U royatalibova -d zavod_edge_db -c "
+SELECT cihaz_kod, count(*), round(avg(qiymet),2) AS orta,
+       max(olcme_vaxti) AS son_olcme
+FROM olcme
+GROUP BY cihaz_kod ORDER BY cihaz_kod;
+"</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      Statistika «yazildi» sayı artır, «redd» 0-dır. Baza sorğusu hər 5 cihaz üçün artan sayları göstərir. Bu, tam avtomatik zəncirin işlədiyinin son sübutudur: <strong>sensor → MQTT → FastAPI → PostgreSQL</strong>.
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Validasiyanı sınayaq — xarab mesaj</h2></div>
+    <p>Validasiya həqiqətən işləyirmi? Əl ilə xarab bir mesaj göndərək və rədd olunduğunu görək. Xidmət (C) və broker (B) işləyən halda, yeni Terminal-da:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — xarab mesaj testi</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># mensiz qiymet — validasiya redd etmeli
+mosquitto_pub -h localhost -p 1883 \
+  -t "zavod/siyezen/temperatur/S001" \
+  -m '{"cihaz_kod":"S001","olcme_vaxti":"2026-07-09T18:00:00+00:00","qiymet":-99999}'
+
+# boş cihaz kodu — validasiya redd etmeli
+mosquitto_pub -h localhost -p 1883 \
+  -t "zavod/siyezen/temperatur/S001" \
+  -m '{"cihaz_kod":"","olcme_vaxti":"2026-07-09T18:00:00+00:00","qiymet":24}'</code></pre>
+    </div>
+    <p>Terminal C (xidmət) belə xəbərdarlıq göstərməlidir:</p>
+    <div class="termout" style="color:#e79aa8;">WARNING  REDD (zavod/siyezen/temperatur/S001): qiymet fiziki araligdan kenardir: -99999.0
+WARNING  REDD (zavod/siyezen/temperatur/S001): cihaz_kod bos ola bilmez</div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      Hər iki xarab mesaj rədd olundu və bazaya yazılmadı. <code>/statistika</code>-da «redd» sayı 2 artdı. Keşikçi işləyir — yalnız təmiz məlumat keçir.
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Yaratdığımız fayllar</h2></div>
+    <div class="tree"><span class="root">03_src/toplama/</span>
+├── <span class="file">mqtt_komekci.py</span>     <span class="comment"># (dərs 4) MQTT ayarları</span>
+├── <span class="file">db_komekci.py</span>       <span class="comment"># edge baza DSN</span>
+├── <span class="file">validasiya.py</span>       <span class="comment"># Pydantic model + yoxlamalar</span>
+└── <span class="file">xidmet.py</span>           <span class="comment"># əsas: MQTT subscriber + FastAPI</span></div>
+    <p class="muted" style="font-size:14px;">Bu HTML dərs faylını <code>_KURS/Ders_05_FastAPI_Toplama.html</code> kimi saxlayın. README.md-də Dərs 5-i [x] işarələyin.</p>
+  </section>
+
+  <!-- 10 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>Dərs 5 — yoxlama siyahısı</h2></div>
+    <ul class="checklist">
+      <li><span class="box"></span>Üç fayl yaradıldı: db_komekci.py, validasiya.py, xidmet.py</li>
+      <li><span class="box"></span>FastAPI xidməti işə düşür və broker-ə abunə olur («abune: zavod/siyezen/#»)</li>
+      <li><span class="box"></span>Dörd komponent birlikdə işləyir: DB + broker + xidmət + publisher</li>
+      <li><span class="box"></span><code>curl .../statistika</code> «yazildi» sayının artdığını göstərir</li>
+      <li><span class="box"></span>Baza sorğusu 5 cihazın artan ölçmə saylarını göstərir</li>
+      <li><span class="box"></span>Xarab mesaj testi: hər iki mənasız mesaj RƏDD olundu, bazaya düşmədi</li>
+      <li><span class="box"></span>Fayl <code>_KURS/Ders_05_FastAPI_Toplama.html</code> kimi saxlanılıb</li>
+    </ul>
+    <div class="callout cyan">
+      <div class="callout-label">Böyük mərhələ</div>
+      Faza 2-nin özəyi indi hazırdır! Tam avtomatik zəncir işləyir: sensordan gələn məlumat MQTT üzərindən keçir, validasiya olunur və zavod bazasına yazılır. Qalan dərslər bu təməli gücləndirir: anomaliya xəbərdarlığı, mərkəzə sinxronizasiya, dashboard və təhlükəsizlik.
+    </div>
+  </section>
+
+  <div class="nextcard">
+    <div class="tag2">Növbəti — Dərs 6</div>
+    <h3>Anomaliya aşkarlama və xəbərdarlıq</h3>
+    <p class="muted" style="margin:0;">İndi xidmətə «ağıl» əlavə edəcəyik. Hər gələn ölçməni <code>sensor_tipi</code> cədvəlindəki həddlərlə müqayisə edəcəyik. Temperatur 35°C-i keçsə və ya çəki mənfi olsa — <code>xeberdarliq</code> cədvəlinə qeyd yazılacaq və real-vaxt alarm veriləcək. Beləliklə sistem yalnız məlumat toplamır, həm də «düşünür».</p>
+  </div>
+
+</main>
+
+<footer>Zarat ERP · Faza 2 · Dərs 5 / 10 — hazır olduqda "davam et" yazın</footer>
+
+<script>
+document.querySelectorAll('.copybtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var wrap = btn.closest('.codewrap');
+    var code = wrap.querySelector('pre code') || wrap.querySelector('pre');
+    var text = code.innerText;
+    function done(){
+      var orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Kopyalandı';
+      setTimeout(function(){ btn.classList.remove('copied'); btn.innerHTML = orig; }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(text); done(); });
+    } else { fallback(text); done(); }
+  });
+});
+function fallback(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+const cells = [
+  {id:'t1', base:24.3, jit:0.4, dec:1, unit:' °C'},
+  {id:'t2', base:12.8, jit:0.3, dec:1, unit:' %'},
+  {id:'t3', base:418, jit:6, dec:0, unit:' kg'},
+  {id:'t4', base:2.1, jit:0.3, dec:1, unit:' mm/s'},
+  {id:'t5', base:37.4, jit:1.1, dec:1, unit:' kW'}
+];
+function tick(){
+  cells.forEach(function(c){
+    var v = c.base + (Math.random()-0.5)*2*c.jit;
+    var el = document.getElementById(c.id);
+    if(el) el.innerHTML = v.toFixed(c.dec) + '<span class="telem-unit">'+c.unit+'</span>';
+  });
+}
+setInterval(tick, 2200);
+</script>
+
+</body>
+</html>

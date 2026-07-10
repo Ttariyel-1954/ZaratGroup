@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarat ERP · Faza 2 · Dərs 3 — Süni Sensor Simulyatoru</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --panel:#121b2e; --panel2:#17233a; --raised:#1c2942;
+  --text:#e7ecf3; --muted:#8a97ab; --line:rgba(255,255,255,0.09);
+  --amber:#f2a72e; --cyan:#35c9c9; --green:#52d17c; --red:#ef5b5b; --violet:#a29bea;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.65; font-size:16px; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,.mono{ font-family:'Space Grotesk',sans-serif; }
+code, pre{ font-family:'JetBrains Mono',monospace; }
+p code, li code, td code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.86em; color:var(--cyan); }
+
+.progressbar{ position:sticky; top:0; z-index:50; background:rgba(11,18,32,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:14px 32px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.progressbar .tag{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); font-weight:600; white-space:nowrap; }
+.dots{ display:flex; gap:6px; flex-wrap:wrap; }
+.dot{ width:22px; height:6px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); }
+.dot.done{ background:#245c39; border-color:var(--green); }
+.dot.active{ background:var(--amber); border-color:var(--amber); }
+
+.telemetry{ display:flex; gap:0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
+.telem-cell{ flex:1; min-width:150px; padding:14px 20px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.telem-cell:last-child{ border-right:none; }
+.telem-label{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.led{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2.6s infinite ease-in-out; }
+.led.warn{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.telem-val{ font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; }
+.telem-unit{ font-size:12px; color:var(--muted); font-weight:400; }
+
+main{ max-width:920px; margin:0 auto; padding:0 32px 80px; }
+.hero{ padding:56px 0 32px; border-bottom:1px solid var(--line); }
+.eyebrow{ color:var(--cyan); font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:14px; }
+.hero h1{ font-size:36px; font-weight:600; margin:0 0 16px; line-height:1.15; }
+.hero p.lead{ font-size:17px; color:var(--muted); max-width:700px; margin:0; }
+
+section{ padding:48px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+.sec-num{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:14px; font-weight:600; }
+h2{ font-size:24px; font-weight:600; margin:0; }
+h3{ font-size:17px; font-weight:600; margin:30px 0 10px; color:var(--cyan); }
+h4{ font-size:15px; font-weight:600; margin:22px 0 8px; color:var(--violet); }
+p{ color:#d3dae5; margin:0 0 14px; }
+.muted{ color:var(--muted); }
+strong{ color:#eef2f8; font-weight:600; }
+
+.callout{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 20px; margin:20px 0; font-size:15px; }
+.callout.cyan{ border-left-color:var(--cyan); }
+.callout.violet{ border-left-color:var(--violet); }
+.callout.red{ border-left-color:var(--red); }
+.callout.green{ border-left-color:var(--green); }
+.callout .callout-label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); font-weight:600; margin-bottom:6px; }
+.callout.cyan .callout-label{ color:var(--cyan); }
+.callout.violet .callout-label{ color:var(--violet); }
+.callout.red .callout-label{ color:var(--red); }
+.callout.green .callout-label{ color:var(--green); }
+
+table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+th{ text-align:left; padding:10px 14px; background:var(--panel2); color:var(--amber); font-size:12px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
+td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#d3dae5; }
+tr:last-child td{ border-bottom:none; }
+td.k{ color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:13px; white-space:nowrap; }
+
+.codewrap{ margin:18px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); background:#0d1526; }
+.codebar{ background:var(--panel2); padding:8px 14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; }
+.codebar .fname{ color:var(--cyan); }
+.copybtn{ background:var(--raised); border:1px solid var(--line); color:var(--text); font-family:'Inter',sans-serif; font-size:12px; font-weight:500; padding:5px 12px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; }
+.copybtn:hover{ background:var(--cyan); color:#04212b; border-color:var(--cyan); }
+.copybtn.copied{ background:var(--green); color:#04211a; border-color:var(--green); }
+.copybtn svg{ width:13px; height:13px; }
+pre{ margin:0; padding:18px 20px; overflow-x:auto; font-size:12.5px; line-height:1.7; color:#c9d4e6; white-space:pre; }
+
+.autochip{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter',sans-serif; color:var(--green); background:rgba(82,209,124,0.12); border:1px solid rgba(82,209,124,0.35); padding:2px 8px; border-radius:20px; margin-left:8px; }
+
+.checklist{ list-style:none; padding:0; margin:18px 0; }
+.checklist li{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15px; color:#d3dae5; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist .box{ width:17px; height:17px; border:1.5px solid var(--cyan); border-radius:4px; flex-shrink:0; margin-top:3px; }
+
+.tree{ font-family:'JetBrains Mono',monospace; font-size:13px; color:#c9d4e6; background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px; line-height:1.85; white-space:pre; overflow-x:auto; }
+.tree .folder{ color:var(--amber); }
+.tree .file{ color:var(--cyan); }
+.tree .comment{ color:var(--muted); }
+.tree .root{ color:var(--green); font-weight:600; }
+
+.nextcard{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-top:20px; }
+.nextcard .tag2{ font-size:12px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:8px; }
+.nextcard h3{ margin:0 0 8px; color:var(--text); font-size:19px; }
+
+.step-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--bg); background:var(--amber); padding:2px 10px; border-radius:20px; font-weight:600; margin-bottom:10px; }
+
+.termout{ background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#8fbf9f; white-space:pre; overflow-x:auto; margin:18px 0; }
+
+footer{ text-align:center; padding:40px 0; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="progressbar">
+  <span class="tag">Zarat ERP · Faza 2 — Zavod Rəqəmsallaşdırılması</span>
+  <div class="dots">
+    <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+    <div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <span class="mono" style="font-size:12px;color:var(--muted);margin-left:auto;">Dərs 3 / 10</span>
+</div>
+
+<div class="telemetry">
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Silo temperaturu</span><span class="telem-val" id="t1">24.3<span class="telem-unit"> °C</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Rütubət (yem qarışığı)</span><span class="telem-val" id="t2">12.8<span class="telem-unit"> %</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led warn"></span>Yem çəkisi (dozator)</span><span class="telem-val" id="t3">418<span class="telem-unit"> kg</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Vibrasiya (mühərrik)</span><span class="telem-val" id="t4">2.1<span class="telem-unit"> mm/s</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Elektrik yükü</span><span class="telem-val" id="t5">37.4<span class="telem-unit"> kW</span></span></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Faza 2 · Dərs 3 / 10</div>
+    <h1>Süni sensor simulyatoru</h1>
+    <p class="lead">İndi sistemin ilk «canlı» hissəsini qururuq. Python siniflərini yazacağıq ki, real sensorlar kimi davransınlar — temperatur yavaş dəyişir, çəki dövri artıb-azalır, arada anomaliyalar püskürür. Bütün fayllar heredoc üsulu ilə <code>03_src/sensorlar/</code>-da avtomatik yaranacaq.</p>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Niyə əvvəlcə simulyator?</h2></div>
+    <p>Real zavodda temperatur sensoru fiziki bir cihazdır — teli var, protokolu var (Modbus, OPC-UA), quraşdırılması vaxt aparır. Amma bütün sistemi qurmaq üçün əvvəlcə real sensorların gəlməsini gözləmək lazım deyil. Bunun əvəzinə <strong>eyni cür davranan</strong> proqram yazırıq.</p>
+    <div class="callout cyan">
+      <div class="callout-label">Əsas fikir</div>
+      Simulyator real sensorun «əkizidir». Sistem üçün fərq yoxdur — hər ikisi eyni formatda məlumat verir. Real sensor gələndə (Faza 3, istehsalat) simulyatoru sadəcə onunla əvəz edirik, qalan bütün kod dəyişməz qalır. Bu, «interfeys birdir, mənbə fərqlidir» prinsipidir.
+    </div>
+    <p>Bu dərsdə hələ MQTT-yə qoşulmuruq. Əvvəlcə simulyatorun özünü qurub ekranda siqnalın necə göründüyünü yoxlayırıq. MQTT-yə göndərmə Dərs 4-dədir. Hər hissəni ayrıca test etmək — sağlam mühəndislik vərdişidir.</p>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Realist siqnal nədir?</h2></div>
+    <p>Sadə təsadüfi ədəd (məsələn <code>random(0,100)</code>) real sensora oxşamır. Real göstəricilər aşağıdakı xüsusiyyətlərə malikdir:</p>
+    <table>
+      <tr><th>Xüsusiyyət</th><th>Nə deməkdir</th><th>Nümunə</th></tr>
+      <tr><td class="k">Baza dəyər</td><td>Normal iş rejimində orta göstərici</td><td>Silo temperaturu ~24°C</td></tr>
+      <tr><td class="k">Küy (noise)</td><td>Kiçik təsadüfi tərəddüd</td><td>±0.4°C oynayır</td></tr>
+      <tr><td class="k">Sürüşmə (drift)</td><td>Yavaş, hamar dəyişmə</td><td>Gün ərzində 2°C qalxıb-enir</td></tr>
+      <tr><td class="k">Dövrilik</td><td>Təkrarlanan naxış</td><td>Dozator dövri doldurulur</td></tr>
+      <tr><td class="k">Anomaliya</td><td>Nadir, kəskin sıçrayış</td><td>Bəzən temperatur birdən qalxır</td></tr>
+    </table>
+    <p>Simulyatorumuz bu beş elementi birləşdirəcək ki, məlumat həqiqi zavod göstəricilərinə oxşasın — bu, sonrakı dərslərdə validasiya və anomaliya aşkarlamanı düzgün test etməyə imkan verəcək.</p>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Fayl 1 — sensor bazası (baza sinif) <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Əvvəlcə bütün sensorların ortaq davranışını təyin edən bir <strong>baza sinif</strong> yazırıq. Sonra hər konkret sensor (temperatur, çəki və s.) bundan miras alacaq. Bu, təkrarçılığı aradan qaldırır.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/sensorlar/baza.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/sensorlar/baza.py << 'EOF'
+"""
+Baza sensor sinfi — butun sensorlarin ortaq davranisi.
+Fayl: 03_src/sensorlar/baza.py
+"""
+import random
+import math
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+
+
+@dataclass
+class Olcme:
+    """Bir sensor oxunusu."""
+    cihaz_kod: str
+    olcme_vaxti: str        # ISO 8601 format
+    qiymet: float
+
+    def dict(self) -> dict:
+        return {
+            "cihaz_kod": self.cihaz_kod,
+            "olcme_vaxti": self.olcme_vaxti,
+            "qiymet": round(self.qiymet, 4),
+        }
+
+
+class BazaSensor:
+    """
+    Butun sensorlarin baza sinfi.
+    Realist siqnal 5 elementden yaranir:
+    baza + kuy + suruşme (drift) + dovrilik + anomaliya
+    """
+
+    def __init__(self, cihaz_kod, baza, kuy=0.0,
+                 drift_amp=0.0, drift_period_s=3600,
+                 dovri_amp=0.0, dovri_period_s=60,
+                 anomaliya_ehtimal=0.0, anomaliya_guc=0.0,
+                 min_deyer=None, max_deyer=None):
+        self.cihaz_kod = cihaz_kod
+        self.baza = baza
+        self.kuy = kuy
+        self.drift_amp = drift_amp
+        self.drift_period_s = drift_period_s
+        self.dovri_amp = dovri_amp
+        self.dovri_period_s = dovri_period_s
+        self.anomaliya_ehtimal = anomaliya_ehtimal
+        self.anomaliya_guc = anomaliya_guc
+        self.min_deyer = min_deyer
+        self.max_deyer = max_deyer
+        self._start = time.time()
+
+    def _hesabla(self) -> float:
+        t = time.time() - self._start
+
+        # 1) baza deyer
+        deyer = self.baza
+
+        # 2) kuy — kicik tesadufi terreddud
+        deyer += random.uniform(-self.kuy, self.kuy)
+
+        # 3) suruşme (drift) — yavas, hamar deyisme
+        if self.drift_amp:
+            deyer += self.drift_amp * math.sin(2 * math.pi * t / self.drift_period_s)
+
+        # 4) dovrilik — tekrarlanan naxis
+        if self.dovri_amp:
+            deyer += self.dovri_amp * math.sin(2 * math.pi * t / self.dovri_period_s)
+
+        # 5) anomaliya — nadir, keskin sicrayis
+        if random.random() < self.anomaliya_ehtimal:
+            deyer += random.choice([-1, 1]) * self.anomaliya_guc
+
+        # mumkun hedd mehdudiyyeti (fiziki reallıq)
+        if self.min_deyer is not None:
+            deyer = max(self.min_deyer, deyer)
+        if self.max_deyer is not None:
+            deyer = min(self.max_deyer, deyer)
+
+        return deyer
+
+    def oxu(self) -> Olcme:
+        """Bir oxunus qaytarir."""
+        indi = datetime.now(timezone.utc).isoformat()
+        return Olcme(
+            cihaz_kod=self.cihaz_kod,
+            olcme_vaxti=indi,
+            qiymet=self._hesabla(),
+        )
+EOF
+
+echo "baza.py yaradildi:"
+ls -la 03_src/sensorlar/baza.py</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;"><code>@dataclass</code> — Python-un sinif yazmağı asanlaşdıran vasitəsidir. <code>Olcme</code> bir oxunuşu təmsil edir; <code>BazaSensor</code> isə siqnalı hesablayır.</p>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Fayl 2 — konkret sensorlar <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>İndi hər sensor tipini bazadan miras alan konkret siniflər yazırıq. Hər birinin öz «şəxsiyyəti» var — temperatur yavaş sürüşür, çəki dövri artıb-azalır, vibrasiya bəzən «püskürür».</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/sensorlar/sensorlar.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/sensorlar/sensorlar.py << 'EOF'
+"""
+Konkret sensorlar — her biri BazaSensor-dan miras alir.
+Fayl: 03_src/sensorlar/sensorlar.py
+Cihaz kodlari ve heddler Ders 2-deki seed melumatina uygun.
+"""
+from baza import BazaSensor
+
+
+class TemperaturSensor(BazaSensor):
+    """S001 — Silo temperaturu (~24 C, yavas suruşur)."""
+    def __init__(self, cihaz_kod="S001"):
+        super().__init__(
+            cihaz_kod=cihaz_kod,
+            baza=24.0,
+            kuy=0.4,
+            drift_amp=3.0, drift_period_s=1800,   # yarim saatliq dalga
+            anomaliya_ehtimal=0.01, anomaliya_guc=8.0,
+            min_deyer=-5, max_deyer=45,
+        )
+
+
+class RutubetSensor(BazaSensor):
+    """S002 — Qarisdirici rutubeti (~13 %)."""
+    def __init__(self, cihaz_kod="S002"):
+        super().__init__(
+            cihaz_kod=cihaz_kod,
+            baza=13.0,
+            kuy=0.3,
+            drift_amp=1.5, drift_period_s=2400,
+            anomaliya_ehtimal=0.008, anomaliya_guc=5.0,
+            min_deyer=0, max_deyer=30,
+        )
+
+
+class CekiSensor(BazaSensor):
+    """S003 — Dozator cekisi (dovri: doldur-boşalt)."""
+    def __init__(self, cihaz_kod="S003"):
+        super().__init__(
+            cihaz_kod=cihaz_kod,
+            baza=250.0,
+            kuy=3.0,
+            dovri_amp=180.0, dovri_period_s=45,   # 45 saniyede bir dovr
+            anomaliya_ehtimal=0.005, anomaliya_guc=60.0,
+            min_deyer=0, max_deyer=520,
+        )
+
+
+class VibrasiyaSensor(BazaSensor):
+    """S004 — Muherrik vibrasiyasi (~2 mm/s, bezen puskurur)."""
+    def __init__(self, cihaz_kod="S004"):
+        super().__init__(
+            cihaz_kod=cihaz_kod,
+            baza=2.0,
+            kuy=0.3,
+            anomaliya_ehtimal=0.02, anomaliya_guc=6.0,
+            min_deyer=0, max_deyer=15,
+        )
+
+
+class EnerjiSensor(BazaSensor):
+    """S005 — Xett enerji serfiyyati (~37 kW, dovri yuk)."""
+    def __init__(self, cihaz_kod="S005"):
+        super().__init__(
+            cihaz_kod=cihaz_kod,
+            baza=37.0,
+            kuy=1.1,
+            dovri_amp=8.0, dovri_period_s=90,
+            anomaliya_ehtimal=0.006, anomaliya_guc=15.0,
+            min_deyer=0, max_deyer=65,
+        )
+
+
+# Butun sensorlari bir yerde qeydiyyatdan kecirek
+def butun_sensorlar():
+    """5 sensordan ibaret siyahi qaytarir."""
+    return [
+        TemperaturSensor(),
+        RutubetSensor(),
+        CekiSensor(),
+        VibrasiyaSensor(),
+        EnerjiSensor(),
+    ]
+EOF
+
+echo "sensorlar.py yaradildi:"
+ls -la 03_src/sensorlar/sensorlar.py</code></pre>
+    </div>
+    <div class="callout violet">
+      <div class="callout-label">Diqqət — parametrlər həddlərə uyğundur</div>
+      Hər sensorun baza dəyəri və həddləri Dərs 2-də seed etdiyimiz <code>sensor_tipi</code> cədvəlinə uyğundur. Məsələn temperaturun max həddi 35°C idi — simulyator anomaliya zamanı bunu aşa bilər, ki Dərs 6-da xəbərdarlıq yaransın.
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Fayl 3 — sınaq işə salıcı <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>İndi simulyatoru sınaqdan keçirən kiçik bir skript yazırıq. Bu, bütün sensorları oxuyub nəticəni ekranda göstərəcək — canlı, real-vaxt cədvəl kimi.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/sensorlar/sinaq.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/sensorlar/sinaq.py << 'EOF'
+"""
+Simulyator sinaq skripti — ekranda canli siqnal gosterir.
+Fayl: 03_src/sensorlar/sinaq.py
+Ishe salmaq:  python sinaq.py
+Dayandirmaq:  CTRL+C
+"""
+import time
+from sensorlar import butun_sensorlar
+
+
+def main():
+    sensorlar = butun_sensorlar()
+    print("Zarat Faza 2 — Sensor simulyatoru (sinaq)")
+    print("Dayandirmaq ucun CTRL+C basin\n")
+    print(f"{'cihaz':<8}{'qiymet':>12}   {'vaxt (UTC)'}")
+    print("-" * 52)
+
+    try:
+        while True:
+            for s in sensorlar:
+                o = s.oxu()
+                print(f"{o.cihaz_kod:<8}{o.qiymet:>12.3f}   {o.olcme_vaxti}")
+            print("-" * 52)
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print("\nSimulyator dayandirildi.")
+
+
+if __name__ == "__main__":
+    main()
+EOF
+
+echo "sinaq.py yaradildi:"
+ls -la 03_src/sensorlar/sinaq.py</code></pre>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Simulyatoru işə salaq</h2></div>
+    <p>Üç fayl hazırdır. İndi simulyatoru işə salıb siqnalı canlı görürük. Diqqət: virtual mühit aktiv olmalıdır və <code>sensorlar</code> qovluğunda olmalıyıq (çünki fayllar bir-birini <code>from baza import</code> ilə çağırır).</p>
+
+    <span class="step-badge">Addım</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — simulyatoru işə sal</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># virtual muhiti aktivlesdir (eger deyilse)
+cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+
+# sensorlar qovluguna kec ve ishe sal
+cd 03_src/sensorlar
+python sinaq.py</code></pre>
+    </div>
+
+    <p>Ekranda təxminən belə canlı axın görəcəksiniz (rəqəmlər hər 2 saniyədə yenilənir):</p>
+    <div class="termout">cihaz         qiymet   vaxt (UTC)
+----------------------------------------------------
+S001        24.187   2026-07-09T18:22:41.003+00:00
+S002        13.041   2026-07-09T18:22:41.003+00:00
+S003       312.450   2026-07-09T18:22:41.004+00:00
+S004         2.213   2026-07-09T18:22:41.004+00:00
+S005        41.882   2026-07-09T18:22:41.004+00:00
+----------------------------------------------------
+S001        24.402   2026-07-09T18:22:43.006+00:00
+S002        12.980   2026-07-09T18:22:43.006+00:00
+S003       358.112   2026-07-09T18:22:43.007+00:00
+...</div>
+
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      Beş sensorun dəyərləri hər 2 saniyədə yenilənir. S003 (çəki) daha çox dəyişir (dövri), S001 (temperatur) yavaş sürüşür. Bəzən dəyərlər «sıçrayır» — bu, anomaliyalardır. CTRL+C ilə dayandırın.
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Bonus — birbaşa edge bazaya yazma testi <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>MQTT-yə keçməzdən əvvəl bir aralıq addım: simulyatordan gələn məlumatı birbaşa <code>zavod_edge_db</code>-yə yazmağı sınayaq. Bu, həm bazaya qoşulmanı test edir, həm də sistemin uçdan-uca işlədiyini göstərir. (Dərs 4-də arada MQTT olacaq, amma məntiq eynidir.)</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/sensorlar/baza_yaz_test.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/sensorlar/baza_yaz_test.py << 'EOF'
+"""
+Simulyator -> zavod_edge_db birbaşa yazma testi.
+Fayl: 03_src/sensorlar/baza_yaz_test.py
+Ishe salmaq:  python baza_yaz_test.py
+"""
+import os
+import time
+import psycopg
+from dotenv import load_dotenv
+from sensorlar import butun_sensorlar
+
+# .env faylini oxu (layihe koku)
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", "01_config", ".env"))
+
+DSN = (
+    f"host={os.getenv('EDGE_DB_HOST')} "
+    f"port={os.getenv('EDGE_DB_PORT')} "
+    f"dbname={os.getenv('EDGE_DB_NAME')} "
+    f"user={os.getenv('EDGE_DB_USER')}"
+)
+
+
+def main():
+    sensorlar = butun_sensorlar()
+    print("Baza yazma testi — 5 dovr, her dovrde 5 sensor")
+    print(f"Qosulma: {DSN}\n")
+
+    with psycopg.connect(DSN) as conn:
+        with conn.cursor() as cur:
+            for dovr in range(5):
+                for s in sensorlar:
+                    o = s.oxu()
+                    cur.execute(
+                        """INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet)
+                           VALUES (%s, %s, %s)""",
+                        (o.cihaz_kod, o.olcme_vaxti, o.qiymet),
+                    )
+                conn.commit()
+                print(f"Dovr {dovr+1}/5 yazildi (5 olcme)")
+                time.sleep(1)
+
+    print("\nBitdi. Yoxlamaq ucun:")
+    print("  psql -p 5434 -U royatalibova -d zavod_edge_db \\")
+    print("    -c \"SELECT count(*) FROM olcme;\"")
+
+
+if __name__ == "__main__":
+    main()
+EOF
+
+echo "baza_yaz_test.py yaradildi:"
+ls -la 03_src/sensorlar/baza_yaz_test.py</code></pre>
+    </div>
+
+    <span class="step-badge">İşə sal</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — baza yazma testi</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># virtual muhit aktiv, sensorlar qovlugunda oluruq
+cd ~/Desktop/Zarat_Faza2_Zavod/03_src/sensorlar
+python baza_yaz_test.py
+
+# yoxlayaq: nece olcme var?
+psql -p 5434 -U royatalibova -d zavod_edge_db -c "
+SELECT cihaz_kod, count(*), round(avg(qiymet),2) AS orta
+FROM olcme GROUP BY cihaz_kod ORDER BY cihaz_kod;
+"</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      Sorğu 5 cihazın hər biri üçün ölçmə sayını və orta dəyəri göstərməlidir. Bu o deməkdir ki, simulyatordan bazaya tam zəncir işləyir: <strong>sensor → Python → PostgreSQL</strong>.
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Yaratdığımız fayllar</h2></div>
+    <div class="tree"><span class="root">03_src/sensorlar/</span>
+├── <span class="file">baza.py</span>             <span class="comment"># Olcme + BazaSensor (ortaq davranış)</span>
+├── <span class="file">sensorlar.py</span>        <span class="comment"># 5 konkret sensor sinfi + butun_sensorlar()</span>
+├── <span class="file">sinaq.py</span>            <span class="comment"># ekranda canlı siqnal göstərir</span>
+└── <span class="file">baza_yaz_test.py</span>    <span class="comment"># birbaşa edge bazaya yazma testi</span></div>
+    <p class="muted" style="font-size:14px;">Bu HTML dərs faylını <code>_KURS/Ders_03_Sensor_Simulyator.html</code> kimi saxlayın. README.md-də Dərs 3-ü [x] işarələyin.</p>
+  </section>
+
+  <!-- 09 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Dərs 3 — yoxlama siyahısı</h2></div>
+    <ul class="checklist">
+      <li><span class="box"></span>Üç əsas fayl <code>03_src/sensorlar/</code>-da avtomatik yarandı: baza.py, sensorlar.py, sinaq.py</li>
+      <li><span class="box"></span><code>python sinaq.py</code> işə düşür və 5 sensorun canlı axınını göstərir</li>
+      <li><span class="box"></span>Dəyərlər realdır: temperatur yavaş sürüşür, çəki dövri dəyişir, arada anomaliyalar var</li>
+      <li><span class="box"></span>CTRL+C ilə simulyator təmiz dayanır («Simulyator dayandirildi»)</li>
+      <li><span class="box"></span>baza_yaz_test.py işlədi və edge bazaya 25 ölçmə (5 dövr × 5 sensor) yazıldı</li>
+      <li><span class="box"></span>Yoxlama sorğusu 5 cihazın orta dəyərlərini göstərir</li>
+      <li><span class="box"></span>Fayl <code>_KURS/Ders_03_Sensor_Simulyator.html</code> kimi saxlanılıb</li>
+    </ul>
+  </section>
+
+  <div class="nextcard">
+    <div class="tag2">Növbəti — Dərs 4</div>
+    <h3>MQTT broker qurulumu</h3>
+    <p class="muted" style="margin:0;">İndi simulyatorla baza arasına MQTT brokerini (Mosquitto) qoyacağıq. Mosquitto-nu konfiqurasiya edəcək, topic strukturunu (<code>zavod/siyezen/temperatur</code> və s.) təyin edəcək və simulyatoru dəyişdirib məlumatı birbaşa bazaya yox, brokerə <code>publish</code> etməsini təmin edəcəyik. Publish/subscribe testi ilə.</p>
+  </div>
+
+</main>
+
+<footer>Zarat ERP · Faza 2 · Dərs 3 / 10 — hazır olduqda "davam et" yazın</footer>
+
+<script>
+document.querySelectorAll('.copybtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var wrap = btn.closest('.codewrap');
+    var code = wrap.querySelector('pre code') || wrap.querySelector('pre');
+    var text = code.innerText;
+    function done(){
+      var orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Kopyalandı';
+      setTimeout(function(){ btn.classList.remove('copied'); btn.innerHTML = orig; }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(text); done(); });
+    } else { fallback(text); done(); }
+  });
+});
+function fallback(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+const cells = [
+  {id:'t1', base:24.3, jit:0.4, dec:1, unit:' °C'},
+  {id:'t2', base:12.8, jit:0.3, dec:1, unit:' %'},
+  {id:'t3', base:418, jit:6, dec:0, unit:' kg'},
+  {id:'t4', base:2.1, jit:0.3, dec:1, unit:' mm/s'},
+  {id:'t5', base:37.4, jit:1.1, dec:1, unit:' kW'}
+];
+function tick(){
+  cells.forEach(function(c){
+    var v = c.base + (Math.random()-0.5)*2*c.jit;
+    var el = document.getElementById(c.id);
+    if(el) el.innerHTML = v.toFixed(c.dec) + '<span class="telem-unit">'+c.unit+'</span>';
+  });
+}
+setInterval(tick, 2200);
+</script>
+
+</body>
+</html>

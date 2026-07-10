@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarat ERP · Faza 2 · Dərs 7 — Mərkəzi Sinxronizasiya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --panel:#121b2e; --panel2:#17233a; --raised:#1c2942;
+  --text:#e7ecf3; --muted:#8a97ab; --line:rgba(255,255,255,0.09);
+  --amber:#f2a72e; --cyan:#35c9c9; --green:#52d17c; --red:#ef5b5b; --violet:#a29bea;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.65; font-size:16px; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,.mono{ font-family:'Space Grotesk',sans-serif; }
+code, pre{ font-family:'JetBrains Mono',monospace; }
+p code, li code, td code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.86em; color:var(--cyan); }
+
+.progressbar{ position:sticky; top:0; z-index:50; background:rgba(11,18,32,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:14px 32px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.progressbar .tag{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); font-weight:600; white-space:nowrap; }
+.dots{ display:flex; gap:6px; flex-wrap:wrap; }
+.dot{ width:22px; height:6px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); }
+.dot.done{ background:#245c39; border-color:var(--green); }
+.dot.active{ background:var(--amber); border-color:var(--amber); }
+
+.telemetry{ display:flex; gap:0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
+.telem-cell{ flex:1; min-width:150px; padding:14px 20px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.telem-cell:last-child{ border-right:none; }
+.telem-label{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.led{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2.6s infinite ease-in-out; }
+.led.warn{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.telem-val{ font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; }
+.telem-unit{ font-size:12px; color:var(--muted); font-weight:400; }
+
+main{ max-width:920px; margin:0 auto; padding:0 32px 80px; }
+.hero{ padding:56px 0 32px; border-bottom:1px solid var(--line); }
+.eyebrow{ color:var(--cyan); font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:14px; }
+.hero h1{ font-size:36px; font-weight:600; margin:0 0 16px; line-height:1.15; }
+.hero p.lead{ font-size:17px; color:var(--muted); max-width:700px; margin:0; }
+
+section{ padding:48px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+.sec-num{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:14px; font-weight:600; }
+h2{ font-size:24px; font-weight:600; margin:0; }
+h3{ font-size:17px; font-weight:600; margin:30px 0 10px; color:var(--cyan); }
+h4{ font-size:15px; font-weight:600; margin:22px 0 8px; color:var(--violet); }
+p{ color:#d3dae5; margin:0 0 14px; }
+.muted{ color:var(--muted); }
+strong{ color:#eef2f8; font-weight:600; }
+
+.callout{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 20px; margin:20px 0; font-size:15px; }
+.callout.cyan{ border-left-color:var(--cyan); }
+.callout.violet{ border-left-color:var(--violet); }
+.callout.red{ border-left-color:var(--red); }
+.callout.green{ border-left-color:var(--green); }
+.callout .callout-label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); font-weight:600; margin-bottom:6px; }
+.callout.cyan .callout-label{ color:var(--cyan); }
+.callout.violet .callout-label{ color:var(--violet); }
+.callout.red .callout-label{ color:var(--red); }
+.callout.green .callout-label{ color:var(--green); }
+
+table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+th{ text-align:left; padding:10px 14px; background:var(--panel2); color:var(--amber); font-size:12px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
+td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#d3dae5; }
+tr:last-child td{ border-bottom:none; }
+td.k{ color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:13px; white-space:nowrap; }
+
+.codewrap{ margin:18px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); background:#0d1526; }
+.codebar{ background:var(--panel2); padding:8px 14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; }
+.codebar .fname{ color:var(--cyan); }
+.copybtn{ background:var(--raised); border:1px solid var(--line); color:var(--text); font-family:'Inter',sans-serif; font-size:12px; font-weight:500; padding:5px 12px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; }
+.copybtn:hover{ background:var(--cyan); color:#04212b; border-color:var(--cyan); }
+.copybtn.copied{ background:var(--green); color:#04211a; border-color:var(--green); }
+.copybtn svg{ width:13px; height:13px; }
+pre{ margin:0; padding:18px 20px; overflow-x:auto; font-size:12.5px; line-height:1.7; color:#c9d4e6; white-space:pre; }
+
+.autochip{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter',sans-serif; color:var(--green); background:rgba(82,209,124,0.12); border:1px solid rgba(82,209,124,0.35); padding:2px 8px; border-radius:20px; margin-left:8px; }
+
+.checklist{ list-style:none; padding:0; margin:18px 0; }
+.checklist li{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15px; color:#d3dae5; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist .box{ width:17px; height:17px; border:1.5px solid var(--cyan); border-radius:4px; flex-shrink:0; margin-top:3px; }
+
+.tree{ font-family:'JetBrains Mono',monospace; font-size:13px; color:#c9d4e6; background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px; line-height:1.85; white-space:pre; overflow-x:auto; }
+.tree .folder{ color:var(--amber); }
+.tree .file{ color:var(--cyan); }
+.tree .comment{ color:var(--muted); }
+.tree .root{ color:var(--green); font-weight:600; }
+
+.nextcard{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-top:20px; }
+.nextcard .tag2{ font-size:12px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:8px; }
+.nextcard h3{ margin:0 0 8px; color:var(--text); font-size:19px; }
+
+.step-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--bg); background:var(--amber); padding:2px 10px; border-radius:20px; font-weight:600; margin-bottom:10px; }
+
+.termout{ background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#8fbf9f; white-space:pre; overflow-x:auto; margin:18px 0; }
+
+footer{ text-align:center; padding:40px 0; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="progressbar">
+  <span class="tag">Zarat ERP · Faza 2 — Zavod Rəqəmsallaşdırılması</span>
+  <div class="dots">
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <span class="mono" style="font-size:12px;color:var(--muted);margin-left:auto;">Dərs 7 / 10</span>
+</div>
+
+<div class="telemetry">
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Silo temperaturu</span><span class="telem-val" id="t1">24.3<span class="telem-unit"> °C</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Rütubət (yem qarışığı)</span><span class="telem-val" id="t2">12.8<span class="telem-unit"> %</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led warn"></span>Yem çəkisi (dozator)</span><span class="telem-val" id="t3">418<span class="telem-unit"> kg</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Vibrasiya (mühərrik)</span><span class="telem-val" id="t4">2.1<span class="telem-unit"> mm/s</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Elektrik yükü</span><span class="telem-val" id="t5">37.4<span class="telem-unit"> kW</span></span></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Faza 2 · Dərs 7 / 10</div>
+    <h1>Mərkəzi sinxronizasiya</h1>
+    <p class="lead">İndiyə qədər bütün məlumat zavod bazasında (<code>zavod_edge_db</code>) qalırdı. Bu dərsdə «outbox» modeli ilə onu mərkəzi <code>zarat_erp_2</code>-yə köçürürük. <code>sync_status=0</code> olan sətirləri tapıb mərkəzə göndərən, sonra <code>sync_status=1</code> edən bir servis yazırıq. Şəbəkə kəssə belə heç nə itmir.</p>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Outbox modeli nədir?</h2></div>
+    <p>Dərs 2-də <code>olcme</code> cədvəlinə <code>sync_status</code> sütununu əlavə etdik. Hər yeni ölçmə <code>sync_status=0</code> (göndərilməyib) ilə yazılır. Sinxronizasiya servisi bu sətirləri tapır, mərkəzə göndərir, uğurlu olsa <code>sync_status=1</code> edir.</p>
+    <table>
+      <tr><th>Vəziyyət</th><th>Nə deməkdir</th></tr>
+      <tr><td class="k">sync_status = 0</td><td>Ölçmə zavod bazasındadır, mərkəzə hələ göndərilməyib</td></tr>
+      <tr><td class="k">sync_status = 1</td><td>Ölçmə uğurla mərkəzə köçürülüb</td></tr>
+    </table>
+    <div class="callout cyan">
+      <div class="callout-label">Niyə «outbox»?</div>
+      Bu naxış poçt qutusuna bənzəyir: yeni məktublar «göndəriləcək» qutusunda yığılır, poçtalyon onları aparıb «göndərildi» kimi işarələyir. Əgər poçtalyon gəlməzsə (şəbəkə kəsik), məktublar itmir — qutuda qalır və növbəti dəfə aparılır. Bu, məlumat itkisinə qarşı ən etibarlı üsuldur.
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Axının mənzərəsi</h2></div>
+    <svg viewBox="0 0 820 250" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;margin:10px 0;" role="img" aria-label="Sinxronizasiya axını">
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5a6b85"/></marker></defs>
+      <rect x="30" y="70" width="200" height="100" rx="10" fill="#17233a" stroke="#52d17c" stroke-width="1.4"/>
+      <text x="130" y="98" fill="#52d17c" font-family="Space Grotesk" font-size="14" font-weight="600" text-anchor="middle">zavod_edge_db</text>
+      <text x="130" y="116" fill="#8a97ab" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">port 5434</text>
+      <text x="130" y="138" fill="#c9d4e6" font-family="Inter" font-size="11" text-anchor="middle">olcme cedveli</text>
+      <text x="130" y="154" fill="#f2a72e" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">sync_status = 0</text>
+
+      <rect x="310" y="80" width="200" height="80" rx="10" fill="#17233a" stroke="#f2a72e" stroke-width="1.4"/>
+      <text x="410" y="110" fill="#f2a72e" font-family="Space Grotesk" font-size="14" font-weight="600" text-anchor="middle">Sync servis</text>
+      <text x="410" y="130" fill="#8a97ab" font-family="Inter" font-size="10.5" text-anchor="middle">tap → göndər → işarələ</text>
+
+      <rect x="590" y="70" width="200" height="100" rx="10" fill="#17233a" stroke="#a29bea" stroke-width="1.4"/>
+      <text x="690" y="98" fill="#a29bea" font-family="Space Grotesk" font-size="14" font-weight="600" text-anchor="middle">zarat_erp_2</text>
+      <text x="690" y="116" fill="#8a97ab" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">port 5432</text>
+      <text x="690" y="138" fill="#c9d4e6" font-family="Inter" font-size="11" text-anchor="middle">zavod_telemetriya</text>
+      <text x="690" y="154" fill="#8a97ab" font-family="Inter" font-size="10.5" text-anchor="middle">sxem</text>
+
+      <path d="M230,110 L305,110" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <text x="267" y="102" fill="#8a97ab" font-family="Inter" font-size="9.5" text-anchor="middle">oxu</text>
+      <path d="M510,120 L585,120" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <text x="547" y="112" fill="#8a97ab" font-family="Inter" font-size="9.5" text-anchor="middle">yaz</text>
+      <path d="M410,160 C410,200 130,200 130,172" stroke="#5a6b85" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+      <text x="270" y="212" fill="#8a97ab" font-family="Inter" font-size="9.5" text-anchor="middle">sync_status = 1 (isarele)</text>
+    </svg>
+    <p class="muted" style="font-size:14px;">Servis dövri işləyir (məsələn hər 10 saniyədə): göndərilməyən sətirləri oxuyur, mərkəzə yazır, sonra mənbədə «göndərildi» kimi işarələyir. Üç addım bir tsikldir.</p>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Mərkəzi baza cədvəli <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Əvvəlcə <code>zarat_erp_2</code>-də telemetriya məlumatını qəbul edən cədvəl yaradırıq. Mövcud ERP cədvəllərinə toxunmamaq üçün ayrıca <strong>sxem</strong> (<code>zavod_telemetriya</code>) yaradırıq — bu, təmiz ayrılıq təmin edir.</p>
+
+    <div class="callout violet">
+      <div class="callout-label">Diqqət — mövcud bazaya toxunmuruq</div>
+      <code>zarat_erp_2</code> sizin əsas ERP bazanızdır (Faza 1). Ayrıca sxem yaradaraq, telemetriya cədvəlini mövcud cədvəllərdən tam təcrid edirik. Faza 1 məlumatına heç nə olmur.
+    </div>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">02_db/merkez/01_telemetriya.sql yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 02_db/merkez/01_telemetriya.sql << 'EOF'
+-- ============================================================
+-- Merkezi baza (zarat_erp_2) - telemetriya qebul cedveli
+-- Fayl: 02_db/merkez/01_telemetriya.sql
+-- ============================================================
+
+-- ayrica sxem: movcud ERP cedvellerine toxunmuruq
+CREATE SCHEMA IF NOT EXISTS zavod_telemetriya;
+
+-- olcmelerin merkezi kopyasi
+CREATE TABLE IF NOT EXISTS zavod_telemetriya.olcme (
+    id              BIGINT       GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    zavod           VARCHAR(30)  NOT NULL DEFAULT 'siyezen',
+    edge_id         BIGINT       NOT NULL,           -- zavod bazasindaki id
+    cihaz_kod       VARCHAR(20)  NOT NULL,
+    olcme_vaxti     TIMESTAMPTZ  NOT NULL,
+    qiymet          NUMERIC(12,4) NOT NULL,
+    qebul_vaxti     TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    -- eyni olcme iki defe gelmesin (idempotentlik)
+    UNIQUE (zavod, edge_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tel_cihaz_vaxt
+    ON zavod_telemetriya.olcme (cihaz_kod, olcme_vaxti DESC);
+
+COMMENT ON TABLE zavod_telemetriya.olcme IS
+    'Zavodlardan sinxronlasdirilan telemetriya olcmeleri';
+COMMENT ON COLUMN zavod_telemetriya.olcme.edge_id IS
+    'Zavod bazasindaki original id - tekrar gonderilmenin qarsisini alir';
+EOF
+
+echo "01_telemetriya.sql yaradildi:"
+ls -la 02_db/merkez/01_telemetriya.sql</code></pre>
+    </div>
+
+    <span class="step-badge">Mərkəzi bazaya tətbiq et</span>
+    <p>Bu cədvəli mərkəzi <code>zarat_erp_2</code>-yə (port 5432) tətbiq edirik. Diqqət: bu, mərkəzi serverdir, zavod deyil.</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — mərkəzə tətbiq</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+# merkezi baza 5432 portunda (standart)
+psql -p 5432 -U royatalibova -d zarat_erp_2 -f 02_db/merkez/01_telemetriya.sql
+
+# yoxlayaq: sxem ve cedvel yarandimi?
+psql -p 5432 -U royatalibova -d zarat_erp_2 -c "\dt zavod_telemetriya.*"</code></pre>
+    </div>
+    <div class="callout">
+      <div class="callout-label">Əgər zarat_erp_2 mövcud deyilsə</div>
+      Bəzi maşınlarda mərkəzi baza fərqli adda ola bilər. <code>.env</code>-dəki <code>MERKEZ_DB_NAME</code> dəyərini yoxlayın. Baza yoxdursa: <code>createdb -p 5432 -U royatalibova zarat_erp_2</code> ilə yaradın.
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Sinxronizasiya servisi <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Bu, əsas fayldır. Servis dövri olaraq: (1) zavod bazasından <code>sync_status=0</code> sətirləri oxuyur, (2) mərkəzə yazır, (3) mənbədə <code>sync_status=1</code> edir. Toplu (batch) işləyir — hər dəfə çoxlu sətir.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/sync/sync_servis.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/sync/sync_servis.py << 'EOF'
+"""
+Sinxronizasiya servisi - zavod_edge_db -> zarat_erp_2 (outbox modeli).
+Fayl: 03_src/sync/sync_servis.py
+Ishe salmaq:  python sync_servis.py
+Dayandirmaq:  CTRL+C
+"""
+import os
+import time
+import logging
+import psycopg
+from dotenv import load_dotenv
+
+_KONF = os.path.join(os.path.dirname(__file__), "..", "..", "01_config", ".env")
+load_dotenv(_KONF)
+
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s  %(levelname)s  %(message)s")
+log = logging.getLogger("sync")
+
+# ayarlar
+BATCH = 200          # her tsikilde en cox nece setir
+INTERVAL = 10        # tsikllerarasi saniye
+ZAVOD = "siyezen"
+
+
+def edge_dsn():
+    return (f"host={os.getenv('EDGE_DB_HOST','localhost')} "
+            f"port={os.getenv('EDGE_DB_PORT','5434')} "
+            f"dbname={os.getenv('EDGE_DB_NAME','zavod_edge_db')} "
+            f"user={os.getenv('EDGE_DB_USER','royatalibova')}")
+
+
+def merkez_dsn():
+    return (f"host={os.getenv('MERKEZ_DB_HOST','localhost')} "
+            f"port={os.getenv('MERKEZ_DB_PORT','5432')} "
+            f"dbname={os.getenv('MERKEZ_DB_NAME','zarat_erp_2')} "
+            f"user={os.getenv('MERKEZ_DB_USER','royatalibova')}")
+
+
+def bir_tsikl(edge, merkez):
+    """Bir sinxronizasiya tsikli. Gonderilen setir sayini qaytarir."""
+    # 1) gonderilmemis setirleri oxu
+    with edge.cursor() as cur:
+        cur.execute("""
+            SELECT id, cihaz_kod, olcme_vaxti, qiymet
+            FROM olcme
+            WHERE sync_status = 0
+            ORDER BY olcme_vaxti
+            LIMIT %s
+        """, (BATCH,))
+        setirler = cur.fetchall()
+
+    if not setirler:
+        return 0
+
+    # 2) merkeze yaz (idempotent: eyni edge_id tekrar dusmesin)
+    with merkez.cursor() as mcur:
+        for (edge_id, cihaz_kod, vaxt, qiymet) in setirler:
+            mcur.execute("""
+                INSERT INTO zavod_telemetriya.olcme
+                    (zavod, edge_id, cihaz_kod, olcme_vaxti, qiymet)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (zavod, edge_id) DO NOTHING
+            """, (ZAVOD, edge_id, cihaz_kod, vaxt, qiymet))
+    merkez.commit()
+
+    # 3) menbede sync_status = 1 isarele
+    ids = [r[0] for r in setirler]
+    with edge.cursor() as cur:
+        cur.execute("""
+            UPDATE olcme SET sync_status = 1
+            WHERE id = ANY(%s)
+        """, (ids,))
+    edge.commit()
+
+    return len(setirler)
+
+
+def main():
+    log.info("Sync servis basladi. CTRL+C ile dayandirin.")
+    log.info(f"Edge: {os.getenv('EDGE_DB_NAME')}  ->  "
+             f"Merkez: {os.getenv('MERKEZ_DB_NAME')}")
+
+    edge = psycopg.connect(edge_dsn())
+    merkez = psycopg.connect(merkez_dsn())
+
+    try:
+        while True:
+            try:
+                say = bir_tsikl(edge, merkez)
+                if say > 0:
+                    log.info(f"Sinxronlasdirildi: {say} olcme")
+                else:
+                    log.info("Yeni olcme yoxdur")
+            except Exception as e:
+                # xeta olsa - bagli qalma, novbeti tsikilde tekrar cehd
+                log.error(f"Tsikl xetasi: {e}")
+                edge.rollback()
+                merkez.rollback()
+            time.sleep(INTERVAL)
+    except KeyboardInterrupt:
+        log.info("Dayandirilir...")
+    finally:
+        edge.close()
+        merkez.close()
+        log.info("Baglantilar baglandi.")
+
+
+if __name__ == "__main__":
+    main()
+EOF
+
+echo "sync_servis.py yaradildi:"
+python -c "import ast; ast.parse(open('03_src/sync/sync_servis.py').read()); print('SINTAKSIS DUZGUN')"</code></pre>
+    </div>
+    <div class="callout violet">
+      <div class="callout-label">İdempotentlik — vacib anlayış</div>
+      Mərkəzi cədvəldə <code>UNIQUE (zavod, edge_id)</code> və <code>ON CONFLICT DO NOTHING</code> var. Bu o deməkdir ki, əgər eyni ölçmə səhvən iki dəfə göndərilsə (məsələn servis çökdü və yenidən başladı), mərkəzdə təkrarlanmır. Bu, «idempotentlik» adlanır — eyni əməliyyat neçə dəfə təkrarlansa da, nəticə eynidir.
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Sınayaq — tam axın</h2></div>
+    <p>Sinxronizasiyanı sınamaq üçün əvvəlcə zavod bazasında göndərilməyən məlumat olmalıdır. Əgər əvvəlki dərslərdən <code>sync_status=0</code> sətirlər varsa, birbaşa sync servisini işə sala bilərik.</p>
+
+    <span class="step-badge">Addım 1 — nə qədər göndərilməyib?</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — gözləyən sətirlər</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>psql -p 5434 -U royatalibova -d zavod_edge_db -c "
+SELECT sync_status, count(*)
+FROM olcme
+GROUP BY sync_status;
+"</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;"><code>sync_status=0</code> sətirlər varsa, sinxronizasiya işləyəcək. Yoxdursa, publisher-i bir az işlədin (Dərs 4-6), sonra qayıdın.</p>
+
+    <span class="step-badge">Addım 2 — sync servisini işə sal</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — sync servis</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+cd 03_src/sync
+python sync_servis.py</code></pre>
+    </div>
+    <p>Belə görməlisiniz:</p>
+    <div class="termout">INFO  Sync servis basladi. CTRL+C ile dayandirin.
+INFO  Edge: zavod_edge_db  ->  Merkez: zarat_erp_2
+INFO  Sinxronlasdirildi: 200 olcme
+INFO  Sinxronlasdirildi: 200 olcme
+INFO  Sinxronlasdirildi: 47 olcme
+INFO  Yeni olcme yoxdur</div>
+    <div class="callout green">
+      <div class="callout-label">Necə işləyir</div>
+      Servis hər 10 saniyədə göndərilməyən sətirləri tapıb köçürür. Bütün köhnə sətirlər bitəndə «Yeni olcme yoxdur» yazır və gözləyir. Publisher işləyirsə, yeni ölçmələr gəldikcə onları da sinxronlaşdırır. CTRL+C ilə dayandırın.
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Nəticəni yoxlayaq — iki baza</h2></div>
+    <p>Sinxronizasiya işlədikdən sonra hər iki bazaya baxırıq. Zavod bazasında sətirlər indi <code>sync_status=1</code>, mərkəzi bazada isə köçürülmüş nüsxələr olmalıdır.</p>
+
+    <h4>Zavod bazası — hamısı göndərildi?</h4>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — zavod bazası</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>psql -p 5434 -U royatalibova -d zavod_edge_db -c "
+SELECT sync_status, count(*) FROM olcme GROUP BY sync_status;
+"</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;">İndi əksəriyyəti (və ya hamısı) <code>sync_status=1</code> olmalıdır.</p>
+
+    <h4>Mərkəzi baza — məlumat gəldi?</h4>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — mərkəzi baza</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>psql -p 5432 -U royatalibova -d zarat_erp_2 -c "
+SELECT cihaz_kod, count(*), round(avg(qiymet),2) AS orta,
+       max(olcme_vaxti) AS son
+FROM zavod_telemetriya.olcme
+GROUP BY cihaz_kod ORDER BY cihaz_kod;
+"</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti — məlumat iki bazadadır</div>
+      Zavod bazasında sətirlər <code>sync_status=1</code>, mərkəzi bazada isə <code>zavod_telemetriya.olcme</code>-də eyni sayda sətir. Məlumat indi həm zavodda (yerli sürət üçün), həm də mərkəzdə (analitika üçün) mövcuddur. Tam replikasiya işləyir!
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>İdempotentliyi sınayaq</h2></div>
+    <p>Servis təkrar göndərsə nə olar? Onu dayandırıb yenidən başladın — «Yeni olcme yoxdur» deməlidir, çünki hamısı artıq <code>sync_status=1</code>-dir. Amma daha maraqlı test: bir sətri süni olaraq yenidən «göndərilməyib» edək və mərkəzdə təkrarlanmadığını görək.</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — idempotentlik testi</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># merkezde neçe setir var? (evvel)
+psql -p 5432 -U royatalibova -d zarat_erp_2 -c "
+SELECT count(*) AS evvel FROM zavod_telemetriya.olcme;
+"
+
+# bir setri suni olaraq yeniden gonderilmemis edek
+psql -p 5434 -U royatalibova -d zavod_edge_db -c "
+UPDATE olcme SET sync_status = 0
+WHERE id = (SELECT min(id) FROM olcme);
+"
+
+# sync servisini bir defe ise sal (CTRL+C ile tez dayandir)
+# ... sonra merkezi yeniden say
+psql -p 5432 -U royatalibova -d zarat_erp_2 -c "
+SELECT count(*) AS sonra FROM zavod_telemetriya.olcme;
+"</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Gözlənilən</div>
+      «evvel» və «sonra» sayı <strong>eynidir</strong> — çünki həmin sətir artıq mərkəzdədir və <code>ON CONFLICT DO NOTHING</code> təkrar əlavəni bloklayır. Bu, idempotentliyin işlədiyinin sübutudur: təkrar göndərmə zərərsizdir.
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>.env yoxlaması</h2></div>
+    <p>Sync servis mərkəzi baza ayarlarını <code>.env</code>-dən oxuyur. Dərs 1-də bunları təyin etmişdik — yoxlayaq ki, düzgündür:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">01_config/.env — mərkəz hissəsi</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># bu setirler .env-de olmalidir (yoxlama ucun goster)
+grep MERKEZ ~/Desktop/Zarat_Faza2_Zavod/01_config/.env</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;">Görməli olduğunuz: <code>MERKEZ_DB_HOST=localhost</code>, <code>MERKEZ_DB_PORT=5432</code>, <code>MERKEZ_DB_NAME=zarat_erp_2</code>, <code>MERKEZ_DB_USER=royatalibova</code>. Fərqli olsa, öz mühitinizə uyğun dəyişin.</p>
+  </section>
+
+  <!-- 09 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Yaratdığımız fayllar</h2></div>
+    <div class="tree"><span class="root">Zarat_Faza2_Zavod/</span>
+├── 02_db/merkez/
+│   └── <span class="file">01_telemetriya.sql</span>   <span class="comment"># mərkəzdə zavod_telemetriya sxemi</span>
+└── 03_src/sync/
+    └── <span class="file">sync_servis.py</span>       <span class="comment"># outbox sinxronizasiya servisi</span></div>
+    <p class="muted" style="font-size:14px;">Bu HTML dərs faylını <code>_KURS/Ders_07_Merkezi_Sync.html</code> kimi saxlayın. README.md-də Dərs 7-ni [x] işarələyin.</p>
+  </section>
+
+  <!-- 10 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>Dərs 7 — yoxlama siyahısı</h2></div>
+    <ul class="checklist">
+      <li><span class="box"></span><code>01_telemetriya.sql</code> yaradıldı və mərkəzi <code>zarat_erp_2</code>-yə tətbiq olundu</li>
+      <li><span class="box"></span><code>zavod_telemetriya</code> sxemi və <code>olcme</code> cədvəli mərkəzdə yarandı</li>
+      <li><span class="box"></span><code>sync_servis.py</code> yaradıldı, sintaksis düzgündür</li>
+      <li><span class="box"></span>Sync servis işə düşür və göndərilməyən sətirləri köçürür</li>
+      <li><span class="box"></span>Zavod bazasında sətirlər <code>sync_status=1</code> oldu</li>
+      <li><span class="box"></span>Mərkəzi bazada <code>zavod_telemetriya.olcme</code>-də məlumat göründü</li>
+      <li><span class="box"></span>İdempotentlik testi: təkrar göndərmə mərkəzdə dublikat yaratmadı</li>
+      <li><span class="box"></span>Fayl <code>_KURS/Ders_07_Merkezi_Sync.html</code> kimi saxlanılıb</li>
+    </ul>
+  </section>
+
+  <div class="nextcard">
+    <div class="tag2">Növbəti — Dərs 8</div>
+    <h3>Offline dayanıqlılıq</h3>
+    <p class="muted" style="margin:0;">İndi sync servis işləyir, amma yalnız hər şey qaydasında olanda. Dərs 8-də əsl sınağı edəcəyik: <strong>şəbəkə kəsiləndə nə olur?</strong> Mərkəzi bazanı süni olaraq «söndürüb» görəcəyik ki, məlumat itmir — zavod bazasında <code>sync_status=0</code> ilə yığılır və şəbəkə qayıdanda avtomatik göndərilir. Retry məntiqi, backoff və dayanıqlılıq testləri ilə.</p>
+  </div>
+
+</main>
+
+<footer>Zarat ERP · Faza 2 · Dərs 7 / 10 — hazır olduqda "davam et" yazın</footer>
+
+<script>
+document.querySelectorAll('.copybtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var wrap = btn.closest('.codewrap');
+    var code = wrap.querySelector('pre code') || wrap.querySelector('pre');
+    var text = code.innerText;
+    function done(){
+      var orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Kopyalandı';
+      setTimeout(function(){ btn.classList.remove('copied'); btn.innerHTML = orig; }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(text); done(); });
+    } else { fallback(text); done(); }
+  });
+});
+function fallback(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+const cells = [
+  {id:'t1', base:24.3, jit:0.4, dec:1, unit:' °C'},
+  {id:'t2', base:12.8, jit:0.3, dec:1, unit:' %'},
+  {id:'t3', base:418, jit:6, dec:0, unit:' kg'},
+  {id:'t4', base:2.1, jit:0.3, dec:1, unit:' mm/s'},
+  {id:'t5', base:37.4, jit:1.1, dec:1, unit:' kW'}
+];
+function tick(){
+  cells.forEach(function(c){
+    var v = c.base + (Math.random()-0.5)*2*c.jit;
+    var el = document.getElementById(c.id);
+    if(el) el.innerHTML = v.toFixed(c.dec) + '<span class="telem-unit">'+c.unit+'</span>';
+  });
+}
+setInterval(tick, 2200);
+</script>
+
+</body>
+</html>

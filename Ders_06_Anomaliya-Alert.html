@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarat ERP · Faza 2 · Dərs 6 — Anomaliya Aşkarlama və Xəbərdarlıq</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --panel:#121b2e; --panel2:#17233a; --raised:#1c2942;
+  --text:#e7ecf3; --muted:#8a97ab; --line:rgba(255,255,255,0.09);
+  --amber:#f2a72e; --cyan:#35c9c9; --green:#52d17c; --red:#ef5b5b; --violet:#a29bea;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.65; font-size:16px; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,.mono{ font-family:'Space Grotesk',sans-serif; }
+code, pre{ font-family:'JetBrains Mono',monospace; }
+p code, li code, td code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.86em; color:var(--cyan); }
+
+.progressbar{ position:sticky; top:0; z-index:50; background:rgba(11,18,32,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:14px 32px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.progressbar .tag{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); font-weight:600; white-space:nowrap; }
+.dots{ display:flex; gap:6px; flex-wrap:wrap; }
+.dot{ width:22px; height:6px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); }
+.dot.done{ background:#245c39; border-color:var(--green); }
+.dot.active{ background:var(--amber); border-color:var(--amber); }
+
+.telemetry{ display:flex; gap:0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
+.telem-cell{ flex:1; min-width:150px; padding:14px 20px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.telem-cell:last-child{ border-right:none; }
+.telem-label{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.led{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2.6s infinite ease-in-out; }
+.led.warn{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+.led.red{ background:var(--red); box-shadow:0 0 6px var(--red); }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.telem-val{ font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; }
+.telem-unit{ font-size:12px; color:var(--muted); font-weight:400; }
+
+main{ max-width:920px; margin:0 auto; padding:0 32px 80px; }
+.hero{ padding:56px 0 32px; border-bottom:1px solid var(--line); }
+.eyebrow{ color:var(--cyan); font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:14px; }
+.hero h1{ font-size:36px; font-weight:600; margin:0 0 16px; line-height:1.15; }
+.hero p.lead{ font-size:17px; color:var(--muted); max-width:700px; margin:0; }
+
+section{ padding:48px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+.sec-num{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:14px; font-weight:600; }
+h2{ font-size:24px; font-weight:600; margin:0; }
+h3{ font-size:17px; font-weight:600; margin:30px 0 10px; color:var(--cyan); }
+h4{ font-size:15px; font-weight:600; margin:22px 0 8px; color:var(--violet); }
+p{ color:#d3dae5; margin:0 0 14px; }
+.muted{ color:var(--muted); }
+strong{ color:#eef2f8; font-weight:600; }
+
+.callout{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 20px; margin:20px 0; font-size:15px; }
+.callout.cyan{ border-left-color:var(--cyan); }
+.callout.violet{ border-left-color:var(--violet); }
+.callout.red{ border-left-color:var(--red); }
+.callout.green{ border-left-color:var(--green); }
+.callout .callout-label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); font-weight:600; margin-bottom:6px; }
+.callout.cyan .callout-label{ color:var(--cyan); }
+.callout.violet .callout-label{ color:var(--violet); }
+.callout.red .callout-label{ color:var(--red); }
+.callout.green .callout-label{ color:var(--green); }
+
+table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+th{ text-align:left; padding:10px 14px; background:var(--panel2); color:var(--amber); font-size:12px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
+td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#d3dae5; }
+tr:last-child td{ border-bottom:none; }
+td.k{ color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:13px; white-space:nowrap; }
+
+.codewrap{ margin:18px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); background:#0d1526; }
+.codebar{ background:var(--panel2); padding:8px 14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; }
+.codebar .fname{ color:var(--cyan); }
+.copybtn{ background:var(--raised); border:1px solid var(--line); color:var(--text); font-family:'Inter',sans-serif; font-size:12px; font-weight:500; padding:5px 12px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; }
+.copybtn:hover{ background:var(--cyan); color:#04212b; border-color:var(--cyan); }
+.copybtn.copied{ background:var(--green); color:#04211a; border-color:var(--green); }
+.copybtn svg{ width:13px; height:13px; }
+pre{ margin:0; padding:18px 20px; overflow-x:auto; font-size:12.5px; line-height:1.7; color:#c9d4e6; white-space:pre; }
+
+.autochip{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter',sans-serif; color:var(--green); background:rgba(82,209,124,0.12); border:1px solid rgba(82,209,124,0.35); padding:2px 8px; border-radius:20px; margin-left:8px; }
+
+.checklist{ list-style:none; padding:0; margin:18px 0; }
+.checklist li{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15px; color:#d3dae5; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist .box{ width:17px; height:17px; border:1.5px solid var(--cyan); border-radius:4px; flex-shrink:0; margin-top:3px; }
+
+.tree{ font-family:'JetBrains Mono',monospace; font-size:13px; color:#c9d4e6; background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px; line-height:1.85; white-space:pre; overflow-x:auto; }
+.tree .folder{ color:var(--amber); }
+.tree .file{ color:var(--cyan); }
+.tree .comment{ color:var(--muted); }
+.tree .root{ color:var(--green); font-weight:600; }
+
+.nextcard{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-top:20px; }
+.nextcard .tag2{ font-size:12px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:8px; }
+.nextcard h3{ margin:0 0 8px; color:var(--text); font-size:19px; }
+
+.step-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--bg); background:var(--amber); padding:2px 10px; border-radius:20px; font-weight:600; margin-bottom:10px; }
+
+.termout{ background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#8fbf9f; white-space:pre; overflow-x:auto; margin:18px 0; }
+
+footer{ text-align:center; padding:40px 0; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="progressbar">
+  <span class="tag">Zarat ERP · Faza 2 — Zavod Rəqəmsallaşdırılması</span>
+  <div class="dots">
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <span class="mono" style="font-size:12px;color:var(--muted);margin-left:auto;">Dərs 6 / 10</span>
+</div>
+
+<div class="telemetry">
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Silo temperaturu</span><span class="telem-val" id="t1">24.3<span class="telem-unit"> °C</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Rütubət (yem qarışığı)</span><span class="telem-val" id="t2">12.8<span class="telem-unit"> %</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led warn"></span>Yem çəkisi (dozator)</span><span class="telem-val" id="t3">418<span class="telem-unit"> kg</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led red"></span>Vibrasiya (mühərrik)</span><span class="telem-val" id="t4">2.1<span class="telem-unit"> mm/s</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Elektrik yükü</span><span class="telem-val" id="t5">37.4<span class="telem-unit"> kW</span></span></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Faza 2 · Dərs 6 / 10</div>
+    <h1>Anomaliya aşkarlama və xəbərdarlıq</h1>
+    <p class="lead">İndiyə qədər sistem məlumatı topladı və saxladı. Bu dərsdə ona «ağıl» əlavə edirik. Hər gələn ölçmə <code>sensor_tipi</code> cədvəlindəki normal həddlərlə müqayisə olunacaq. Temperatur 35°C-i keçsə, vibrasiya 7 mm/s-i aşsa — <code>xeberdarliq</code> cədvəlinə qeyd yazılacaq və real-vaxt alarm veriləcək.</p>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>İki növ yoxlama — fərqi anlayaq</h2></div>
+    <p>Dərs 5-də artıq bir validasiya qatı qurduq. Bu dərsdəki anomaliya yoxlaması fərqli məqsəd daşıyır. Onları qarışdırmamaq vacibdir.</p>
+    <table>
+      <tr><th></th><th>Validasiya (Dərs 5)</th><th>Anomaliya (Dərs 6)</th></tr>
+      <tr><td class="k">Sual</td><td>Məlumat düzgündürmü?</td><td>Məlumat təhlükəlidirmi?</td></tr>
+      <tr><td class="k">Nümunə</td><td>qiymet = -99999 (mənasız)</td><td>temperatur = 42°C (real, amma yüksək)</td></tr>
+      <tr><td class="k">Nəticə</td><td>Bazaya YAZILMIR (rədd)</td><td>Bazaya YAZILIR + xəbərdarlıq</td></tr>
+      <tr><td class="k">Məqsəd</td><td>Zibili kənara atmaq</td><td>Operatoru xəbərdar etmək</td></tr>
+    </table>
+    <div class="callout cyan">
+      <div class="callout-label">Əsas fərq</div>
+      Anomal dəyər <strong>həqiqi ölçmədir</strong> — onu atmaq olmaz, əksinə saxlamaq və diqqət çəkmək lazımdır. 42°C real problemdir (mühərrik qızır?) və bazada qalmalıdır ki, sonra analiz oluna bilsin. Yalnız əlavə olaraq bir xəbərdarlıq qeydi yaranır.
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Anomaliya növləri</h2></div>
+    <p>Üç növ anomaliya aşkarlayacağıq. İkisi dəyərlə bağlıdır, biri isə cihazın susması ilə.</p>
+    <table>
+      <tr><th>Növ</th><th>Nə vaxt</th><th>Nümunə</th></tr>
+      <tr><td class="k">yuxari_hedd</td><td>Dəyər max həddi keçir</td><td>Temperatur 38°C (max 35°C)</td></tr>
+      <tr><td class="k">asagi_hedd</td><td>Dəyər min həddən aşağı</td><td>Çəki -5 kg (min 0 kg)</td></tr>
+      <tr><td class="k">cihaz_susur</td><td>Cihaz uzun müddət mesaj vermir</td><td>S001 son 2 dəqiqədir susur</td></tr>
+    </table>
+    <p>Bu dərsdə ilk ikisini (dəyər həddləri) qururuq. Cihaz susmasını isə bonus olaraq göstərəcəyik — çünki o, ayrıca dövri yoxlama tələb edir.</p>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Həddləri bazadan oxumaq</h2></div>
+    <p>Həddlər <code>sensor_tipi</code> cədvəlində saxlanılır (Dərs 2-də seed etdik). Məsələn temperatur üçün <code>min_hedd=-5, max_hedd=35</code>. Anomaliya modulu əvvəlcə bu həddləri yükləyəcək.</p>
+    <p>Amma hər ölçmədə bazadan hədd oxumaq yavaş olardı (saniyədə çoxlu mesaj gəlir). Ona görə həddləri bir dəfə oxuyub <strong>yaddaşda keş (cache)</strong> saxlayırıq. Cihaz→hədd xəritəsi.</p>
+    <div class="callout violet">
+      <div class="callout-label">Dizayn qərarı</div>
+      Həddləri xidmət başlayanda bir dəfə yükləyirik. Əgər həddlər sonradan dəyişsə (nadir hadisə), xidməti yenidən başlatmaq kifayətdir. Bu, sadəlik və sürət arasında düzgün balansdır — real sənaye sistemlərində də belə edilir.
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Fayl 1 — anomaliya modulu <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Bu modul həddləri yükləyir, bir ölçməni yoxlayır və hədd aşılıbsa <code>xeberdarliq</code> cədvəlinə yazır. Xidmətdən ayrı fayl saxlayırıq ki, məntiq təmiz və test edilə bilən olsun.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/alert/anomaliya.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/alert/anomaliya.py << 'EOF'
+"""
+Anomaliya askarlama - olcmeni heddlerle muqayise edir.
+Fayl: 03_src/alert/anomaliya.py
+"""
+import logging
+
+log = logging.getLogger("anomaliya")
+
+# cihaz_kod -> (min_hedd, max_hedd, vahid, ad)
+_heddler = {}
+
+
+def heddleri_yukle(conn):
+    """sensor_tipi ve cihaz cedvellerinden heddleri yaddasa yuklyeyir."""
+    global _heddler
+    _heddler = {}
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT c.kod, t.min_hedd, t.max_hedd, t.vahid, t.ad
+            FROM cihaz c
+            JOIN sensor_tipi t ON c.sensor_tipi_kod = t.kod
+        """)
+        for kod, minh, maxh, vahid, ad in cur.fetchall():
+            _heddler[kod] = {
+                "min": float(minh) if minh is not None else None,
+                "max": float(maxh) if maxh is not None else None,
+                "vahid": vahid,
+                "ad": ad,
+            }
+    log.info(f"Heddler yuklendi: {len(_heddler)} cihaz")
+    return _heddler
+
+
+def yoxla(cihaz_kod, qiymet):
+    """
+    Bir olcmeni yoxlayir.
+    Qaytarir: None (normal) ve ya (novu, mesaj) (anomaliya).
+    """
+    h = _heddler.get(cihaz_kod)
+    if h is None:
+        return None  # namelum cihaz - yoxlanmir
+
+    if h["max"] is not None and qiymet > h["max"]:
+        mesaj = (f"{h['ad']}: {qiymet} {h['vahid']} "
+                 f"(max hedd {h['max']} {h['vahid']} asildi)")
+        return ("yuxari_hedd", mesaj)
+
+    if h["min"] is not None and qiymet < h["min"]:
+        mesaj = (f"{h['ad']}: {qiymet} {h['vahid']} "
+                 f"(min hedd {h['min']} {h['vahid']} altinda)")
+        return ("asagi_hedd", mesaj)
+
+    return None
+
+
+def xeberdarliq_yaz(conn, cihaz_kod, olcme_vaxti, qiymet, novu, mesaj):
+    """xeberdarliq cedveline qeyd yazir."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            INSERT INTO xeberdarliq
+                (cihaz_kod, olcme_vaxti, qiymet, novu, mesaj)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (cihaz_kod, olcme_vaxti, qiymet, novu, mesaj))
+EOF
+
+echo "anomaliya.py yaradildi:"
+ls -la 03_src/alert/anomaliya.py</code></pre>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Fayl 2 — xidməti yeniləyək <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>İndi Dərs 5-in <code>xidmet.py</code> faylını yeniləyirik ki, anomaliya modulunu istifadə etsin. Dəyişikliklər: (1) başlanğıcda həddləri yüklə, (2) hər yazılan ölçməni yoxla, (3) anomaliya varsa xəbərdarlıq yaz və alarm göstər.</p>
+
+    <div class="callout">
+      <div class="callout-label">Diqqət</div>
+      Bu blok bütün <code>xidmet.py</code>-ni yenidən yazır (əvvəlkinin üzərinə). Anomaliya inteqrasiyası əlavə olunub. Köhnə funksionallıq (validasiya, statistika) qorunur.
+    </div>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/toplama/xidmet.py yenilenir</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/toplama/xidmet.py << 'EOF'
+"""
+FastAPI toplama xidmeti - MQTT dinleyir, validasiya edir, bazaya yazir,
+anomaliyalari askarlayir (Ders 6).
+Fayl: 03_src/toplama/xidmet.py
+Ishe salmaq:
+  PYTHONPATH=.:../alert uvicorn xidmet:app --host 0.0.0.0 --port 8020
+"""
+import os
+import sys
+import json
+import logging
+from contextlib import asynccontextmanager
+
+import psycopg
+import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
+from fastapi import FastAPI
+from pydantic import ValidationError
+
+# alert qovlugunu yola elave et
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "alert"))
+
+from db_komekci import edge_dsn
+from validasiya import OlcmeMesaj
+from mqtt_komekci import MQTT_HOST, MQTT_PORT, TOPIC_BASE
+import anomaliya
+
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s  %(levelname)s  %(message)s")
+log = logging.getLogger("toplama")
+
+stat = {"qebul": 0, "yazildi": 0, "redd": 0, "xeberdarliq": 0}
+
+_db = None
+
+
+def db_qosul():
+    global _db
+    if _db is None or _db.closed:
+        _db = psycopg.connect(edge_dsn(), autocommit=True)
+    return _db
+
+
+def olcme_yaz(m: OlcmeMesaj):
+    conn = db_qosul()
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet)
+               VALUES (%s, %s, %s)""",
+            (m.cihaz_kod, m.olcme_vaxti, m.qiymet),
+        )
+    # --- ANOMALIYA YOXLAMASI (Ders 6) ---
+    netice = anomaliya.yoxla(m.cihaz_kod, m.qiymet)
+    if netice is not None:
+        novu, mesaj = netice
+        anomaliya.xeberdarliq_yaz(conn, m.cihaz_kod, m.olcme_vaxti,
+                                  m.qiymet, novu, mesaj)
+        stat["xeberdarliq"] += 1
+        log.warning(f"ALARM [{novu}] {mesaj}")
+
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code == 0:
+        topic = f"{TOPIC_BASE}/#"
+        client.subscribe(topic, qos=0)
+        log.info(f"Broker-e qosuldu, abune: {topic}")
+    else:
+        log.error(f"Broker qosulmasi alinmadi: {reason_code}")
+
+
+def on_message(client, userdata, msg):
+    stat["qebul"] += 1
+    try:
+        data = json.loads(msg.payload.decode())
+        m = OlcmeMesaj(**data)
+        olcme_yaz(m)
+        stat["yazildi"] += 1
+    except (ValidationError, ValueError) as e:
+        stat["redd"] += 1
+        log.warning(f"REDD ({msg.topic}): {e}")
+    except Exception as e:
+        stat["redd"] += 1
+        log.error(f"XETA ({msg.topic}): {e}")
+
+
+mqtt_client = mqtt.Client(
+    callback_api_version=CallbackAPIVersion.VERSION2,
+    client_id="zarat-toplama",
+)
+mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # baslanğic: heddleri yukle, broker-e qosul
+    conn = db_qosul()
+    anomaliya.heddleri_yukle(conn)
+    mqtt_client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+    mqtt_client.loop_start()
+    log.info("Toplama xidmeti basladi (anomaliya aktiv).")
+    yield
+    mqtt_client.loop_stop()
+    mqtt_client.disconnect()
+    log.info("Toplama xidmeti dayandi.")
+
+
+app = FastAPI(title="Zarat Faza 2 - Toplama Xidmeti", lifespan=lifespan)
+
+
+@app.get("/")
+def kok():
+    return {"xidmet": "Zarat toplama", "veziyyet": "isleyir"}
+
+
+@app.get("/saglamliq")
+def saglamliq():
+    return {"status": "ok", "statistika": stat}
+
+
+@app.get("/statistika")
+def statistika():
+    return stat
+
+
+@app.get("/xeberdarliqlar")
+def xeberdarliqlar():
+    """Son 20 xeberdarligi qaytarir."""
+    conn = db_qosul()
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT cihaz_kod, novu, mesaj, olcme_vaxti
+            FROM xeberdarliq
+            ORDER BY yaradilma DESC LIMIT 20
+        """)
+        setirler = cur.fetchall()
+    return [
+        {"cihaz": r[0], "novu": r[1], "mesaj": r[2], "vaxt": str(r[3])}
+        for r in setirler
+    ]
+EOF
+
+echo "xidmet.py yenilendi (anomaliya elave olundu):"
+python -c "import ast; ast.parse(open('03_src/toplama/xidmet.py').read()); print('SINTAKSIS DUZGUN')"</code></pre>
+    </div>
+    <div class="callout violet">
+      <div class="callout-label">Yeni endpoint</div>
+      Əlavə olaraq <code>/xeberdarliqlar</code> endpoint-i yaratdıq — son 20 xəbərdarlığı JSON kimi qaytarır. Dashboard (Dərs 9) bunu istifadə edəcək.
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>İşə salaq — yenilənmiş xidmət</h2></div>
+    <p>Xidmət indi <code>alert</code> qovluğundakı modulu da yükləyir, ona görə PYTHONPATH-a onu da əlavə edirik. Digər komponentlər (DB, broker) işləməlidir.</p>
+
+    <span class="step-badge">Terminal C — yenilənmiş xidmət</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal C</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+cd 03_src/toplama
+
+# alert qovlugu da PYTHONPATH-da olmalidir
+PYTHONPATH=.:../alert uvicorn xidmet:app --host 0.0.0.0 --port 8020</code></pre>
+    </div>
+    <p>Başlanğıcda belə görməlisiniz:</p>
+    <div class="termout">INFO  Heddler yuklendi: 5 cihaz
+INFO  Broker-e qosuldu, abune: zavod/siyezen/#
+INFO  Toplama xidmeti basladi (anomaliya aktiv).
+INFO:     Uvicorn running on http://0.0.0.0:8020</div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      «Heddler yuklendi: 5 cihaz» sətri anomaliya modulunun işlədiyini göstərir. Xidmət indi hər ölçməni yoxlayır.
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Anomaliyanı canlı görək</h2></div>
+    <p>Publisher-i başladın (Terminal D). Simulyatorda vibrasiya (S004) tez-tez 7 mm/s həddini keçir, temperatur (S001) də arada 35°C-i aşır. Bunlar avtomatik tutulacaq.</p>
+
+    <span class="step-badge">Terminal D — publisher</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal D</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+cd 03_src/sensorlar
+python mqtt_publisher.py</code></pre>
+    </div>
+
+    <p>Terminal C (xidmət) anomaliya olanda belə alarm göstərəcək:</p>
+    <div class="termout" style="color:#f0a0a0;">WARNING  ALARM [yuxari_hedd] Vibrasiya: 8.0587 mm/s (max hedd 7.0 mm/s asildi)
+WARNING  ALARM [yuxari_hedd] Temperatur: 36.21 °C (max hedd 35.0 °C asildi)</div>
+
+    <h3>Xəbərdarlıqları HTTP ilə görək</h3>
+    <p>Publisher bir müddət işlədikdən sonra, yeni Terminal-da:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — xəbərdarlıqlar</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># xidmetin xeberdarliq endpoint-i
+curl http://localhost:8020/xeberdarliqlar
+
+# statistikada xeberdarliq sayi
+curl http://localhost:8020/statistika</code></pre>
+    </div>
+
+    <h3>Bazada xəbərdarlıqlar</h3>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — baza yoxlaması</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>psql -p 5434 -U royatalibova -d zavod_edge_db -c "
+SELECT cihaz_kod, novu, count(*) AS say, max(qiymet) AS en_yuksek
+FROM xeberdarliq
+GROUP BY cihaz_kod, novu
+ORDER BY say DESC;
+"</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      <code>/statistika</code>-da «xeberdarliq» sayı artır. Baza sorğusu S004 (vibrasiya) və bəlkə S001 (temperatur) üçün <code>yuxari_hedd</code> anomaliyalarını göstərir. Sistem indi yalnız məlumat toplamır — problemləri avtomatik aşkarlayır.
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Bonus — süni anomaliya testi</h2></div>
+    <p>Anomaliyanın dəqiq işlədiyini əl ilə də sınaya bilərik. Xüsusi olaraq həddi aşan bir mesaj göndərək:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — süni anomaliya</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code># temperatur 50 derece - yuxari hedd (35) asilir
+mosquitto_pub -h localhost -p 1883 \
+  -t "zavod/siyezen/temperatur/S001" \
+  -m '{"cihaz_kod":"S001","olcme_vaxti":"2026-07-10T05:00:00+00:00","qiymet":50}'
+
+# ceki menfi - asagi hedd (0) altinda
+mosquitto_pub -h localhost -p 1883 \
+  -t "zavod/siyezen/ceki/S003" \
+  -m '{"cihaz_kod":"S003","olcme_vaxti":"2026-07-10T05:00:00+00:00","qiymet":-3}'</code></pre>
+    </div>
+    <p>Terminal C dərhal iki alarm göstərməlidir:</p>
+    <div class="termout" style="color:#f0a0a0;">WARNING  ALARM [yuxari_hedd] Temperatur: 50.0 °C (max hedd 35.0 °C asildi)
+WARNING  ALARM [asagi_hedd] Ceki (dozator): -3.0 kg (min hedd 0.0 kg altinda)</div>
+    <div class="callout">
+      <div class="callout-label">Diqqət</div>
+      Çəki -3 kg anomaliyadır (asagi_hedd), amma validasiyadan keçir (çünki -3 mənasız deyil, sadəcə həddin altındadır). Bu, iki qatın fərqini göstərir: -99999 rədd olunardı, -3 isə saxlanılır + xəbərdarlıq yaradır.
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Yaratdığımız / dəyişdiyimiz fayllar</h2></div>
+    <div class="tree"><span class="root">03_src/</span>
+├── alert/
+│   └── <span class="file">anomaliya.py</span>       <span class="comment"># YENİ: hədd yoxlaması + xəbərdarlıq yazma</span>
+└── toplama/
+    └── <span class="file">xidmet.py</span>          <span class="comment"># YENİLƏNDİ: anomaliya inteqrasiyası + /xeberdarliqlar</span></div>
+    <p class="muted" style="font-size:14px;">Bu HTML dərs faylını <code>_KURS/Ders_06_Anomaliya_Alert.html</code> kimi saxlayın. README.md-də Dərs 6-nı [x] işarələyin.</p>
+  </section>
+
+  <!-- 10 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>Dərs 6 — yoxlama siyahısı</h2></div>
+    <ul class="checklist">
+      <li><span class="box"></span><code>anomaliya.py</code> yaradıldı (03_src/alert/)</li>
+      <li><span class="box"></span><code>xidmet.py</code> yeniləndi, sintaksis düzgündür</li>
+      <li><span class="box"></span>Xidmət başlayanda «Heddler yuklendi: 5 cihaz» görünür</li>
+      <li><span class="box"></span>Publisher işlədikdə vibrasiya/temperatur anomaliyaları alarm verir</li>
+      <li><span class="box"></span><code>curl .../xeberdarliqlar</code> xəbərdarlıq siyahısını qaytarır</li>
+      <li><span class="box"></span><code>xeberdarliq</code> cədvəlində anomaliya qeydləri var</li>
+      <li><span class="box"></span>Süni anomaliya testi: 50°C və -3 kg hər ikisi alarm verdi</li>
+      <li><span class="box"></span>Fərq aydındır: validasiya (rədd) vs anomaliya (saxla + xəbərdar et)</li>
+      <li><span class="box"></span>Fayl <code>_KURS/Ders_06_Anomaliya_Alert.html</code> kimi saxlanılıb</li>
+    </ul>
+  </section>
+
+  <div class="nextcard">
+    <div class="tag2">Növbəti — Dərs 7</div>
+    <h3>Mərkəzi sinxronizasiya</h3>
+    <p class="muted" style="margin:0;">İndiyə qədər hər şey zavod bazasında (<code>zavod_edge_db</code>) qalır. Dərs 7-də «outbox» modeli ilə məlumatı mərkəzi <code>zarat_erp_2</code>-yə köçürəcəyik. <code>sync_status=0</code> olan sətirləri tapıb mərkəzə göndərən, sonra <code>sync_status=1</code> edən bir sinxronizasiya servisi yazacağıq. Şəbəkə kəssə belə heç nə itməyəcək.</p>
+  </div>
+
+</main>
+
+<footer>Zarat ERP · Faza 2 · Dərs 6 / 10 — hazır olduqda "davam et" yazın</footer>
+
+<script>
+document.querySelectorAll('.copybtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var wrap = btn.closest('.codewrap');
+    var code = wrap.querySelector('pre code') || wrap.querySelector('pre');
+    var text = code.innerText;
+    function done(){
+      var orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Kopyalandı';
+      setTimeout(function(){ btn.classList.remove('copied'); btn.innerHTML = orig; }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(text); done(); });
+    } else { fallback(text); done(); }
+  });
+});
+function fallback(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+const cells = [
+  {id:'t1', base:24.3, jit:0.4, dec:1, unit:' °C'},
+  {id:'t2', base:12.8, jit:0.3, dec:1, unit:' %'},
+  {id:'t3', base:418, jit:6, dec:0, unit:' kg'},
+  {id:'t4', base:2.1, jit:0.3, dec:1, unit:' mm/s'},
+  {id:'t5', base:37.4, jit:1.1, dec:1, unit:' kW'}
+];
+function tick(){
+  cells.forEach(function(c){
+    var v = c.base + (Math.random()-0.5)*2*c.jit;
+    var el = document.getElementById(c.id);
+    if(el) el.innerHTML = v.toFixed(c.dec) + '<span class="telem-unit">'+c.unit+'</span>';
+  });
+}
+setInterval(tick, 2200);
+</script>
+
+</body>
+</html>

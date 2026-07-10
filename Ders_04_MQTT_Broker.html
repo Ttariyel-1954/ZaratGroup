@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarat ERP · Faza 2 · Dərs 4 — MQTT Broker Qurulumu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --panel:#121b2e; --panel2:#17233a; --raised:#1c2942;
+  --text:#e7ecf3; --muted:#8a97ab; --line:rgba(255,255,255,0.09);
+  --amber:#f2a72e; --cyan:#35c9c9; --green:#52d17c; --red:#ef5b5b; --violet:#a29bea;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.65; font-size:16px; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,.mono{ font-family:'Space Grotesk',sans-serif; }
+code, pre{ font-family:'JetBrains Mono',monospace; }
+p code, li code, td code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.86em; color:var(--cyan); }
+
+.progressbar{ position:sticky; top:0; z-index:50; background:rgba(11,18,32,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:14px 32px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.progressbar .tag{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); font-weight:600; white-space:nowrap; }
+.dots{ display:flex; gap:6px; flex-wrap:wrap; }
+.dot{ width:22px; height:6px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); }
+.dot.done{ background:#245c39; border-color:var(--green); }
+.dot.active{ background:var(--amber); border-color:var(--amber); }
+
+.telemetry{ display:flex; gap:0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
+.telem-cell{ flex:1; min-width:150px; padding:14px 20px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.telem-cell:last-child{ border-right:none; }
+.telem-label{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.led{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2.6s infinite ease-in-out; }
+.led.warn{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.telem-val{ font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; }
+.telem-unit{ font-size:12px; color:var(--muted); font-weight:400; }
+
+main{ max-width:920px; margin:0 auto; padding:0 32px 80px; }
+.hero{ padding:56px 0 32px; border-bottom:1px solid var(--line); }
+.eyebrow{ color:var(--cyan); font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:14px; }
+.hero h1{ font-size:36px; font-weight:600; margin:0 0 16px; line-height:1.15; }
+.hero p.lead{ font-size:17px; color:var(--muted); max-width:700px; margin:0; }
+
+section{ padding:48px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+.sec-num{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:14px; font-weight:600; }
+h2{ font-size:24px; font-weight:600; margin:0; }
+h3{ font-size:17px; font-weight:600; margin:30px 0 10px; color:var(--cyan); }
+h4{ font-size:15px; font-weight:600; margin:22px 0 8px; color:var(--violet); }
+p{ color:#d3dae5; margin:0 0 14px; }
+.muted{ color:var(--muted); }
+strong{ color:#eef2f8; font-weight:600; }
+
+.callout{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 20px; margin:20px 0; font-size:15px; }
+.callout.cyan{ border-left-color:var(--cyan); }
+.callout.violet{ border-left-color:var(--violet); }
+.callout.red{ border-left-color:var(--red); }
+.callout.green{ border-left-color:var(--green); }
+.callout .callout-label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); font-weight:600; margin-bottom:6px; }
+.callout.cyan .callout-label{ color:var(--cyan); }
+.callout.violet .callout-label{ color:var(--violet); }
+.callout.red .callout-label{ color:var(--red); }
+.callout.green .callout-label{ color:var(--green); }
+
+table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+th{ text-align:left; padding:10px 14px; background:var(--panel2); color:var(--amber); font-size:12px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
+td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#d3dae5; }
+tr:last-child td{ border-bottom:none; }
+td.k{ color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:13px; white-space:nowrap; }
+
+.codewrap{ margin:18px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); background:#0d1526; }
+.codebar{ background:var(--panel2); padding:8px 14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; }
+.codebar .fname{ color:var(--cyan); }
+.copybtn{ background:var(--raised); border:1px solid var(--line); color:var(--text); font-family:'Inter',sans-serif; font-size:12px; font-weight:500; padding:5px 12px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; }
+.copybtn:hover{ background:var(--cyan); color:#04212b; border-color:var(--cyan); }
+.copybtn.copied{ background:var(--green); color:#04211a; border-color:var(--green); }
+.copybtn svg{ width:13px; height:13px; }
+pre{ margin:0; padding:18px 20px; overflow-x:auto; font-size:12.5px; line-height:1.7; color:#c9d4e6; white-space:pre; }
+
+.autochip{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter',sans-serif; color:var(--green); background:rgba(82,209,124,0.12); border:1px solid rgba(82,209,124,0.35); padding:2px 8px; border-radius:20px; margin-left:8px; }
+
+.checklist{ list-style:none; padding:0; margin:18px 0; }
+.checklist li{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15px; color:#d3dae5; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist .box{ width:17px; height:17px; border:1.5px solid var(--cyan); border-radius:4px; flex-shrink:0; margin-top:3px; }
+
+.tree{ font-family:'JetBrains Mono',monospace; font-size:13px; color:#c9d4e6; background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px; line-height:1.85; white-space:pre; overflow-x:auto; }
+.tree .folder{ color:var(--amber); }
+.tree .file{ color:var(--cyan); }
+.tree .comment{ color:var(--muted); }
+.tree .root{ color:var(--green); font-weight:600; }
+
+.nextcard{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-top:20px; }
+.nextcard .tag2{ font-size:12px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:8px; }
+.nextcard h3{ margin:0 0 8px; color:var(--text); font-size:19px; }
+
+.step-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--bg); background:var(--amber); padding:2px 10px; border-radius:20px; font-weight:600; margin-bottom:10px; }
+
+.termout{ background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#8fbf9f; white-space:pre; overflow-x:auto; margin:18px 0; }
+
+.twocol{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0; }
+@media (max-width:680px){ .twocol{ grid-template-columns:1fr; } }
+.pane{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+.pane h4{ margin-top:0; }
+
+footer{ text-align:center; padding:40px 0; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="progressbar">
+  <span class="tag">Zarat ERP · Faza 2 — Zavod Rəqəmsallaşdırılması</span>
+  <div class="dots">
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <span class="mono" style="font-size:12px;color:var(--muted);margin-left:auto;">Dərs 4 / 10</span>
+</div>
+
+<div class="telemetry">
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Silo temperaturu</span><span class="telem-val" id="t1">24.3<span class="telem-unit"> °C</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Rütubət (yem qarışığı)</span><span class="telem-val" id="t2">12.8<span class="telem-unit"> %</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led warn"></span>Yem çəkisi (dozator)</span><span class="telem-val" id="t3">418<span class="telem-unit"> kg</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Vibrasiya (mühərrik)</span><span class="telem-val" id="t4">2.1<span class="telem-unit"> mm/s</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Elektrik yükü</span><span class="telem-val" id="t5">37.4<span class="telem-unit"> kW</span></span></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Faza 2 · Dərs 4 / 10</div>
+    <h1>MQTT broker qurulumu</h1>
+    <p class="lead">İndi simulyatorla baza arasına Mosquitto brokerini qoyuruq. Sensor artıq birbaşa bazaya yazmır — o, mesajı brokerə <code>publish</code> edir. Bu, sistemi əsl sənaye memarlığına çevirən addımdır. Mosquitto-nu konfiqurasiya edəcək, topic strukturunu quracaq və publish/subscribe testi keçirəcəyik.</p>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Nə dəyişir?</h2></div>
+    <p>Dərs 3-də simulyator birbaşa PostgreSQL-ə yazırdı. Bu, sadə idi, amma çevik deyildi. İndi arada MQTT broker olacaq:</p>
+    <div class="twocol">
+      <div class="pane">
+        <h4>Dərs 3 — birbaşa</h4>
+        <p class="muted" style="margin:0;font-size:14px;">Sensor → PostgreSQL<br><br>Sensor bazanın parolunu bilməli, bağlantını idarə etməli idi. Yalnız bir alıcı ola bilərdi.</p>
+      </div>
+      <div class="pane">
+        <h4>Dərs 4 — broker vasitəsilə</h4>
+        <p class="muted" style="margin:0;font-size:14px;">Sensor → MQTT Broker → (çoxlu alıcı)<br><br>Sensor sadəcə «bu ədədi gördüm» deyir. Broker onu dinləyən hər kəsə paylayır: baza, dashboard, alert.</p>
+      </div>
+    </div>
+    <div class="callout cyan">
+      <div class="callout-label">Üstünlük</div>
+      Broker olduqda bir mesajı eyni anda bir neçə sistem ala bilər. Məsələn temperatur oxunuşu həm bazaya yazıla, həm dashboard-da göstərilə, həm də hədd aşılıbsa alarm yarada bilər — sensor bunların heç birini bilmədən.
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Topic strukturu</h2></div>
+    <p>MQTT-də mesajlar «topic» adlı kanallar üzrə axır. Zarat üçün aydın, iyerarxik struktur qururuq. Baza yol <code>.env</code>-də <code>MQTT_TOPIC_BASE=zavod/siyezen</code> kimi təyin olunub.</p>
+    <table>
+      <tr><th>Sensor</th><th>Cihaz</th><th>Topic</th></tr>
+      <tr><td>Temperatur</td><td class="k">S001</td><td class="k">zavod/siyezen/temperatur/S001</td></tr>
+      <tr><td>Rütubət</td><td class="k">S002</td><td class="k">zavod/siyezen/rutubet/S002</td></tr>
+      <tr><td>Çəki</td><td class="k">S003</td><td class="k">zavod/siyezen/ceki/S003</td></tr>
+      <tr><td>Vibrasiya</td><td class="k">S004</td><td class="k">zavod/siyezen/vibrasiya/S004</td></tr>
+      <tr><td>Enerji</td><td class="k">S005</td><td class="k">zavod/siyezen/enerji/S005</td></tr>
+    </table>
+    <div class="callout">
+      <div class="callout-label">Wildcard (əvəzləyici) — <code>#</code> və <code>+</code></div>
+      Abunə olanda bütün sensorları bir dəfəyə dinləmək üçün <code>zavod/siyezen/#</code> yazırıq — <code>#</code> «bu yolun altındakı hər şey» deməkdir. Yalnız temperaturları dinləmək üçün <code>zavod/siyezen/temperatur/+</code> — <code>+</code> «bir səviyyə istənilən dəyər» deməkdir.
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Mosquitto konfiqurasiyası <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Dərs 1-də Mosquitto-nu quraşdırdıq. İndi ona konfiqurasiya faylı veririk ki, düzgün portda işləsin. Zavod brokeri standart 1883 portunda işləyəcək.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">01_config/mosquitto.conf yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 01_config/mosquitto.conf << 'EOF'
+# ============================================================
+# Zarat Faza 2 — Mosquitto MQTT broker konfiqurasiyasi
+# Fayl: 01_config/mosquitto.conf
+# ============================================================
+
+# dinleme portu (standart MQTT)
+listener 1883 localhost
+
+# inkishaf merhelesinde anonim qosulmaya icaze
+# (istehsalatda auth elave edilecek — ders 10)
+allow_anonymous true
+
+# davamliliq: broker soyunse mesajlar diskde qalsin
+persistence true
+persistence_location /tmp/mosquitto_zarat/
+
+# jurnal
+log_type warning
+log_type notice
+log_type information
+EOF
+
+# davamliliq qovlugunu yaradaq
+mkdir -p /tmp/mosquitto_zarat
+
+echo "mosquitto.conf yaradildi:"
+ls -la 01_config/mosquitto.conf</code></pre>
+    </div>
+
+    <span class="step-badge">Brokeri işə sal</span>
+    <p>İndi brokeri bu konfiqurasiya ilə işə salırıq. Bu, <strong>ayrı bir Terminal pəncərəsində</strong> daim açıq qalmalıdır (broker işləyən müddətdə mesajları daşıyır).</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal A — broker (açıq qalır)</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+# brokeri konfiqurasiya faylı ilə işə sal
+mosquitto -c 01_config/mosquitto.conf -v</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      Ekranda «mosquitto version 2.x starting» və «Opening ipv4 listen socket on port 1883» görməlisiniz. Bu Terminal pəncərəsini <strong>bağlamayın</strong> — broker burada işləyir. Növbəti addımlar üçün yeni Terminal pəncərəsi açın.
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Broker işləyirmi? — komanda xətti testi</h2></div>
+    <p>Python-a keçməzdən əvvəl brokerin işlədiyini Mosquitto-nun öz alətləri ilə yoxlayaq. İki yeni Terminal pəncərəsi lazımdır.</p>
+
+    <div class="twocol">
+      <div class="pane">
+        <h4>Terminal B — dinləyici</h4>
+        <div class="codewrap" style="margin:8px 0;">
+          <div class="codebar"><span class="fname">subscribe</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+          <pre><code>mosquitto_sub -h localhost \
+  -p 1883 \
+  -t "zavod/siyezen/#" -v</code></pre>
+        </div>
+        <p class="muted" style="font-size:13px;margin:0;">Bu, bütün zavod topic-lərini dinləyir və gözləyir.</p>
+      </div>
+      <div class="pane">
+        <h4>Terminal C — göndərici</h4>
+        <div class="codewrap" style="margin:8px 0;">
+          <div class="codebar"><span class="fname">publish</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+          <pre><code>mosquitto_pub -h localhost \
+  -p 1883 \
+  -t "zavod/siyezen/temperatur/S001" \
+  -m '{"cihaz_kod":"S001","qiymet":24.5}'</code></pre>
+        </div>
+        <p class="muted" style="font-size:13px;margin:0;">Bir test mesajı göndərir.</p>
+      </div>
+    </div>
+
+    <p>Terminal C-də göndərəndə, Terminal B-də dərhal görünməlidir:</p>
+    <div class="termout">zavod/siyezen/temperatur/S001 {"cihaz_kod":"S001","qiymet":24.5}</div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      Terminal B mesajı dərhal göstərdisə — broker işləyir, publish/subscribe zənciri qurulub. Bu, MQTT-nin «poçt şöbəsi» rolunun canlı sübutudur.
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Ortaq MQTT köməkçisi <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>İndi Python tərəfinə keçirik. Əvvəlcə həm publisher, həm subscriber tərəfindən istifadə olunacaq ortaq bir MQTT köməkçi modulu yazırıq. Bu, <code>.env</code>-dən ayarları oxuyub broker bağlantısını qurur. paho-mqtt 2.x <strong>VERSION2</strong> callback API-ni istifadə edirik.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/toplama/mqtt_komekci.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/toplama/mqtt_komekci.py << 'EOF'
+"""
+Ortaq MQTT komekcisi — .env-den ayarlari oxuyur.
+Fayl: 03_src/toplama/mqtt_komekci.py
+paho-mqtt 2.x VERSION2 callback API istifade olunur.
+"""
+import os
+from dotenv import load_dotenv
+
+# .env faylini oxu (layihe koku)
+_KONF = os.path.join(os.path.dirname(__file__), "..", "..", "01_config", ".env")
+load_dotenv(_KONF)
+
+MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+TOPIC_BASE = os.getenv("MQTT_TOPIC_BASE", "zavod/siyezen")
+
+# sensor tipi kodu -> topic sozu
+TIP_TOPIC = {
+    "S001": "temperatur",
+    "S002": "rutubet",
+    "S003": "ceki",
+    "S004": "vibrasiya",
+    "S005": "enerji",
+}
+
+
+def cihaz_topic(cihaz_kod: str) -> str:
+    """Cihaz kodu ucun tam topic yolu qaytarir."""
+    soz = TIP_TOPIC.get(cihaz_kod, "diger")
+    return f"{TOPIC_BASE}/{soz}/{cihaz_kod}"
+EOF
+
+echo "mqtt_komekci.py yaradildi:"
+ls -la 03_src/toplama/mqtt_komekci.py</code></pre>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Publisher — simulyator MQTT-yə <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>İndi Dərs 3-ün simulyatorunu MQTT-yə bağlayırıq. Bu skript sensorları oxuyur və hər oxunuşu müvafiq topic-ə <code>publish</code> edir. Mesaj JSON formatında olacaq.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">03_src/sensorlar/mqtt_publisher.py yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 03_src/sensorlar/mqtt_publisher.py << 'EOF'
+"""
+Simulyator -> MQTT broker publisher.
+Fayl: 03_src/sensorlar/mqtt_publisher.py
+Her sensor oxunusunu muvafiq topic-e JSON kimi publish edir.
+Ishe salmaq:  python mqtt_publisher.py
+Dayandirmaq:  CTRL+C
+"""
+import os
+import sys
+import json
+import time
+import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
+
+# toplama qovlugunu yola elave edek (mqtt_komekci ucun)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "toplama"))
+
+from sensorlar import butun_sensorlar
+from mqtt_komekci import MQTT_HOST, MQTT_PORT, cihaz_topic
+
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code == 0:
+        print(f"Broker-e qosuldu: {MQTT_HOST}:{MQTT_PORT}")
+    else:
+        print(f"Qosulma alinmadi, kod={reason_code}")
+
+
+def main():
+    client = mqtt.Client(
+        callback_api_version=CallbackAPIVersion.VERSION2,
+        client_id="zarat-publisher",
+    )
+    client.on_connect = on_connect
+    client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+    client.loop_start()
+
+    sensorlar = butun_sensorlar()
+    print("Publisher başladi. CTRL+C ile dayandirin.\n")
+
+    try:
+        while True:
+            for s in sensorlar:
+                o = s.oxu()
+                topic = cihaz_topic(o.cihaz_kod)
+                payload = json.dumps(o.dict())
+                client.publish(topic, payload, qos=0)
+                print(f"-> {topic}  {payload}")
+            print("-" * 60)
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print("\nPublisher dayandirilir...")
+        client.loop_stop()
+        client.disconnect()
+        print("Bitdi.")
+
+
+if __name__ == "__main__":
+    main()
+EOF
+
+echo "mqtt_publisher.py yaradildi:"
+ls -la 03_src/sensorlar/mqtt_publisher.py</code></pre>
+    </div>
+    <div class="callout violet">
+      <div class="callout-label">VERSION2 detalı</div>
+      Diqqət edin: <code>mqtt.Client(callback_api_version=CallbackAPIVersion.VERSION2, ...)</code>. paho-mqtt 2.x-də bu vacibdir — köhnə <code>Client(client_id)</code> yazılışı xəta verər. <code>on_connect</code> imzası da yenidir: 5 arqument (<code>...reason_code, properties</code>).
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Tam test — üç Terminal</h2></div>
+    <p>İndi hər şeyi birləşdiririk. Üç Terminal pəncərəsi:</p>
+
+    <span class="step-badge">Terminal A — broker</span>
+    <p style="font-size:14px;">Əvvəldən açıqdır (§3-də başlatdıq). Əgər bağlamısınızsa, yenidən:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal A</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+mosquitto -c 01_config/mosquitto.conf -v</code></pre>
+    </div>
+
+    <span class="step-badge">Terminal B — dinləyici</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal B</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>mosquitto_sub -h localhost -p 1883 -t "zavod/siyezen/#" -v</code></pre>
+    </div>
+
+    <span class="step-badge">Terminal C — publisher</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal C</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+cd 03_src/sensorlar
+python mqtt_publisher.py</code></pre>
+    </div>
+
+    <p>Terminal C (publisher) belə göstərəcək:</p>
+    <div class="termout">Broker-e qosuldu: localhost:1883
+Publisher başladi. CTRL+C ile dayandirin.
+
+-> zavod/siyezen/temperatur/S001  {"cihaz_kod": "S001", "olcme_vaxti": "2026-07-09T18:30:12+00:00", "qiymet": 24.19}
+-> zavod/siyezen/rutubet/S002  {"cihaz_kod": "S002", ...}
+...</div>
+
+    <p>Terminal B (dinləyici) eyni mesajları broker vasitəsilə alacaq:</p>
+    <div class="termout">zavod/siyezen/temperatur/S001 {"cihaz_kod": "S001", "olcme_vaxti": "...", "qiymet": 24.19}
+zavod/siyezen/rutubet/S002 {"cihaz_kod": "S002", ...}
+...</div>
+
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti — bütöv zəncir işləyir</div>
+      Publisher göndərir → broker qəbul edir → dinləyici alır. Bu, sensor məlumatının artıq MQTT üzərindən axdığının sübutudur. Sensor kimin dinlədiyini bilmir — bu, «loosely coupled» memarlığın gücüdür.
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>topics.md — topic sxemini sənədləşdirək <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Dərs 1-də <code>01_config/topics.md</code> boş faylını yaratmışdıq. İndi onu dolduraq ki, komanda topic strukturunu bir yerdə görsün.</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">01_config/topics.md yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 01_config/topics.md << 'EOF'
+# Zarat Faza 2 — MQTT Topic Sxemi
+
+Baza yol: zavod/siyezen
+
+## Sensor topic-leri
+
+| Cihaz | Sensor      | Topic                             |
+|-------|-------------|-----------------------------------|
+| S001  | Temperatur  | zavod/siyezen/temperatur/S001     |
+| S002  | Rutubet     | zavod/siyezen/rutubet/S002        |
+| S003  | Ceki        | zavod/siyezen/ceki/S003           |
+| S004  | Vibrasiya   | zavod/siyezen/vibrasiya/S004      |
+| S005  | Enerji      | zavod/siyezen/enerji/S005         |
+
+## Wildcard-lar (abune ucun)
+
+- zavod/siyezen/#              -> butun sensorlar
+- zavod/siyezen/temperatur/+   -> yalniz temperaturlar
+- zavod/siyezen/+/S001         -> yalniz S001 cihazi
+
+## Mesaj formati (JSON)
+
+{
+  "cihaz_kod": "S001",
+  "olcme_vaxti": "2026-07-09T18:30:12+00:00",
+  "qiymet": 24.19
+}
+
+## QoS
+
+- Sensor olcmeleri: QoS 0 (itse problem deyil, davamli axir)
+- Xeberdarliqlar (ders 6): QoS 1 (mutleq catmalidir)
+EOF
+
+echo "topics.md yaradildi:"
+cat 01_config/topics.md | head -5</code></pre>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Yaratdığımız fayllar</h2></div>
+    <div class="tree"><span class="root">Zarat_Faza2_Zavod/</span>
+├── 01_config/
+│   ├── <span class="file">mosquitto.conf</span>        <span class="comment"># broker konfiqurasiyası</span>
+│   └── <span class="file">topics.md</span>             <span class="comment"># topic sxemi sənədi</span>
+└── 03_src/
+    ├── sensorlar/
+    │   └── <span class="file">mqtt_publisher.py</span>  <span class="comment"># simulyator → MQTT</span>
+    └── toplama/
+        └── <span class="file">mqtt_komekci.py</span>    <span class="comment"># ortaq MQTT ayarları</span></div>
+    <p class="muted" style="font-size:14px;">Bu HTML dərs faylını <code>_KURS/Ders_04_MQTT_Broker.html</code> kimi saxlayın. README.md-də Dərs 4-ü [x] işarələyin.</p>
+  </section>
+
+  <!-- 10 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>Dərs 4 — yoxlama siyahısı</h2></div>
+    <ul class="checklist">
+      <li><span class="box"></span><code>mosquitto.conf</code> yaradıldı və broker <code>mosquitto -c ...</code> ilə işə düşür</li>
+      <li><span class="box"></span>Komanda xətti testi keçdi: <code>mosquitto_pub</code> → <code>mosquitto_sub</code> mesajı göstərir</li>
+      <li><span class="box"></span><code>mqtt_komekci.py</code> və <code>mqtt_publisher.py</code> yaradıldı</li>
+      <li><span class="box"></span>Publisher broker-ə qoşulur («Broker-e qosuldu») — VERSION2 API xətasız</li>
+      <li><span class="box"></span>Üç Terminal testi işləyir: publisher → broker → subscriber</li>
+      <li><span class="box"></span>Dinləyici JSON mesajları düzgün topic-lərdə alır</li>
+      <li><span class="box"></span><code>topics.md</code> dolduruldu</li>
+      <li><span class="box"></span>Fayl <code>_KURS/Ders_04_MQTT_Broker.html</code> kimi saxlanılıb</li>
+    </ul>
+  </section>
+
+  <div class="nextcard">
+    <div class="tag2">Növbəti — Dərs 5</div>
+    <h3>FastAPI toplama xidməti</h3>
+    <p class="muted" style="margin:0;">İndi zəncirin son halqasını quracağıq: MQTT-dən gələn mesajları dinləyən və <code>zavod_edge_db</code>-yə yazan FastAPI xidməti. Bu xidmət validasiya edəcək (mənfi çəki, ağlabatmayan temperatur rədd olunacaq), yalnız təmiz məlumat bazaya düşəcək. Beləliklə tam zəncir tamamlanacaq: sensor → MQTT → FastAPI → PostgreSQL.</p>
+  </div>
+
+</main>
+
+<footer>Zarat ERP · Faza 2 · Dərs 4 / 10 — hazır olduqda "davam et" yazın</footer>
+
+<script>
+document.querySelectorAll('.copybtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var wrap = btn.closest('.codewrap');
+    var code = wrap.querySelector('pre code') || wrap.querySelector('pre');
+    var text = code.innerText;
+    function done(){
+      var orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Kopyalandı';
+      setTimeout(function(){ btn.classList.remove('copied'); btn.innerHTML = orig; }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(text); done(); });
+    } else { fallback(text); done(); }
+  });
+});
+function fallback(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+const cells = [
+  {id:'t1', base:24.3, jit:0.4, dec:1, unit:' °C'},
+  {id:'t2', base:12.8, jit:0.3, dec:1, unit:' %'},
+  {id:'t3', base:418, jit:6, dec:0, unit:' kg'},
+  {id:'t4', base:2.1, jit:0.3, dec:1, unit:' mm/s'},
+  {id:'t5', base:37.4, jit:1.1, dec:1, unit:' kW'}
+];
+function tick(){
+  cells.forEach(function(c){
+    var v = c.base + (Math.random()-0.5)*2*c.jit;
+    var el = document.getElementById(c.id);
+    if(el) el.innerHTML = v.toFixed(c.dec) + '<span class="telem-unit">'+c.unit+'</span>';
+  });
+}
+setInterval(tick, 2200);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarat ERP · Faza 2 · Dərs 2 — Edge Baza Sxemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --panel:#121b2e; --panel2:#17233a; --raised:#1c2942;
+  --text:#e7ecf3; --muted:#8a97ab; --line:rgba(255,255,255,0.09);
+  --amber:#f2a72e; --cyan:#35c9c9; --green:#52d17c; --red:#ef5b5b; --violet:#a29bea;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.65; font-size:16px; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,.mono{ font-family:'Space Grotesk',sans-serif; }
+code, pre{ font-family:'JetBrains Mono',monospace; }
+p code, li code, td code{ background:var(--panel2); padding:2px 6px; border-radius:4px; font-size:0.86em; color:var(--cyan); }
+
+.progressbar{ position:sticky; top:0; z-index:50; background:rgba(11,18,32,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:14px 32px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.progressbar .tag{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); font-weight:600; white-space:nowrap; }
+.dots{ display:flex; gap:6px; flex-wrap:wrap; }
+.dot{ width:22px; height:6px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); }
+.dot.done{ background:#245c39; border-color:var(--green); }
+.dot.active{ background:var(--amber); border-color:var(--amber); }
+
+.telemetry{ display:flex; gap:0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
+.telem-cell{ flex:1; min-width:150px; padding:14px 20px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.telem-cell:last-child{ border-right:none; }
+.telem-label{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.led{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2.6s infinite ease-in-out; }
+.led.warn{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.telem-val{ font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; }
+.telem-unit{ font-size:12px; color:var(--muted); font-weight:400; }
+
+main{ max-width:920px; margin:0 auto; padding:0 32px 80px; }
+.hero{ padding:56px 0 32px; border-bottom:1px solid var(--line); }
+.eyebrow{ color:var(--cyan); font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:14px; }
+.hero h1{ font-size:36px; font-weight:600; margin:0 0 16px; line-height:1.15; }
+.hero p.lead{ font-size:17px; color:var(--muted); max-width:700px; margin:0; }
+
+section{ padding:48px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+.sec-num{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-size:14px; font-weight:600; }
+h2{ font-size:24px; font-weight:600; margin:0; }
+h3{ font-size:17px; font-weight:600; margin:30px 0 10px; color:var(--cyan); }
+h4{ font-size:15px; font-weight:600; margin:22px 0 8px; color:var(--violet); }
+p{ color:#d3dae5; margin:0 0 14px; }
+.muted{ color:var(--muted); }
+strong{ color:#eef2f8; font-weight:600; }
+
+.callout{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 20px; margin:20px 0; font-size:15px; }
+.callout.cyan{ border-left-color:var(--cyan); }
+.callout.violet{ border-left-color:var(--violet); }
+.callout.red{ border-left-color:var(--red); }
+.callout.green{ border-left-color:var(--green); }
+.callout .callout-label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); font-weight:600; margin-bottom:6px; }
+.callout.cyan .callout-label{ color:var(--cyan); }
+.callout.violet .callout-label{ color:var(--violet); }
+.callout.red .callout-label{ color:var(--red); }
+.callout.green .callout-label{ color:var(--green); }
+
+table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+th{ text-align:left; padding:10px 14px; background:var(--panel2); color:var(--amber); font-size:12px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
+td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#d3dae5; }
+tr:last-child td{ border-bottom:none; }
+td.k{ color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:13px; white-space:nowrap; }
+
+.codewrap{ margin:18px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); background:#0d1526; }
+.codebar{ background:var(--panel2); padding:8px 14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono',monospace; }
+.codebar .fname{ color:var(--cyan); }
+.copybtn{ background:var(--raised); border:1px solid var(--line); color:var(--text); font-family:'Inter',sans-serif; font-size:12px; font-weight:500; padding:5px 12px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; }
+.copybtn:hover{ background:var(--cyan); color:#04212b; border-color:var(--cyan); }
+.copybtn.copied{ background:var(--green); color:#04211a; border-color:var(--green); }
+.copybtn svg{ width:13px; height:13px; }
+pre{ margin:0; padding:18px 20px; overflow-x:auto; font-size:12.5px; line-height:1.7; color:#c9d4e6; white-space:pre; }
+
+.autochip{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter',sans-serif; color:var(--green); background:rgba(82,209,124,0.12); border:1px solid rgba(82,209,124,0.35); padding:2px 8px; border-radius:20px; margin-left:8px; }
+
+.checklist{ list-style:none; padding:0; margin:18px 0; }
+.checklist li{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15px; color:#d3dae5; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist .box{ width:17px; height:17px; border:1.5px solid var(--cyan); border-radius:4px; flex-shrink:0; margin-top:3px; }
+
+.tree{ font-family:'JetBrains Mono',monospace; font-size:13px; color:#c9d4e6; background:#0d1526; border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px; line-height:1.85; white-space:pre; overflow-x:auto; }
+.tree .folder{ color:var(--amber); }
+.tree .file{ color:var(--cyan); }
+.tree .comment{ color:var(--muted); }
+.tree .root{ color:var(--green); font-weight:600; }
+
+.nextcard{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-top:20px; }
+.nextcard .tag2{ font-size:12px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:8px; }
+.nextcard h3{ margin:0 0 8px; color:var(--text); font-size:19px; }
+
+.step-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--bg); background:var(--amber); padding:2px 10px; border-radius:20px; font-weight:600; margin-bottom:10px; }
+
+footer{ text-align:center; padding:40px 0; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="progressbar">
+  <span class="tag">Zarat ERP · Faza 2 — Zavod Rəqəmsallaşdırılması</span>
+  <div class="dots">
+    <div class="dot done"></div><div class="dot active"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <span class="mono" style="font-size:12px;color:var(--muted);margin-left:auto;">Dərs 2 / 10</span>
+</div>
+
+<div class="telemetry">
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Silo temperaturu</span><span class="telem-val" id="t1">24.3<span class="telem-unit"> °C</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Rütubət (yem qarışığı)</span><span class="telem-val" id="t2">12.8<span class="telem-unit"> %</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led warn"></span>Yem çəkisi (dozator)</span><span class="telem-val" id="t3">418<span class="telem-unit"> kg</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Vibrasiya (mühərrik)</span><span class="telem-val" id="t4">2.1<span class="telem-unit"> mm/s</span></span></div>
+  <div class="telem-cell"><span class="telem-label"><span class="led"></span>Elektrik yükü</span><span class="telem-val" id="t5">37.4<span class="telem-unit"> kW</span></span></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Faza 2 · Dərs 2 / 10</div>
+    <h1>Edge baza sxemi — zavod_edge_db</h1>
+    <p class="lead">Bu dərsdə zavodun öz lokal bazasını qururuq. Bu versiyada bütün SQL faylları <strong>avtomatik öz yerində yaranır</strong> — hər blok <code>cat &gt; fayl</code> üsulu ilə faylı birbaşa <code>02_db/edge/</code> qovluğunda yaradır. Sizə yalnız kopyala düyməsini basıb Terminalda yapışdırmaq qalır.</p>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Niyə ayrıca «edge» baza?</h2></div>
+    <p>Dərs 1-də qərar verdik: zavod bazası mərkəzi <code>zarat_erp_2</code>-dən <strong>tam ayrı</strong> olacaq — ayrı verilənlər bazası, ayrı port (5434). Buna «edge» (kənar) baza deyilir, çünki o, məlumatın ilk yarandığı yerdə — zavod sahəsində — dayanır.</p>
+    <table>
+      <tr><th>Xüsusiyyət</th><th>Edge baza (zavod)</th><th>Mərkəzi baza (ofis)</th></tr>
+      <tr><td class="k">Ad</td><td>zavod_edge_db</td><td>zarat_erp_2</td></tr>
+      <tr><td class="k">Port</td><td>5434</td><td>5432</td></tr>
+      <tr><td class="k">Rol</td><td>Xam sensor məlumatını qəbul edir</td><td>Yekun, təmizlənmiş məlumatı saxlayır</td></tr>
+      <tr><td class="k">Yük</td><td>Saniyədə çox yazma</td><td>Analitika, hesabatlar</td></tr>
+    </table>
+    <div class="callout green">
+      <div class="callout-label">Artıq hazır olan</div>
+      Əvvəlki addımlarda siz artıq 5434 portunda serveri işə saldınız və <code>zavod_edge_db</code> bazasını yaratdınız. Bu dərsdə həmin bazanın <strong>içini</strong> — cədvəlləri — quracağıq.
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Sxemin ümumi mənzərəsi</h2></div>
+    <p>Dörd cədvəl və onların əlaqəsi. Ox istiqaməti «hansı cədvəl hansına istinad edir» deməkdir.</p>
+
+    <svg viewBox="0 0 820 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;margin:22px 0;" role="img" aria-label="Edge baza cədvəllərinin əlaqə diaqramı">
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5a6b85"/></marker></defs>
+      <rect x="40" y="40" width="220" height="120" rx="10" fill="#17233a" stroke="#35c9c9" stroke-width="1.4"/>
+      <text x="150" y="66" fill="#35c9c9" font-family="Space Grotesk" font-size="14" font-weight="600" text-anchor="middle">sensor_tipi</text>
+      <line x1="52" y1="76" x2="248" y2="76" stroke="#1c2942"/>
+      <text x="60" y="96" fill="#c9d4e6" font-family="JetBrains Mono" font-size="11">kod (PK)</text>
+      <text x="60" y="114" fill="#8a97ab" font-family="Inter" font-size="11">ad, vahid</text>
+      <text x="60" y="132" fill="#8a97ab" font-family="Inter" font-size="11">min_hedd, max_hedd</text>
+      <text x="60" y="150" fill="#8a97ab" font-family="Inter" font-size="11">(temperatur, rütubət...)</text>
+      <rect x="560" y="40" width="220" height="120" rx="10" fill="#17233a" stroke="#a29bea" stroke-width="1.4"/>
+      <text x="670" y="66" fill="#a29bea" font-family="Space Grotesk" font-size="14" font-weight="600" text-anchor="middle">cihaz</text>
+      <line x1="572" y1="76" x2="768" y2="76" stroke="#1c2942"/>
+      <text x="580" y="96" fill="#c9d4e6" font-family="JetBrains Mono" font-size="11">kod (PK)</text>
+      <text x="580" y="114" fill="#f2a72e" font-family="JetBrains Mono" font-size="11">sensor_tipi_kod (FK)</text>
+      <text x="580" y="132" fill="#8a97ab" font-family="Inter" font-size="11">ad, yer, status</text>
+      <text x="580" y="150" fill="#8a97ab" font-family="Inter" font-size="11">(S001, S002...)</text>
+      <path d="M560,100 L262,100" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+      <text x="410" y="92" fill="#8a97ab" font-family="Inter" font-size="10.5" text-anchor="middle">hər cihaz bir tipdəndir</text>
+      <rect x="300" y="220" width="220" height="140" rx="10" fill="#17233a" stroke="#52d17c" stroke-width="1.4"/>
+      <text x="410" y="246" fill="#52d17c" font-family="Space Grotesk" font-size="14" font-weight="600" text-anchor="middle">olcme</text>
+      <text x="410" y="262" fill="#8a97ab" font-family="Inter" font-size="10" text-anchor="middle">(partisiyalı, vaxt üzrə)</text>
+      <line x1="312" y1="272" x2="508" y2="272" stroke="#1c2942"/>
+      <text x="320" y="292" fill="#c9d4e6" font-family="JetBrains Mono" font-size="11">id, olcme_vaxti (PK)</text>
+      <text x="320" y="310" fill="#f2a72e" font-family="JetBrains Mono" font-size="11">cihaz_kod (FK)</text>
+      <text x="320" y="328" fill="#8a97ab" font-family="Inter" font-size="11">qiymet, keyfiyyet</text>
+      <text x="320" y="346" fill="#f2a72e" font-family="JetBrains Mono" font-size="11">sync_status (outbox)</text>
+      <path d="M600,160 C600,220 490,220 460,220" stroke="#5a6b85" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+      <text x="560" y="200" fill="#8a97ab" font-family="Inter" font-size="10.5" text-anchor="middle">hansı cihazdan</text>
+      <rect x="40" y="250" width="200" height="90" rx="10" fill="#17233a" stroke="#ef5b5b" stroke-width="1.4"/>
+      <text x="140" y="276" fill="#ef5b5b" font-family="Space Grotesk" font-size="14" font-weight="600" text-anchor="middle">xeberdarliq</text>
+      <line x1="52" y1="286" x2="228" y2="286" stroke="#1c2942"/>
+      <text x="60" y="306" fill="#c9d4e6" font-family="JetBrains Mono" font-size="11">id (PK)</text>
+      <text x="60" y="324" fill="#f2a72e" font-family="JetBrains Mono" font-size="11">cihaz_kod (FK)</text>
+      <path d="M300,300 L242,300" stroke="#5a6b85" stroke-width="1.4" marker-end="url(#arrow)"/>
+    </svg>
+    <p class="muted" style="font-size:14px;">Məntiq: <code>sensor_tipi</code> — lüğətdir (temperatur, rütubət və s. və normal həddləri). <code>cihaz</code> — fiziki sensorlar. <code>olcme</code> — əsas cədvəl, hər ölçmə buraya düşür. <code>xeberdarliq</code> — hədd aşılanda yaranan qeydlər.</p>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Necə işləyir — <code>cat &gt; fayl</code> üsulu</h2></div>
+    <p>Bu dərsdə hər SQL faylı <strong>heredoc</strong> adlanan üsulla yaranır. Struktur belədir:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">izah — nümunə</span></div>
+      <pre>cat &gt; fayl_adı.sql &lt;&lt; 'EOF'
+   ... fayl məzmunu buraya gəlir ...
+EOF</pre>
+    </div>
+    <p><code>cat &gt; fayl.sql</code> deyir «bu faylı yarat və içinə yaz». <code>&lt;&lt; 'EOF'</code> deyir «EOF sözünü görənə qədər hər şeyi fayla yaz». Beləliklə kopyala-yapışdır edəndə fayl <strong>öz yerində, tam məzmunla</strong> yaranır — əl ilə fayl açıb yapışdırmağa ehtiyac yoxdur.</p>
+    <div class="callout cyan">
+      <div class="callout-label">Vacib</div>
+      Hər bloku <strong>bütöv</strong> kopyalayın — <code>cat</code> sətrindən son <code>EOF</code>-a qədər. Terminalda yapışdırıb Enter basın. Fayl dərhal yaranacaq.
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Fayl 1 — cədvəllər <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Dörd cədvəli yaradan SQL. Bu blok <code>02_db/edge/01_cedveller.sql</code> faylını avtomatik yaradacaq. Kopyalayıb Terminalda yapışdırın (əvvəlcə layihə qovluğunda olduğunuzdan əmin olun).</p>
+
+    <div class="callout violet">
+      <div class="callout-label">Partition qaydası</div>
+      Partisiyalı cədvəldə partition açarı (<code>olcme_vaxti</code>) mütləq PRIMARY KEY-in bir hissəsi olmalıdır. Ona görə PK <code>(id, olcme_vaxti)</code>-dir. Bu, PostgreSQL-in tələbidir.
+    </div>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">02_db/edge/01_cedveller.sql yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 02_db/edge/01_cedveller.sql << 'EOF'
+-- ============================================================
+-- Zarat Faza 2 — zavod_edge_db — cədvəllər
+-- Fayl: 02_db/edge/01_cedveller.sql
+-- ============================================================
+
+-- ---- 1. SENSOR TİPLƏRİ (lüğət) ----
+CREATE TABLE IF NOT EXISTS sensor_tipi (
+    kod          VARCHAR(20)  PRIMARY KEY,
+    ad           VARCHAR(80)  NOT NULL,
+    vahid        VARCHAR(15)  NOT NULL,
+    min_hedd     NUMERIC(10,3),
+    max_hedd     NUMERIC(10,3),
+    tesvir       TEXT,
+    yaradilma    TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+COMMENT ON TABLE  sensor_tipi IS 'Sensor novlerinin lugeti ve normal heddleri';
+COMMENT ON COLUMN sensor_tipi.min_hedd IS 'Bu hedden asagi = anomaliya (ders 6)';
+COMMENT ON COLUMN sensor_tipi.max_hedd IS 'Bu hedden yuxari = anomaliya (ders 6)';
+
+-- ---- 2. CİHAZLAR (fiziki sensorlar) ----
+CREATE TABLE IF NOT EXISTS cihaz (
+    kod              VARCHAR(20)  PRIMARY KEY,
+    sensor_tipi_kod  VARCHAR(20)  NOT NULL REFERENCES sensor_tipi(kod),
+    ad               VARCHAR(100) NOT NULL,
+    yer              VARCHAR(100),
+    status           VARCHAR(15)  NOT NULL DEFAULT 'aktiv'
+                     CHECK (status IN ('aktiv','deaktiv','xarab')),
+    qurasdirilma     DATE,
+    yaradilma        TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_cihaz_tipi ON cihaz(sensor_tipi_kod);
+COMMENT ON TABLE cihaz IS 'Zavodda qurasdirilmis fiziki sensorlar';
+
+-- ---- 3. ÖLÇMƏLƏR (əsas cədvəl — partisiyalı) ----
+CREATE TABLE IF NOT EXISTS olcme (
+    id           BIGINT       GENERATED ALWAYS AS IDENTITY,
+    cihaz_kod    VARCHAR(20)  NOT NULL REFERENCES cihaz(kod),
+    olcme_vaxti  TIMESTAMPTZ  NOT NULL,
+    qiymet       NUMERIC(12,4) NOT NULL,
+    keyfiyyet    SMALLINT     NOT NULL DEFAULT 1,
+    sync_status  SMALLINT     NOT NULL DEFAULT 0,
+    yaradilma    TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    PRIMARY KEY (id, olcme_vaxti)
+) PARTITION BY RANGE (olcme_vaxti);
+
+CREATE INDEX IF NOT EXISTS idx_olcme_cihaz_vaxt
+    ON olcme (cihaz_kod, olcme_vaxti DESC);
+CREATE INDEX IF NOT EXISTS idx_olcme_sync
+    ON olcme (sync_status, olcme_vaxti) WHERE sync_status = 0;
+
+COMMENT ON TABLE  olcme IS 'Sensorlardan gelen xam olcmeler — ayliq partisiyali';
+COMMENT ON COLUMN olcme.sync_status IS 'Outbox: 0=gonderilmeyib, 1=gonderilib';
+COMMENT ON COLUMN olcme.keyfiyyet IS '1=etibarli, 0=validasiyadan kecmeyib (ders 5)';
+
+-- ---- 4. XƏBƏRDARLIQLAR (anomaliya jurnalı) ----
+CREATE TABLE IF NOT EXISTS xeberdarliq (
+    id           BIGINT       GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cihaz_kod    VARCHAR(20)  NOT NULL REFERENCES cihaz(kod),
+    olcme_vaxti  TIMESTAMPTZ  NOT NULL,
+    qiymet       NUMERIC(12,4) NOT NULL,
+    novu         VARCHAR(20)  NOT NULL
+                 CHECK (novu IN ('yuxari_hedd','asagi_hedd','cihaz_susur')),
+    mesaj        TEXT,
+    hell_olundu  BOOLEAN      NOT NULL DEFAULT false,
+    yaradilma    TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_xeber_cihaz ON xeberdarliq(cihaz_kod, yaradilma DESC);
+CREATE INDEX IF NOT EXISTS idx_xeber_hell ON xeberdarliq(hell_olundu) WHERE hell_olundu = false;
+COMMENT ON TABLE xeberdarliq IS 'Hedd asilmalari ve cihaz susmalari jurnali';
+EOF
+
+echo "01_cedveller.sql yaradildi:"
+ls -la 02_db/edge/01_cedveller.sql</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;">Son <code>echo</code> və <code>ls</code> faylın həqiqətən yarandığını təsdiqləyəcək.</p>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Fayl 2 — partisiyalar <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p><code>olcme</code> valideyn cədvəldir — məlumat aylıq «uşaq» partisiyalarda yaşayır. Bu blok <code>02_db/edge/02_partisiyalar.sql</code> faylını yaradır: 2026-ın ayları, DEFAULT partisiya və gələcək partisiyaları avtomatik yaradan funksiya.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">02_db/edge/02_partisiyalar.sql yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 02_db/edge/02_partisiyalar.sql << 'EOF'
+-- ============================================================
+-- olcme cədvəli üçün aylıq partisiyalar
+-- Fayl: 02_db/edge/02_partisiyalar.sql
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS olcme_2026_07 PARTITION OF olcme
+    FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
+CREATE TABLE IF NOT EXISTS olcme_2026_08 PARTITION OF olcme
+    FOR VALUES FROM ('2026-08-01') TO ('2026-09-01');
+CREATE TABLE IF NOT EXISTS olcme_2026_09 PARTITION OF olcme
+    FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
+
+-- DEFAULT partisiya: heç bir aralığa düşməyən sətirlər buraya gedir
+CREATE TABLE IF NOT EXISTS olcme_default PARTITION OF olcme DEFAULT;
+
+-- Verilən tarix üçün aylıq partisiya yaradan funksiya
+CREATE OR REPLACE FUNCTION partisiya_yarat(p_tarix DATE)
+RETURNS TEXT AS $$
+DECLARE
+    v_bas DATE := date_trunc('month', p_tarix)::DATE;
+    v_son DATE := (date_trunc('month', p_tarix) + INTERVAL '1 month')::DATE;
+    v_ad  TEXT := 'olcme_' || to_char(v_bas, 'YYYY_MM');
+BEGIN
+    EXECUTE format(
+        'CREATE TABLE IF NOT EXISTS %I PARTITION OF olcme
+         FOR VALUES FROM (%L) TO (%L)',
+        v_ad, v_bas, v_son
+    );
+    RETURN v_ad || ' yaradildi (' || v_bas || ' - ' || v_son || ')';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Nümunə: oktyabr partisiyasını yaradaq
+SELECT partisiya_yarat('2026-10-15');
+EOF
+
+echo "02_partisiyalar.sql yaradildi:"
+ls -la 02_db/edge/02_partisiyalar.sql</code></pre>
+    </div>
+    <div class="callout">
+      <div class="callout-label">Diqqət — <code>$$</code> və tək dırnaqlı heredoc</div>
+      Funksiya daxilində PL/pgSQL bloku <code>$$</code> ilə açılır. Blok <code>&lt;&lt; 'EOF'</code> (tək dırnaqlı) olduğu üçün bash içəridəki heç nəyi dəyişmir — <code>$$</code>, <code>||</code>, <code>%I</code> hamısı olduğu kimi fayla düşür. Məhz bu səbəbdən tək dırnaqlı heredoc SQL üçün ideal seçimdir.
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Fayl 3 — başlanğıc məlumat <span class="autochip">avtomatik yaranır</span></h2></div>
+    <p>Sensor tiplərini və cihazları dolduran seed faylı. Bu blok <code>02_db/edge/03_seed.sql</code> yaradır. Dəyərlər Siyəzən yem fabrikinin real göstəricilərinə uyğundur.</p>
+
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">02_db/edge/03_seed.sql yaradır</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat > 02_db/edge/03_seed.sql << 'EOF'
+-- ============================================================
+-- Baslangic melumat — sensor tipleri ve cihazlar
+-- Fayl: 02_db/edge/03_seed.sql
+-- ============================================================
+
+INSERT INTO sensor_tipi (kod, ad, vahid, min_hedd, max_hedd, tesvir) VALUES
+  ('TEMP',     'Temperatur',      '°C',   -5,   35,  'Silo ve anbar temperaturu'),
+  ('RUTUBET',  'Rutubet',         '%',     8,   18,  'Yem qarisiginin rutubeti'),
+  ('CEKI',     'Ceki (dozator)',  'kg',    0,  500,  'Dozator cixis cekisi'),
+  ('VIBRASIYA','Vibrasiya',       'mm/s',  0,    7,  'Muherrik vibrasiyasi'),
+  ('ENERJI',   'Elektrik yuku',   'kW',    0,   60,  'Xettin enerji serfiyyati')
+ON CONFLICT (kod) DO NOTHING;
+
+INSERT INTO cihaz (kod, sensor_tipi_kod, ad, yer, status, qurasdirilma) VALUES
+  ('S001', 'TEMP',      'Silo-1 temperatur',  'Yem anbari, silo 1',    'aktiv', '2026-06-01'),
+  ('S002', 'RUTUBET',   'Qarisdirici rutubet','Qarisdirma xetti',      'aktiv', '2026-06-01'),
+  ('S003', 'CEKI',      'Dozator ceki',       'Dozator cixisi',        'aktiv', '2026-06-01'),
+  ('S004', 'VIBRASIYA', 'Esas muherrik vib.', 'Qranulyator muherriki', 'aktiv', '2026-06-05'),
+  ('S005', 'ENERJI',    'Xett enerji sayqaci','Elektrik sitasi',       'aktiv', '2026-06-05')
+ON CONFLICT (kod) DO NOTHING;
+
+SELECT c.kod, c.ad, t.ad AS tip, t.vahid, t.min_hedd, t.max_hedd
+FROM cihaz c JOIN sensor_tipi t ON c.sensor_tipi_kod = t.kod
+ORDER BY c.kod;
+EOF
+
+echo "03_seed.sql yaradildi:"
+ls -la 02_db/edge/03_seed.sql</code></pre>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Üç faylı da yoxlayaq</h2></div>
+    <p>İndi hər üç fayl <code>02_db/edge/</code> qovluğunda yaranıb. Yoxlayaq:</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — faylların yoxlanması</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+ls -la 02_db/edge/</code></pre>
+    </div>
+    <p class="muted" style="font-size:14px;">Üç fayl görünməlidir: 01_cedveller.sql, 02_partisiyalar.sql, 03_seed.sql</p>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Faylları bazaya tətbiq edək</h2></div>
+    <p>Fayllar diskdə hazırdır. İndi onları ardıcıllıqla bazaya tətbiq edirik — ardıcıllıq vacibdir: əvvəlcə cədvəllər, sonra partisiyalar, sonra seed.</p>
+
+    <span class="step-badge">Addım</span>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — DDL tətbiqi</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>cd ~/Desktop/Zarat_Faza2_Zavod
+
+psql -p 5434 -U royatalibova -d zavod_edge_db -f 02_db/edge/01_cedveller.sql
+psql -p 5434 -U royatalibova -d zavod_edge_db -f 02_db/edge/02_partisiyalar.sql
+psql -p 5434 -U royatalibova -d zavod_edge_db -f 02_db/edge/03_seed.sql</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Gözlənilən nəticə</div>
+      Birinci fayl: bir neçə <code>CREATE TABLE</code> / <code>CREATE INDEX</code>. İkinci: partisiyalar + <code>partisiya_yarat</code> nəticəsi. Üçüncü: <code>INSERT 0 5</code> iki dəfə və sonda 5 cihazın siyahısı.
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Strukturu və test ölçməsini yoxlayaq</h2></div>
+    <p>Hər şeyin düzgün qurulduğunu bir neçə sorğu ilə təsdiqləyirik.</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — struktur + test</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>psql -p 5434 -U royatalibova -d zavod_edge_db -c "
+-- cedvellerin sayi
+SELECT count(*) AS cedvel_sayi FROM information_schema.tables
+WHERE table_schema='public';
+
+-- test olcmesi elave edek
+INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet)
+VALUES ('S001', now(), 24.3);
+
+-- son olcmeni goster
+SELECT id, cihaz_kod, olcme_vaxti, qiymet, sync_status
+FROM olcme ORDER BY id DESC LIMIT 1;
+"</code></pre>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Uğur əlaməti</div>
+      Test ölçməsi bir sətir qaytarmalıdır: <code>S001</code>, indiki vaxt, <code>24.3</code>, <code>sync_status = 0</code>. Bu o deməkdir ki, ölçmə düzgün partisiyaya (<code>olcme_2026_07</code>) düşdü və mərkəzə göndərilmək üçün növbədədir.
+    </div>
+
+    <h3>Partisiyaları görmək istəsəniz</h3>
+    <div class="codewrap">
+      <div class="codebar"><span class="fname">terminal — partisiyalar</span><button class="copybtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopyala</button></div>
+      <pre><code>psql -p 5434 -U royatalibova -d zavod_edge_db -c "\d+ olcme"</code></pre>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>Yaratdığımız fayllar və yoxlama siyahısı</h2></div>
+    <div class="tree"><span class="root">02_db/edge/</span>
+├── <span class="file">01_cedveller.sql</span>      <span class="comment"># 4 cədvəl</span>
+├── <span class="file">02_partisiyalar.sql</span>   <span class="comment"># aylıq partisiyalar + funksiya</span>
+└── <span class="file">03_seed.sql</span>           <span class="comment"># 5 sensor tipi + 5 cihaz</span></div>
+
+    <ul class="checklist">
+      <li><span class="box"></span>Üç SQL faylı <code>02_db/edge/</code>-də avtomatik yarandı (heredoc bloklarından)</li>
+      <li><span class="box"></span><code>ls -la 02_db/edge/</code> hər üç faylı göstərir</li>
+      <li><span class="box"></span>Üç fayl ardıcıllıqla tətbiq olundu, xəta yoxdur</li>
+      <li><span class="box"></span>4 cədvəl yarandı: sensor_tipi, cihaz, olcme, xeberdarliq</li>
+      <li><span class="box"></span>5 sensor tipi və 5 cihaz seed olundu</li>
+      <li><span class="box"></span>Test ölçməsi <code>sync_status = 0</code> ilə düzgün partisiyaya düşdü</li>
+      <li><span class="box"></span>Bu fayl <code>_KURS/Ders_02_Edge_DB_Sxem.html</code> kimi saxlanılıb</li>
+    </ul>
+  </section>
+
+  <div class="nextcard">
+    <div class="tag2">Növbəti — Dərs 3</div>
+    <h3>Süni sensor simulyatoru</h3>
+    <p class="muted" style="margin:0;">Python-da hər sensor tipi üçün bir sinif yazacağıq (<code>03_src/sensorlar/</code>) — yenə heredoc üsulu ilə avtomatik yerində yaranan fayllar. Bu siniflər realist siqnal generasiya edəcək: temperatur yavaş dəyişir, çəki dövri artıb-azalır, arada anomaliyalar «püskürür».</p>
+  </div>
+
+</main>
+
+<footer>Zarat ERP · Faza 2 · Dərs 2 / 10 — hazır olduqda "davam et" yazın</footer>
+
+<script>
+document.querySelectorAll('.copybtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var wrap = btn.closest('.codewrap');
+    var code = wrap.querySelector('pre code') || wrap.querySelector('pre');
+    var text = code.innerText;
+    function done(){
+      var orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Kopyalandı';
+      setTimeout(function(){ btn.classList.remove('copied'); btn.innerHTML = orig; }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(text); done(); });
+    } else { fallback(text); done(); }
+  });
+});
+function fallback(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+const cells = [
+  {id:'t1', base:24.3, jit:0.4, dec:1, unit:' °C'},
+  {id:'t2', base:12.8, jit:0.3, dec:1, unit:' %'},
+  {id:'t3', base:418, jit:6, dec:0, unit:' kg'},
+  {id:'t4', base:2.1, jit:0.3, dec:1, unit:' mm/s'},
+  {id:'t5', base:37.4, jit:1.1, dec:1, unit:' kW'}
+];
+function tick(){
+  cells.forEach(function(c){
+    var v = c.base + (Math.random()-0.5)*2*c.jit;
+    var el = document.getElementById(c.id);
+    if(el) el.innerHTML = v.toFixed(c.dec) + '<span class="telem-unit">'+c.unit+'</span>';
+  });
+}
+setInterval(tick, 2200);
+</script>
+
+</body>
+</html>

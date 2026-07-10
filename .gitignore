@@ -1,0 +1,17 @@
+# Python virtual muhit (her mainda ayrica qurulur)
+00_env/
+__pycache__/
+*.pyc
+
+# Konfiqurasiya - sirler, her mainda ayrica
+.env
+
+# Loglar
+*.log
+_LOG/*.log
+
+# macOS
+.DS_Store
+
+# PostgreSQL data (ehtiyat ucun)
+*_pgdata/
