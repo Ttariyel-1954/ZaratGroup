@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 04-A — Zarat Zavodu: Sensor Sisteminin Fiziki Qurulması və Məsuliyyət Zənciri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620;
+    --steel:#17222f;
+    --steel-2:#1f2e3d;
+    --line:#2a3b4d;
+    --teal:#2dd4bf;
+    --teal-deep:#0d9488;
+    --amber:#f5a524;
+    --blue:#5aa9e6;
+    --green:#5bd08a;
+    --slate:#94a3b8;
+    --paper:#f6f4ef;
+    --paper-2:#efece4;
+    --ink:#1a222c;
+    --ink-soft:#41505f;
+    --danger:#e5695f;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:17px;
+    line-height:1.72;
+    -webkit-font-smoothing:antialiased;
+  }
+  .disp{font-family:"Oswald","Arial Narrow",Arial,sans-serif;letter-spacing:.02em;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:
+      radial-gradient(1200px 400px at 80% -10%, rgba(45,212,191,.14), transparent 60%),
+      linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;
+    padding:68px 32px 56px;
+    border-bottom:3px solid var(--teal-deep);
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;left:0;right:0;bottom:0;height:56px;
+    background-image:repeating-linear-gradient(90deg,transparent 0 38px,rgba(45,212,191,.10) 38px 40px);
+    pointer-events:none;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+  .eyebrow{
+    font-family:"Oswald",Arial,sans-serif;
+    text-transform:uppercase;letter-spacing:.32em;
+    font-size:13px;color:var(--teal);font-weight:600;margin:0 0 14px;
+  }
+  .hero h1{
+    font-family:"Oswald","Arial Narrow",Arial,sans-serif;
+    font-weight:700;font-size:clamp(30px,5vw,50px);line-height:1.06;
+    margin:0 0 18px;color:#fff;letter-spacing:.01em;
+  }
+  .hero .lede{font-size:19px;line-height:1.7;color:#c6d3df;max-width:720px;margin:0;}
+  .hero .meta{
+    margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;
+  }
+  .chip{
+    font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(45,212,191,.12);
+    border:1px solid rgba(45,212,191,.35);color:#8ff0e2;
+    padding:6px 13px;border-radius:2px;
+  }
+
+  /* ---------- LAYOUT ---------- */
+  main{max-width:960px;margin:0 auto;padding:0 32px;}
+  section{padding:48px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  section:last-child{border-bottom:none;}
+  .sec-num{
+    font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.28em;color:var(--teal-deep);text-transform:uppercase;
+    margin:0 0 8px;
+  }
+  h2{
+    font-family:"Oswald","Arial Narrow",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.4vw,32px);line-height:1.14;margin:0 0 20px;
+    color:var(--ink);letter-spacing:.01em;
+  }
+  h3{
+    font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;
+    margin:32px 0 10px;color:var(--ink);letter-spacing:.02em;
+  }
+  p{margin:0 0 16px;}
+  strong{color:var(--ink);}
+  a{color:var(--teal-deep);}
+
+  .callout{
+    background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:18px 22px;border-radius:0 4px 4px 0;margin:22px 0;
+    font-size:16px;line-height:1.65;
+  }
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout .k{
+    font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.14em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;
+  }
+  .callout.warn .k{color:#b9781a;}
+
+  /* ---------- TABLE ---------- */
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.5;}
+  .tbl thead th{
+    background:var(--steel);color:#dbe6f0;
+    font-family:"Oswald",Arial,sans-serif;font-weight:500;letter-spacing:.04em;
+    text-align:left;padding:11px 13px;font-size:13px;text-transform:uppercase;
+    border-bottom:2px solid var(--teal-deep);
+  }
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+  .tag{
+    display:inline-block;font-family:"Oswald",Arial,sans-serif;font-size:11px;
+    letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:2px;
+    background:#e6efe9;color:#2f6b4a;border:1px solid #bcd9c8;
+  }
+
+  /* ---------- CODE ---------- */
+  .codebox{position:relative;margin:22px 0;}
+  .codebox pre{
+    background:var(--graphite);color:#d7e3ee;border-radius:6px;
+    padding:18px 20px;overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:13.5px;line-height:1.65;margin:0;border:1px solid var(--line);
+  }
+  .codebox .cmt{color:#6f8598;}
+  .codebox .kw{color:var(--teal);}
+  .copybtn{
+    position:absolute;top:10px;right:10px;background:rgba(45,212,191,.14);
+    color:#8ff0e2;border:1px solid rgba(45,212,191,.4);border-radius:3px;
+    font-family:"Oswald",Arial,sans-serif;font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;padding:5px 10px;cursor:pointer;transition:.15s;
+  }
+  .copybtn:hover{background:rgba(45,212,191,.28);}
+
+  /* ---------- SIGNAL FLOW (mini) ---------- */
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:26px 0;}
+  .flow .node{
+    flex:1 1 120px;background:var(--steel);color:#dbe6f0;border:1px solid var(--line);
+    border-radius:6px;padding:14px 12px;text-align:center;position:relative;min-width:120px;
+  }
+  .flow .node .ic{font-size:20px;display:block;margin-bottom:6px;}
+  .flow .node .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.03em;color:#fff;text-transform:uppercase;}
+  .flow .node .s{font-size:11.5px;color:#93a6b8;font-family:ui-monospace,monospace;margin-top:4px;display:block;}
+  .flow .arr{display:flex;align-items:center;justify-content:center;color:var(--teal);font-size:22px;padding:0 4px;flex:0 0 auto;}
+
+  /* ---------- RESPONSIBILITY CHAIN (signature) ---------- */
+  .chain{background:var(--graphite);border-radius:10px;padding:40px 30px 44px;margin:30px 0;position:relative;overflow:hidden;}
+  .chain-head{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end;margin-bottom:34px;}
+  .chain-head h3{color:#fff;margin:0;font-size:22px;}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;}
+  .legend span{font-family:"Oswald",Arial,sans-serif;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:#a9bccd;display:flex;align-items:center;gap:6px;}
+  .legend i{width:11px;height:11px;border-radius:2px;display:inline-block;}
+
+  .chain-track{position:relative;padding-left:8px;}
+  .chain-track::before{
+    content:"";position:absolute;left:29px;top:14px;bottom:14px;width:3px;
+    background:linear-gradient(180deg,var(--amber),var(--teal),var(--blue),var(--green));
+    border-radius:2px;opacity:.6;
+  }
+  .stage{position:relative;display:flex;gap:20px;padding:12px 0;align-items:flex-start;}
+  .stage .badge{
+    flex:0 0 44px;height:44px;width:44px;border-radius:50%;z-index:2;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Oswald",Arial,sans-serif;font-weight:700;font-size:18px;color:var(--graphite);
+    box-shadow:0 0 0 4px var(--graphite);
+  }
+  .stage .body{
+    flex:1;background:var(--steel);border:1px solid var(--line);border-radius:8px;
+    padding:15px 18px;border-left-width:4px;
+  }
+  .stage .body h4{
+    font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:16.5px;
+    margin:0 0 4px;color:#fff;letter-spacing:.02em;
+  }
+  .stage .role{
+    font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.06em;
+    text-transform:uppercase;font-weight:500;margin-bottom:8px;display:inline-block;
+  }
+  .stage .desc{font-family:Georgia,serif;font-size:14.5px;line-height:1.6;color:#c2d0dd;margin:0;}
+  .stage .out{
+    margin-top:9px;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#8ff0e2;
+    background:rgba(45,212,191,.08);border:1px dashed rgba(45,212,191,.3);
+    padding:4px 9px;border-radius:3px;display:inline-block;
+  }
+  /* colour groups */
+  .g-yon .badge{background:var(--amber);} .g-yon .body{border-left-color:var(--amber);} .g-yon .role{color:var(--amber);}
+  .g-muh .badge{background:var(--teal);} .g-muh .body{border-left-color:var(--teal);} .g-muh .role{color:var(--teal);}
+  .g-tec .badge{background:var(--slate);} .g-tec .body{border-left-color:var(--slate);} .g-tec .role{color:var(--slate);}
+  .g-it  .badge{background:var(--blue);} .g-it  .body{border-left-color:var(--blue);} .g-it  .role{color:var(--blue);}
+  .g-dev .badge{background:var(--green);} .g-dev .body{border-left-color:var(--green);} .g-dev .role{color:var(--green);}
+
+  /* ---------- TIMELINE ---------- */
+  .tl{border-collapse:collapse;width:100%;margin:22px 0;font-size:14.5px;}
+  .tl th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;padding:10px 12px;text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;}
+  .tl td{padding:9px 12px;border-bottom:1px solid #e3ded4;}
+  .tl .wk{font-family:ui-monospace,monospace;color:var(--teal-deep);font-weight:bold;white-space:nowrap;}
+  .tl tbody tr:hover{background:var(--paper-2);}
+
+  /* ---------- CHECKLIST ---------- */
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{
+    padding:12px 16px 12px 46px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:9px;font-size:15.5px;line-height:1.55;
+    border-left:3px solid var(--green);
+  }
+  .check li::before{
+    content:"✓";position:absolute;left:15px;top:11px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .disp{color:var(--teal);letter-spacing:.14em;text-transform:uppercase;font-size:13px;}
+
+  @media (max-width:640px){
+    .hero{padding:48px 20px 40px;} main{padding:0 20px;}
+    .flow .arr{transform:rotate(90deg);} .flow .node{flex-basis:100%;}
+    .stage{gap:14px;} .chain{padding:28px 16px 32px;}
+    .chain-track::before{left:25px;}
+  }
+  @media print{
+    .hero,.chain{background:#fff!important;color:#000!important;}
+    .copybtn{display:none;} body{font-size:12pt;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Əlavə Dərs</p>
+    <h1>Dərs 04-A — Sensor Sisteminin Fiziki Qurulması, Təchizatı və Məsuliyyət Zənciri</h1>
+    <p class="lede">Bu dərsə qədər biz siqnalları Python-da <em>simulyasiya</em> edirdik. İndi eyni siqnalların Siyəzən yem zavodunda <strong>real cihazlardan</strong> necə yarandığını, kimin quraşdırdığını, hansı yolla mərkəzə ötürüldüyünü və nəhayət bizim kompüterdə istifadəyə necə hazırlandığını izah edirik. Bu, developer işi deyil — bunu <strong>müəssisə müdüriyyəti sifariş verib icra etdirməli</strong> və developer işə başlayana qədər hazır olmalıdır.</p>
+    <div class="meta">
+      <span class="chip">5 sensor növü</span>
+      <span class="chip">Sensordan dashboard-a</span>
+      <span class="chip">10 mərhələli məsuliyyət zənciri</span>
+      <span class="chip">Təchizat qrafiki</span>
+      <span class="chip">Büdcə və bazar qiymətləri</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- 1 -->
+<section id="niye">
+  <p class="sec-num">01 — Kontekst</p>
+  <h2>Simulyasiyadan reallığa: niyə ayrıca mərhələ?</h2>
+  <p>Dərs 03 və 04-də <span class="mono">sensor_simulyator.py</span> təsadüfi, amma məntiqli ədədlər yaradıб MQTT-yə göndərirdi. Bu, sistemi <strong>proqram tərəfdən</strong> qurmaq və sınamaq üçün idealdır — real avadanlıq olmadan bütün zənciri (broker → FastAPI → edge baza → dashboard) işlək hala gətirdik.</p>
+  <p>Lakin real zavodda o ədədlər simulyatordan yox, <strong>fiziki cihazlardan</strong> gəlməlidir. Bu keçid təsadüfi olmur: cihazların alınması, düzgün yerə quraşdırılması, elektrik və şəbəkə işləri, kalibrləmə və qəbul — hamısı ayrıca bir <strong>təchizat və montaj layihəsidir</strong>. Bu işlər ay(lar) çəkə bilər, ona görə müdüriyyət bunu <em>indidən</em> planlaşdırmalıdır ki, developer işə başlayanda infrastruktur hazır olsun.</p>
+  <div class="callout warn">
+    <span class="k">Əsas prinsip</span>
+    Developer (siz) heç bir sensor quraşdırmır, kabel çəkmir. Sizin işiniz — hazır MQTT axınını qəbul edən proqram təminatıdır. Bu dərs məhz o axını <strong>yaradan tərəfi</strong> — müdüriyyət, mühəndislər və podratçıları — təsvir edir.
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="zonalar">
+  <p class="sec-num">02 — Yerləşmə</p>
+  <h2>Zavod zonaları və hansı cihaz hara quraşdırılır</h2>
+  <p>Siyəzən yem fabrikini beş kritik nöqtəyə bölürük. Hər nöqtədə bir sensor növü var — bu, bizim <span class="mono">zavod_edge_db</span>-dəki <span class="mono">cihaz</span> və <span class="mono">sensor_tipi</span> cədvəlləri ilə birbaşa uyğundur (S001–S005).</p>
+  <table class="tbl">
+    <thead><tr><th>Zavod zonası</th><th>Cihaz</th><th>Sensor növü</th><th>Nəyi ölçür</th><th>Normal hədd</th></tr></thead>
+    <tbody>
+      <tr><td>Yem anbarı — Silo 1</td><td class="code">S001</td><td>Temperatur (TEMP)</td><td>Saxlanan yemin/dənin temperaturu (kiflənmə, özü-qızma riski)</td><td>−5 … 35 °C</td></tr>
+      <tr><td>Qarışdırma xətti</td><td class="code">S002</td><td>Rütubət (RUTUBET)</td><td>Yem qarışığının rütubəti (keyfiyyət və saxlanma müddəti)</td><td>8 … 18 %</td></tr>
+      <tr><td>Dozator çıxışı</td><td class="code">S003</td><td>Çəki (CEKI)</td><td>Hər dozanın çəkisi (resept dəqiqliyi)</td><td>0 … 500 kg</td></tr>
+      <tr><td>Qranulyator mühərriki</td><td class="code">S004</td><td>Vibrasiya (VIBRASIYA)</td><td>Mühərrik vibrasiyası (yataq/dişli aşınması — nasazlıq proqnozu)</td><td>0 … 7 mm/s</td></tr>
+      <tr><td>Elektrik şitası</td><td class="code">S005</td><td>Enerji (ENERJI)</td><td>Xəttin elektrik yükü (enerji sərfiyyəti, yüklənmə)</td><td>0 … 60 kW</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <span class="k">Diqqət</span>
+    Bu beş nöqtə <strong>başlanğıc konfiqurasiyadır</strong>. Sistem hazır olandan sonra əlavə silolar, ikinci xətt və ya soyutma zonası üçün yeni cihazlar (S006, S007…) eyni sxemə asanlıqla əlavə olunur — heç bir kod dəyişikliyi tələb olunmadan.
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="cihazlar">
+  <p class="sec-num">03 — Avadanlıq</p>
+  <h2>Alınacaq cihazların texniki növləri</h2>
+  <p>Müdüriyyət və təchizat şöbəsi üçün ən vacib sual: <strong>konkret nə almaq?</strong> Aşağıdakı cədvəl hər sensor növü üçün sənaye standartı avadanlığı və çıxış siqnalını göstərir. Siqnal standartı vacibdir — bütün cihazlar ya <strong>4-20 mA analoq</strong>, ya da <strong>Modbus RTU (RS-485)</strong> rəqəmsal çıxış verməlidir ki, gateway onları oxuya bilsin.</p>
+  <table class="tbl">
+    <thead><tr><th>Sensor</th><th>Sənaye cihazı</th><th>Çıxış siqnalı</th><th>Qeyd</th></tr></thead>
+    <tbody>
+      <tr><td>Temperatur</td><td>PT100 / PT1000 zond + transmitter</td><td>4-20 mA</td><td>Silo daxilinə uzun zond; qoruyucu qılaf</td></tr>
+      <tr><td>Rütubət</td><td>Sənaye tutumlu (kapasitiv) rütubət sensoru</td><td>4-20 mA / Modbus</td><td>Dən/yem üçün nəzərdə tutulmuş model</td></tr>
+      <tr><td>Çəki</td><td>Yük hüceyrələri (load cell) + çəki indikatoru</td><td>Modbus RTU</td><td>Dozator bункerinin altına 3-4 tenzo</td></tr>
+      <tr><td>Vibrasiya</td><td>IEPE akselerometr / vibrasiya transmitteri</td><td>4-20 mA</td><td>Mühərrik gövdəsinə maqnit/vintlə</td></tr>
+      <tr><td>Enerji</td><td>Enerji analizatoru + cərəyan transformatorları (CT)</td><td>Modbus RTU</td><td>Şitada avtomat çıxışına CT sancaqları</td></tr>
+    </tbody>
+  </table>
+  <p>Bunlardan əlavə mütləq lazım olan <strong>ümumi avadanlıq</strong>: sənaye IoT gateway (Modbus/4-20mA → MQTT çeviricisi), RS-485 kabel və izolyator, sənaye qidalanma bloku (24 V DC), şəbəkə avadanlığı (industrial switch, lazım olsa 4G router), və qapalı elektrik şkafı (IP65).</p>
+</section>
+
+<!-- 4 -->
+<section id="zencir">
+  <p class="sec-num">04 — Siqnal Axını</p>
+  <h2>Sensordan mərkəzə: siqnal necə gedir?</h2>
+  <p>Bir temperatur oxumasının fiziki zonddan bizim dashboard-a qədər keçdiyi yol yeddi mərhələdən ibarətdir. Bu zəncirin <strong>ilk dörd mərhələsi zavodda</strong> (fiziki), son üçü isə <strong>bizim proqram tərəfindədir</strong> (Dərs 04–07-də qurduğumuz).</p>
+
+  <div class="flow">
+    <div class="node"><span class="ic">🌡️</span><span class="t">Sensor</span><span class="s">fiziki</span></div>
+    <div class="arr">→</div>
+    <div class="node"><span class="ic">🔌</span><span class="t">Transmitter</span><span class="s">4-20mA / RS-485</span></div>
+    <div class="arr">→</div>
+    <div class="node"><span class="ic">📟</span><span class="t">Gateway / PLC</span><span class="s">Modbus→MQTT</span></div>
+    <div class="arr">→</div>
+    <div class="node"><span class="ic">📡</span><span class="t">MQTT Broker</span><span class="s">Mosquitto</span></div>
+    <div class="arr">→</div>
+    <div class="node"><span class="ic">⚙️</span><span class="t">FastAPI</span><span class="s">validasiya</span></div>
+    <div class="arr">→</div>
+    <div class="node"><span class="ic">🗄️</span><span class="t">Edge DB</span><span class="s">port 5434</span></div>
+    <div class="arr">→</div>
+    <div class="node"><span class="ic">📊</span><span class="t">Dashboard</span><span class="s">sizin ekran</span></div>
+  </div>
+
+  <h3>1–2. Fiziki siqnal və transmitter</h3>
+  <p>Sensorun özü zəif/xam elektrik siqnalı verir. <strong>Transmitter</strong> onu standart <span class="mono">4-20 mA</span> cərəyan siqnalına və ya rəqəmsal <span class="mono">Modbus RTU</span> mesajına çevirir. 4-20 mA sənayedə üstünlük təşkil edir, çünki uzun kabellərdə maneədən təsirlənmir (4 mA = minimum, 20 mA = maksimum dəyər).</p>
+
+  <h3>3. Gateway / PLC — zəncirin ürəyi</h3>
+  <p>Bu cihaz bütün sensorları oxuyur (analoq girişlər + Modbus şini) və onları <strong>MQTT mesajlarına</strong> çevirib brokerə göndərir. Topic strukturu bizim <span class="mono">.env</span>-dəki <span class="mono">MQTT_TOPIC_BASE=zavod/siyezen</span> ilə uyğun olmalıdır:</p>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Hər cihaz öz topic-inə yazır — cihaz kodu ilə:</span>
+zavod/siyezen/S001   <span class="cmt"># temperatur</span>
+zavod/siyezen/S002   <span class="cmt"># rütubət</span>
+zavod/siyezen/S003   <span class="cmt"># çəki</span>
+zavod/siyezen/S004   <span class="cmt"># vibrasiya</span>
+zavod/siyezen/S005   <span class="cmt"># enerji</span>
+
+<span class="cmt"># Mesajın formatı (JSON) — FastAPI-nin gözlədiyi ilə eyni:</span>
+{ <span class="kw">"cihaz_kod"</span>: <span class="kw">"S001"</span>, <span class="kw">"qiymet"</span>: 24.3, <span class="kw">"olcme_vaxti"</span>: <span class="kw">"2026-07-11T09:15:00+04:00"</span> }</pre>
+  </div>
+  <div class="callout">
+    <span class="k">Kritik uyğunluq</span>
+    Gateway-in göndərdiyi <strong>topic adları</strong> və <strong>JSON sahələri</strong> bizim FastAPI-nin (Dərs 05) gözlədiyi ilə eyni olmalıdır. Bu, developer ilə inteqrator arasında razılaşdırılan "müqavilə"dir. Uyğunsuzluq olsa, məlumat baza yerinə itir.
+  </div>
+
+  <h3>4. MQTT Broker (Mosquitto)</h3>
+  <p>Broker "poçt mərkəzi"dir: cihazların göndərdiyi mesajları qəbul edir və onlara abunə olan FastAPI-yə çatdırır. Zavodda broker ya lokal edge serverdə (bizim maşın rolunda), ya da müəssisə şəbəkəsində işləyir. Bağlantını yoxlamaq üçün sadə əmr:</p>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Bütün zavod topic-lərini canlı dinlə (test üçün):</span>
+mosquitto_sub -h localhost -p 1883 -t <span class="kw">"zavod/siyezen/#"</span> -v</pre>
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="merkez">
+  <p class="sec-num">05 — Qəbul və Hazırlıq</p>
+  <h2>Mərkəzdə siqnal necə qəbul edilir və istifadəyə hazırlanır</h2>
+  <p>Zəncirin son üç mərhələsi artıq bizim qurduğumuz proqram tərəfidir — bu dərslərdə (04–07) hazırlanır:</p>
+  <table class="tbl">
+    <thead><tr><th>Mərhələ</th><th>Komponent</th><th>Nə edir</th><th>Dərs</th></tr></thead>
+    <tbody>
+      <tr><td>Qəbul + Yoxlama</td><td class="code">FastAPI</td><td>MQTT-dən gələn mesajı oxuyur, dəyəri validasiyadan keçirir (hədd, format), <span class="mono">keyfiyyet</span> bayrağı təyin edir</td><td>05</td></tr>
+      <tr><td>Saxlama</td><td class="code">zavod_edge_db</td><td>Ölçməni <span class="mono">olcme</span> cədvəlinə yazır (aylıq partisiya), <span class="mono">sync_status=0</span> qoyur</td><td>02</td></tr>
+      <tr><td>Anomaliya</td><td class="code">xeberdarliq</td><td>Dəyər həddi aşarsa, avtomatik xəbərdarlıq qeydi yaradır</td><td>06</td></tr>
+      <tr><td>Sinxronizasiya</td><td class="code">Sync servisi</td><td><span class="mono">sync_status=0</span> olan sətirləri mərkəzi <span class="mono">zarat_erp_2</span>-yə köçürür (outbox pattern)</td><td>07</td></tr>
+      <tr><td>Təqdimat</td><td class="code">R Shiny Dashboard</td><td>Rəhbərlik üçün canlı qrafiklər, KPI-lar, xəbərdarlıq paneli</td><td>08+</td></tr>
+    </tbody>
+  </table>
+  <p>Beləliklə fiziki bir temperatur dəyəri — silodakı zonddan başlayıб — bir neçə saniyə içində rəhbərin ekranında rəqəm və qrafikə çevrilir. Bizim işimiz bu son həlqələri qurmaqdır; zavod isə ilk dörd fiziki həlqəni <em>hazır təhvil verməlidir</em>.</p>
+</section>
+
+<!-- 6 -->
+<section id="zencir-diaqram">
+  <p class="sec-num">06 — Məsuliyyət Zənciri</p>
+  <h2>Kim hansı mərhələni etməli və xidmətini kim təşkil etməli</h2>
+  <p>Aşağıdakı zəncir müdüriyyət üçün əsas idarəetmə sənədidir. Hər həlqədə: <strong>kim məsuldur</strong>, <strong>hansı xidməti təşkil edir</strong> və <strong>nə nəticə təhvil verir</strong> göstərilib. Rənglər məsul qrupu bildirir.</p>
+
+  <div class="chain">
+    <div class="chain-head">
+      <h3>Zarat Zavodu — Sensor Sistemi Məsuliyyət Zənciri</h3>
+      <div class="legend">
+        <span><i style="background:var(--amber)"></i>Müdüriyyət</span>
+        <span><i style="background:var(--teal)"></i>Mühəndislik</span>
+        <span><i style="background:var(--slate)"></i>Təchizat</span>
+        <span><i style="background:var(--blue)"></i>İT / Şəbəkə</span>
+        <span><i style="background:var(--green)"></i>Developer</span>
+      </div>
+    </div>
+
+    <div class="chain-track">
+
+      <div class="stage g-yon">
+        <div class="badge">1</div>
+        <div class="body">
+          <h4>Qərar və Büdcə</h4>
+          <span class="role">Məsul: Zarat Group rəhbərliyi</span>
+          <p class="desc">Layihənin təsdiqi, maliyyələşdirmə, məsul layihə menecerinin təyini. Bütün zəncir bu qərardan başlayır.</p>
+          <span class="out">Nəticə: təsdiqlənmiş büdcə + layihə meneceri</span>
+        </div>
+      </div>
+
+      <div class="stage g-muh">
+        <div class="badge">2</div>
+        <div class="body">
+          <h4>Texniki Tapşırıq (TZ)</h4>
+          <span class="role">Məsul: Layihə meneceri + avtomatlaşdırma məsləhətçisi</span>
+          <p class="desc">Zonaların, sensor növlərinin, siqnal standartlarının (4-20mA/Modbus) və MQTT topic "müqaviləsinin" sənədləşdirilməsi. Bu dərsdəki 02–04 cədvəlləri TZ-nin özəyidir.</p>
+          <span class="out">Nəticə: texniki tapşırıq sənədi</span>
+        </div>
+      </div>
+
+      <div class="stage g-tec">
+        <div class="badge">3</div>
+        <div class="body">
+          <h4>Təchizat və Tender</h4>
+          <span class="role">Məsul: Təchizat şöbəsi</span>
+          <p class="desc">Sensorlar, transmitterlər, gateway, RS-485 kabel, qidalanma və şəbəkə avadanlığının tender əsasında alınması və çatdırılması.</p>
+          <span class="out">Nəticə: avadanlıq zavodda</span>
+        </div>
+      </div>
+
+      <div class="stage g-muh">
+        <div class="badge">4</div>
+        <div class="body">
+          <h4>Fiziki Montaj</h4>
+          <span class="role">Məsul: Sistem inteqratoru + mexanik briqada</span>
+          <p class="desc">Sensorların düzgün zonalara quraşdırılması — silo zondu, dozator tenzoları, mühərrik akselerometri, şitada CT sancaqları.</p>
+          <span class="out">Nəticə: quraşdırılmış cihazlar</span>
+        </div>
+      </div>
+
+      <div class="stage g-muh">
+        <div class="badge">5</div>
+        <div class="body">
+          <h4>Elektrik və Kabel</h4>
+          <span class="role">Məsul: Elektrik mühəndisi</span>
+          <p class="desc">Qidalanma (24V DC), siqnal kabelləri (4-20mA/RS-485), torpaqlama və maneə qorunması. Sənaye mühitində düzgün ekranlaşdırma kritikdir.</p>
+          <span class="out">Nəticə: kabellənmiş, qidalanan sistem</span>
+        </div>
+      </div>
+
+      <div class="stage g-muh">
+        <div class="badge">6</div>
+        <div class="body">
+          <h4>Gateway və Avtomatlaşdırma</h4>
+          <span class="role">Məsul: Avtomatlaşdırma mühəndisi / inteqrator</span>
+          <p class="desc">Gateway/PLC konfiqurasiyası: sensorların oxunması, Modbus→MQTT çevrilməsi, <span class="mono">zavod/siyezen/*</span> topic strukturu və JSON formatının TZ ilə uyğunlaşdırılması.</p>
+          <span class="out">Nəticə: MQTT-yə axan real data</span>
+        </div>
+      </div>
+
+      <div class="stage g-it">
+        <div class="badge">7</div>
+        <div class="body">
+          <h4>Şəbəkə və Broker</h4>
+          <span class="role">Məsul: İT şöbəsi</span>
+          <p class="desc">Sənaye şəbəkəsi, Mosquitto brokerin qurulması, təhlükəsizlik (istifadəçi/parol, lazım olsa VPN), zavod–mərkəz bağlantısı.</p>
+          <span class="out">Nəticə: etibarlı, təhlükəsiz şəbəkə</span>
+        </div>
+      </div>
+
+      <div class="stage g-muh">
+        <div class="badge">8</div>
+        <div class="body">
+          <h4>Kalibrləmə və Sınaq</h4>
+          <span class="role">Məsul: Ölçmə mühəndisi</span>
+          <p class="desc">Hər sensorun kalibrləməsi (etalonla müqayisə), siqnal doğruluğunun və uçdan-uca axının (sensor→broker) yoxlanması.</p>
+          <span class="out">Nəticə: dəqiq, etibarlı ölçmələr</span>
+        </div>
+      </div>
+
+      <div class="stage g-yon">
+        <div class="badge">9</div>
+        <div class="body">
+          <h4>Qəbul və Təhvil</h4>
+          <span class="role">Məsul: Müdüriyyət + layihə meneceri</span>
+          <p class="desc">Rəsmi qəbul sınağı (acceptance test), sənədləşmə, zəmanət və xidmət müqaviləsi. Sistem bu andan "hazır" sayılır.</p>
+          <span class="out">Nəticə: təhvil aktı imzalanır</span>
+        </div>
+      </div>
+
+      <div class="stage g-dev">
+        <div class="badge">10</div>
+        <div class="body">
+          <h4>Rəqəmsal Hazırlıq</h4>
+          <span class="role">Məsul: Developer (siz)</span>
+          <p class="desc">Hazır MQTT axınına qoşulmaq: FastAPI qəbulu, edge baza, anomaliya, sync və dashboard. Bu tərəf onsuz da paralel hazırlanır — real data gələn kimi işə düşür.</p>
+          <span class="out">Nəticə: canlı dashboard və hesabatlar</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="callout">
+    <span class="k">Oxunuş</span>
+    1–9 həlqələr <strong>müəssisənin</strong> məsuliyyətidir və developer işə tam başlayana qədər bitməlidir. 10-cu həlqə (developer) 1–9 ilə <strong>paralel</strong> gedə bilər — çünki biz simulyator sayəsində real cihaz olmadan da bütün proqramı sınamışıq. Real data gələndə sadəcə simulyatoru söndürüb gateway-i qoşuruq.
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="qrafik">
+  <p class="sec-num">07 — Qrafik</p>
+  <h2>Müdüriyyət üçün təxmini icra qrafiki</h2>
+  <p>Aşağıdakı qrafik təxmini müddətləri göstərir (real müddət təchizat və podratçıdan asılıdır). Diqqət: developer işi (son sətir) bütün müddət boyu <strong>paralel</strong> gedir.</p>
+  <table class="tl">
+    <thead><tr><th>Müddət</th><th>Mərhələ (zəncir)</th><th>Əsas nəticə</th></tr></thead>
+    <tbody>
+      <tr><td class="wk">Həftə 1–2</td><td>Qərar, büdcə, TZ (1–2)</td><td>Təsdiq + texniki tapşırıq</td></tr>
+      <tr><td class="wk">Həftə 2–4</td><td>Təchizat və tender (3)</td><td>Avadanlıq sifarişi</td></tr>
+      <tr><td class="wk">Həftə 4–5</td><td>Çatdırılma (3)</td><td>Avadanlıq zavodda</td></tr>
+      <tr><td class="wk">Həftə 5–7</td><td>Montaj + elektrik (4–5)</td><td>Quraşdırılmış, kabellənmiş sistem</td></tr>
+      <tr><td class="wk">Həftə 7–8</td><td>Gateway + şəbəkə (6–7)</td><td>MQTT-yə axan real data</td></tr>
+      <tr><td class="wk">Həftə 8–9</td><td>Kalibrləmə + sınaq (8)</td><td>Dəqiq ölçmələr</td></tr>
+      <tr><td class="wk">Həftə 9–10</td><td>Qəbul və təhvil (9)</td><td>İmzalanmış təhvil aktı</td></tr>
+      <tr><td class="wk">Paralel</td><td>Developer (10)</td><td>FastAPI, edge baza, dashboard — hazır</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 8 -->
+<section id="checklist">
+  <p class="sec-num">08 — Nəzarət</p>
+  <h2>Developer işə başlamazdan əvvəl hazır olmalı olanlar</h2>
+  <p>Bu siyahının hər bəndi təsdiqlənəndə, sistem developerə təhvil verilməyə hazırdır:</p>
+  <ul class="check">
+    <li>Beş sensor (S001–S005) düzgün zonalara quraşdırılıб və kalibrlənib.</li>
+    <li>Gateway real ölçmələri <span class="mono">zavod/siyezen/*</span> topic-lərinə göndərir.</li>
+    <li>MQTT broker (Mosquitto) əlçatandır və <span class="mono">mosquitto_sub</span> ilə canlı data görünür.</li>
+    <li>Göndərilən JSON formatı və topic adları TZ ilə (FastAPI-nin gözlədiyi ilə) eynidir.</li>
+    <li>Şəbəkə stabil, təhlükəsizlik (parol/VPN) qurulub.</li>
+    <li>Bir neçə saatlıq nümunə data yığılıb və dəyərlərin məntiqli olduğu yoxlanılıb.</li>
+    <li>Təhvil aktı imzalanıb, zəmanət və xidmət müqaviləsi var.</li>
+  </ul>
+  <div class="callout warn">
+    <span class="k">Növbəti addım</span>
+    Bu siyahı təsdiqlənənə qədər biz simulyator (Dərs 04) üzərində işləməyə davam edirik — real infrastruktur hazır olan kimi simulyatoru gateway ilə əvəz edəcəyik. Bu dərs həmin keçidin təşkilati "yol xəritəsidir".
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="qiymet-avadanliq">
+  <p class="sec-num">09 — Büdcə I</p>
+  <h2>Alınacaq mal və materialın təxmini bazar qiymətləri</h2>
+  <div class="callout warn">
+    <span class="k">Vacib qeyd</span>
+    Aşağıdakı rəqəmlər <strong>planlaşdırma üçün oriyentir</strong>dir, kommersiya təklifi deyil. Real qiymət brenddən (Avropa / Türkiyə / Çin), dəqiqlik sinfindən, çatdırılma və gömrükdən asılı olaraq ciddi dəyişir. Rəsmi qiymət yalnız tender və ya təchizatçı təklifi ilə müəyyən olunur. Məzənnə: <strong>1 USD ≈ 1,70 AZN</strong>.
+  </div>
+
+  <h3>Sensorlar və ölçmə avadanlığı</h3>
+  <table class="tbl">
+    <thead><tr><th>Mövqe</th><th>Cihaz</th><th>Say</th><th>Vahid qiymət (AZN)</th><th>Cəmi (AZN)</th></tr></thead>
+    <tbody>
+      <tr><td class="code">S001</td><td>PT100 zond + temperatur transmitteri (4-20mA, IP65)</td><td>1</td><td>150 – 450</td><td>150 – 450</td></tr>
+      <tr><td class="code">S002</td><td>Sənaye rütubət sensoru (dən/yem üçün)</td><td>1</td><td>280 – 750</td><td>280 – 750</td></tr>
+      <tr><td class="code">S003</td><td>Yük hüceyrələri (4 əd.) + çəki indikatoru (Modbus)</td><td>1 dəst</td><td>800 – 2 200</td><td>800 – 2 200</td></tr>
+      <tr><td class="code">S004</td><td>Vibrasiya transmitteri / akselerometr</td><td>1</td><td>450 – 1 300</td><td>450 – 1 300</td></tr>
+      <tr><td class="code">S005</td><td>Enerji analizatoru + cərəyan transformatorları (CT)</td><td>1 dəst</td><td>350 – 1 100</td><td>350 – 1 100</td></tr>
+    </tbody>
+  </table>
+
+  <h3>İnfrastruktur və köməkçi material</h3>
+  <table class="tbl">
+    <thead><tr><th>Mövqe</th><th>Təyinat</th><th>Say</th><th>Vahid qiymət (AZN)</th><th>Cəmi (AZN)</th></tr></thead>
+    <tbody>
+      <tr><td>IoT Gateway</td><td>Modbus/4-20mA → MQTT çeviricisi (sənaye)</td><td>1</td><td>500 – 1 600</td><td>500 – 1 600</td></tr>
+      <tr><td>Qidalanma bloku</td><td>24 V DC sənaye (DIN reyka)</td><td>1–2</td><td>90 – 260</td><td>90 – 500</td></tr>
+      <tr><td>Elektrik şkafı</td><td>Qapalı, IP65, kilidli</td><td>1</td><td>200 – 600</td><td>200 – 600</td></tr>
+      <tr><td>Siqnal kabeli</td><td>Ekranlı RS-485 / analoq (≈200–400 m)</td><td>1 lot</td><td>3 – 7 / m</td><td>600 – 2 800</td></tr>
+      <tr><td>Şəbəkə avadanlığı</td><td>Sənaye switch (+ ehtiyat 4G router)</td><td>1</td><td>250 – 900</td><td>250 – 900</td></tr>
+      <tr><td>Edge server / mini-PC</td><td>Broker + baza üçün (əgər ayrıca lazımdırsa)</td><td>1</td><td>800 – 2 500</td><td>800 – 2 500</td></tr>
+      <tr><td>Montaj materialı</td><td>Klemma, kabel kanalı, birləşdirici, qılaf</td><td>1 lot</td><td>—</td><td>300 – 800</td></tr>
+      <tr><td>Ehtiyat hissə</td><td>Ehtiyat sensor / transmitter (tövsiyə olunur)</td><td>1–2</td><td>—</td><td>300 – 900</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="k">Avadanlıq üzrə yekun</span>
+    <strong>Təxmini cəmi: 5 800 – 16 400 AZN</strong> (≈ 3 400 – 9 600 USD).<br>
+    Aşağı hədd — Çin/Türkiyə mənşəli, orta dəqiqlikli avadanlıq. Yuxarı hədd — Avropa brendləri (Siemens, Endress+Hauser, ifm və s.), yüksək dəqiqlik və uzun zəmanət. <strong>Yem zavodu üçün orta seqment (təxminən 9 000 – 11 000 AZN) adətən optimal balansdır.</strong>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="qiymet-xidmet">
+  <p class="sec-num">10 — Büdcə II</p>
+  <h2>Görüləcək iş və xidmətlərin təxmini qiymətləri (Azərbaycan)</h2>
+  <p>Avadanlıq büdcənin yalnız bir hissəsidir. Sənaye layihələrində <strong>montaj, konfiqurasiya və kalibrləmə xidmətləri</strong> çox vaxt avadanlığın dəyəri qədər (bəzən daha çox) tutur. Aşağıdakı rəqəmlər Bakı/Siyəzən regionunda podratçı və inteqrator xidmətlərinin təxmini səviyyəsidir.</p>
+  <table class="tbl">
+    <thead><tr><th>Zəncir</th><th>İş / xidmət</th><th>İcraçı</th><th>Təxmini qiymət (AZN)</th></tr></thead>
+    <tbody>
+      <tr><td>2</td><td>Texniki tapşırığın hazırlanması, məsləhət</td><td>Avtomatlaşdırma məsləhətçisi</td><td>600 – 1 800</td></tr>
+      <tr><td>4</td><td>Fiziki montaj (5 sensor, mexanik işlər)</td><td>Sistem inteqratoru</td><td>1 500 – 4 000</td></tr>
+      <tr><td>5</td><td>Elektrik və kabel işləri (çəkiliş, torpaqlama, şkaf)</td><td>Elektrik briqadası</td><td>1 200 – 3 500</td></tr>
+      <tr><td>6</td><td>Gateway konfiqurasiyası (Modbus → MQTT, topic sxemi)</td><td>Avtomatlaşdırma mühəndisi</td><td>1 200 – 3 500</td></tr>
+      <tr><td>7</td><td>Şəbəkə qurulması, broker, təhlükəsizlik</td><td>İT şöbəsi / podratçı</td><td>600 – 2 000</td></tr>
+      <tr><td>8</td><td>Kalibrləmə və uçdan-uca sınaq (5 nöqtə)</td><td>Ölçmə mühəndisi</td><td>600 – 1 800</td></tr>
+      <tr><td>9</td><td>Qəbul sınağı, sənədləşmə, təlimat</td><td>Layihə meneceri</td><td>300 – 900</td></tr>
+      <tr><td>—</td><td><strong>İllik xidmət və dəstək müqaviləsi</strong> (opsional)</td><td>İnteqrator</td><td>avadanlıq dəyərinin 10–15 %-i / il</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <span class="k">Xidmətlər üzrə yekun</span>
+    <strong>Təxmini cəmi: 6 000 – 17 500 AZN</strong> (≈ 3 500 – 10 300 USD).<br>
+    Praktikada bir çox inteqrator "açar təhvili" (turnkey) paket təklif edir: avadanlıq + montaj + konfiqurasiya + kalibrləmə bir müqavilədə. Bu, ayrı-ayrı sifarişdən <strong>10–20 % baha</strong> ola bilər, amma məsuliyyət bir tərəfdə cəmləşir — nasazlıq olanda "kim günahkardır?" mübahisəsi yaranmır. Zarat üçün bu yanaşma tövsiyə olunur.
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="qiymet-developer">
+  <p class="sec-num">11 — Büdcə III</p>
+  <h2>Developer işinin beynəlxalq bazar qiymətləri</h2>
+  <p>Zəncirin 10-cu həlqəsi — proqram təminatı — beynəlxalq bazarda ayrıca qiymətləndirilir. Bu iş <strong>IoT/data mühəndisliyi</strong> kateqoriyasına düşür: MQTT qəbulu, FastAPI, PostgreSQL partisiyalı sxem, sinxronizasiya (outbox pattern), anomaliya sistemi və analitik dashboard. Bu, adi "veb sayt" işi deyil — sistem memarlığı tələb edir və bazarda müvafiq olaraq dəyərləndirilir.</p>
+
+  <h3>Saatlıq dərəcələr (2026, beynəlxalq bazar)</h3>
+  <table class="tbl">
+    <thead><tr><th>Region</th><th>Orta səviyyə (mid)</th><th>Senior / sistem memarı</th><th>Qeyd</th></tr></thead>
+    <tbody>
+      <tr><td>Şimali Amerika</td><td>70 – 100 USD/saat</td><td>100 – 160 USD/saat</td><td>Bazarın yuxarı həddi</td></tr>
+      <tr><td>Qərbi Avropa</td><td>55 – 80 USD/saat</td><td>80 – 120 USD/saat</td><td>—</td></tr>
+      <tr><td>Şərqi Avropa / Qafqaz</td><td>40 – 65 USD/saat</td><td>60 – 90 USD/saat</td><td><strong>Azərbaycan bu seqmentə düşür</strong></td></tr>
+      <tr><td>Cənubi Asiya</td><td>25 – 40 USD/saat</td><td>40 – 60 USD/saat</td><td>Ən aşağı hədd</td></tr>
+      <tr><td colspan="4"><span class="tag">Əlavə</span> Data/IoT və AI ixtisaslaşması generalist dərəcələrindən <strong>20–60 % yuxarı</strong> qiymətləndirilir. Agentlik (şirkət) vasitəsilə sifariş birbaşa freelancerdən <strong>20–40 % baha</strong> olur.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Bu layihənin proqram hissəsi: əmək həcmi</h3>
+  <table class="tbl">
+    <thead><tr><th>Komponent</th><th>Təxmini saat</th><th>Dəyər (60 USD/saat ilə)</th></tr></thead>
+    <tbody>
+      <tr><td>Memarlıq, sxem dizaynı, edge baza (partisiya, indeks)</td><td>25 – 40</td><td>1 500 – 2 400 USD</td></tr>
+      <tr><td>MQTT qəbulu + FastAPI validasiya servisi</td><td>30 – 50</td><td>1 800 – 3 000 USD</td></tr>
+      <tr><td>Anomaliya və xəbərdarlıq sistemi</td><td>20 – 35</td><td>1 200 – 2 100 USD</td></tr>
+      <tr><td>Mərkəzi sinxronizasiya (outbox, təkrar cəhd, konflikt)</td><td>30 – 50</td><td>1 800 – 3 000 USD</td></tr>
+      <tr><td>Dashboard (R Shiny — qrafiklər, KPI, alert paneli)</td><td>40 – 70</td><td>2 400 – 4 200 USD</td></tr>
+      <tr><td>Test, sənədləşmə, təhvil və istismara vermə</td><td>25 – 40</td><td>1 500 – 2 400 USD</td></tr>
+      <tr><td><strong>CƏMİ</strong></td><td><strong>170 – 285 saat</strong></td><td><strong>10 200 – 17 100 USD</strong></td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <span class="k">Oxunuş</span>
+    Beynəlxalq bazarda bu proqram paketi <strong>17 000 – 29 000 AZN</strong> (≈ 10 000 – 17 000 USD) dəyərləndirilir. Qərb agentliyinə sifariş verilsəydi, eyni iş <strong>2–3 dəfə baha</strong> (35 000 – 70 000 AZN) olardı. Müəssisə bu işi daxili resursla (siz) həyata keçirdiyi üçün faktiki qənaət məhz bu məbləğ qədərdir.
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="butce-yekun">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Ümumi büdcə mənzərəsi</h2>
+  <table class="tbl">
+    <thead><tr><th>Kateqoriya</th><th>Kim ödəyir / icra edir</th><th>Minimum (AZN)</th><th>Maksimum (AZN)</th></tr></thead>
+    <tbody>
+      <tr><td>Mal və material (avadanlıq)</td><td>Təchizat şöbəsi</td><td>5 800</td><td>16 400</td></tr>
+      <tr><td>İş və xidmətlər (montaj, konfiqurasiya)</td><td>Podratçı / inteqrator</td><td>6 000</td><td>17 500</td></tr>
+      <tr><td><strong>Zavod infrastrukturu — ARA CƏM</strong></td><td>Müəssisə</td><td><strong>11 800</strong></td><td><strong>33 900</strong></td></tr>
+      <tr><td>Proqram təminatı (bazar dəyəri)</td><td>Developer (daxili resurs)</td><td>17 000</td><td>29 000</td></tr>
+      <tr><td><strong>LAYİHƏNİN TAM BAZAR DƏYƏRİ</strong></td><td>—</td><td><strong>28 800</strong></td><td><strong>62 900</strong></td></tr>
+      <tr><td>İllik istismar və dəstək</td><td>Müəssisə</td><td>1 200 / il</td><td>2 500 / il</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn">
+    <span class="k">Müdüriyyət üçün əsas mesaj</span>
+    Zavod infrastrukturu (<strong>12 – 34 min AZN</strong>) — bu, müəssisənin <em>real xərcidir</em> və tender ilə optimallaşdırıla bilər. Proqram hissəsi bazarda <strong>17 – 29 min AZN</strong> dəyərindədir, lakin daxili resursla icra olunur.<br><br>
+    Müqayisə üçün: bir silo yeminin kiflənmə səbəbindən zay olması, yaxud qranulyator mühərrikinin gözlənilməz sıradan çıxması <strong>tək bir hadisədə</strong> bu büdcənin əhəmiyyətli hissəsini yeyə bilər. Sistem məhz bunun qarşısını almaq üçündür — investisiya adətən <strong>1–2 il ərzində</strong> özünü ödəyir.
+  </div>
+  <div class="callout">
+    <span class="k">Tender tövsiyəsi</span>
+    Müdüriyyət ən azı <strong>3 təchizatçıdan</strong> qiymət təklifi almalıdır; təkliflər müqayisə oluna bilməsi üçün hamısına <strong>eyni texniki tapşırıq</strong> (zəncirin 2-ci həlqəsi) verilməlidir. TZ olmadan alınan təkliflər müqayisə edilə bilməz və qiymət fərqi mənasız olur.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="disp">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 04-A — Fiziki Qurulma, Təchizat və Məsuliyyət Zənciri</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>

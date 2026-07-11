@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 04-A — MQTT Broker: Memarlıq, Mosquitto və Topic Dizaynı</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --steel-2:#1f2e3d; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524; --blue:#5aa9e6;
+    --green:#5bd08a; --slate:#94a3b8; --paper:#f6f4ef; --paper-2:#efece4;
+    --ink:#1a222c; --danger:#e5695f; --violet:#a78bfa;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  /* HERO */
+  .hero{background:radial-gradient(1200px 400px at 78% -10%,rgba(45,212,191,.15),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:66px 32px 54px;border-bottom:3px solid var(--teal-deep);}
+  .wrap{max-width:980px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--teal);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(29px,4.8vw,48px);line-height:1.08;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:760px;margin:0;line-height:1.7;}
+  .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(45,212,191,.12);
+    border:1px solid rgba(45,212,191,.35);color:#8ff0e2;padding:6px 13px;border-radius:2px;}
+
+  /* TOC */
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:980px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;}
+  .toc a{color:var(--teal-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:980px;margin:0 auto;padding:0 32px;}
+  section{padding:46px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--teal-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.3vw,32px);line-height:1.15;margin:0 0 20px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;
+    margin:32px 0 10px;letter-spacing:.02em;}
+  h4{font-family:"Oswald",Arial,sans-serif;font-weight:500;font-size:17px;margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:17px 22px;border-radius:0 4px 4px 0;margin:22px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:#b9781a;} .callout.why .k{color:#6d4fc4;} .callout.err .k{color:#c0453a;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--teal-deep);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+
+  .codebox{position:relative;margin:20px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;
+    line-height:1.7;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .fn{color:var(--blue);}
+  .copybtn{position:absolute;top:32px;right:10px;background:rgba(45,212,191,.14);color:#8ff0e2;
+    border:1px solid rgba(45,212,191,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(45,212,191,.28);}
+
+  /* line-by-line explainer */
+  .expl{margin:18px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;}
+  .expl .row{display:flex;border-bottom:1px solid #e8e3d8;}
+  .expl .row:last-child{border-bottom:none;}
+  .expl .row:nth-child(even){background:var(--paper-2);}
+  .expl .c{flex:0 0 42%;padding:11px 14px;font-family:ui-monospace,Menlo,monospace;
+    font-size:13px;color:#0b5f57;background:rgba(13,148,136,.05);border-right:1px solid #e8e3d8;
+    word-break:break-word;}
+  .expl .d{flex:1;padding:11px 14px;font-size:14.5px;line-height:1.55;}
+
+  /* architecture diagram */
+  .arch{background:var(--graphite);border-radius:10px;padding:30px 24px;margin:26px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--teal);margin-bottom:16px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:13px 14px;
+    text-align:center;min-width:118px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;color:#fff;text-transform:uppercase;letter-spacing:.03em;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:11px;color:#8fa6ba;display:block;margin-top:3px;}
+  .bx.hl{border-color:var(--teal);box-shadow:0 0 0 1px rgba(45,212,191,.3);}
+  .ar{color:var(--teal);font-size:20px;}
+
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{padding:12px 16px 12px 44px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--green);}
+  .check li::before{content:"✓";position:absolute;left:15px;top:10px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;}
+
+  .next{list-style:none;padding:0;margin:20px 0;}
+  .next li{padding:13px 16px 13px 44px;position:relative;background:#eef5fb;
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--blue);}
+  .next li::before{content:"→";position:absolute;left:16px;top:12px;color:var(--blue);
+    font-weight:bold;font-size:17px;font-family:Arial,sans-serif;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--teal);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+
+  @media (max-width:700px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .expl .row{flex-direction:column;} .expl .c{flex:1;border-right:none;border-bottom:1px solid #e8e3d8;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Dərs 04 — Hissə A</p>
+    <h1>MQTT Broker: Memarlıq, Mosquitto və Topic Dizaynı</h1>
+    <p class="lede">İndiyə qədər simulyator birbaşa bazaya yazırdı. Bu dərsdə aralarına <strong>broker</strong> qoyuruq — sistemi əsl sənaye memarlığına çevirən addım. Burada (Hissə A) brokerin <em>nə olduğunu, niyə lazım olduğunu</em> və Mosquitto-nun hər konfiqurasiya sətrinin nə etdiyini öyrənirik. Hissə B-də isə Python ilə ona qoşulacağıq.</p>
+    <div class="meta">
+      <span class="chip">MQTT protokolu</span>
+      <span class="chip">Mosquitto konfiqurasiyası</span>
+      <span class="chip">Topic dizaynı</span>
+      <span class="chip">QoS · Retain · LWT</span>
+      <span class="chip">Publish/Subscribe testi</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Problem: niyə broker lazımdır?</a></li>
+    <li><a href="#s2">MQTT-nin anatomiyası</a></li>
+    <li><a href="#s3">Topic dizaynı — bizim sxem</a></li>
+    <li><a href="#s4">QoS: üç zəmanət səviyyəsi</a></li>
+    <li><a href="#s5">Retain və LWT — susan cihazı tutmaq</a></li>
+    <li><a href="#s6">Mosquitto quraşdırılması</a></li>
+    <li><a href="#s7">mosquitto.conf — sətir-sətir</a></li>
+    <li><a href="#s8">Brokeri işə salmaq</a></li>
+    <li><a href="#s9">Publish/Subscribe testləri</a></li>
+    <li><a href="#s10">Diaqnostika və tipik xətalar</a></li>
+    <li><a href="#s11">Sonra nə əlavə edəcəyik?</a></li>
+    <li><a href="#s12">Yoxlama siyahısı</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01 — Problem</p>
+  <h2>Niyə broker? Birbaşa bazaya yazmaq nəyi ilə pisdir?</h2>
+  <p>Dərs 03-də simulyator ölçməni yaradıб <strong>birbaşa</strong> <code class="inl">olcme</code> cədvəlinə <code class="inl">INSERT</code> edirdi. Bu, öyrənmək üçün əla idi — amma real zavodda bu memarlıq dörd yerdən sınır.</p>
+
+  <h3>Sıx bağlılıq (tight coupling)</h3>
+  <p>Simulyator bazanın <em>ünvanını, portunu, istifadəçisini, cədvəl adlarını</em> bilməli idi. Real zavodda sensoru oxuyan gateway — Çin istehsalı bir qutu — sizin PostgreSQL sxeminizi bilə bilməz. O yalnız bir şeyi bacarır: <strong>mesajı bir ünvana atmaq</strong>. Broker məhz bu "ünvan"dır.</p>
+
+  <h3>Baza söndükdə data itir</h3>
+  <p>Birbaşa yazmada baza bir dəqiqəlik söndürülsə (yenilənmə, restart), o dəqiqəlik bütün ölçmələr <strong>həmişəlik itir</strong>. Broker isə mesajı qəbul edib saxlayır, baza qayıdanda çatdırır.</p>
+
+  <h3>Bir mesaj — çox alıcı</h3>
+  <p>Bir temperatur oxumasını eyni anda üç yerə göndərmək lazım ola bilər: bazaya (tarixçə), alert servisinə (dərhal xəbərdarlıq), canlı ekrana (real-vaxt qrafik). Birbaşa yazmada simulyatorun kodunu üç dəfə dəyişməlisiniz. Brokerlə — <strong>heç nə dəyişmirsiniz</strong>: üç ayrı abunəçi eyni topic-i dinləyir.</p>
+
+  <h3>Şəbəkə kəsilməsi</h3>
+  <p>Zavod ilə server arasında Wi-Fi/kabel kəsilə bilər. MQTT bunun üçün dizayn olunub: avtomatik yenidən qoşulma, mesaj növbəsi, çatdırılma zəmanəti.</p>
+
+  <div class="arch">
+    <div class="lbl">Əvvəl — sıx bağlı (kövrək)</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">Simulyator</span><span class="s">python</span></div>
+      <span class="ar">──────►</span>
+      <div class="bx"><span class="t">PostgreSQL</span><span class="s">olcme</span></div>
+    </div>
+    <div class="lbl" style="margin-top:26px;">İndi — broker vasitəsilə (sənaye standartı)</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">Sensor / Simulyator</span><span class="s">publisher</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">MQTT Broker</span><span class="s">Mosquitto :1883</span></div>
+      <span class="ar">►</span>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="bx"><span class="t">Körpü → Baza</span><span class="s">subscriber</span></div>
+        <div class="bx"><span class="t">Alert servisi</span><span class="s">subscriber</span></div>
+        <div class="bx"><span class="t">Canlı ekran</span><span class="s">subscriber</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Əsas fikir</span>
+    Broker <strong>publisher</strong> (göndərən) ilə <strong>subscriber</strong> (alan) arasında "poçt mərkəzi"dir. Göndərən kimin oxuduğunu bilmir; alan kimin göndərdiyini bilmir. Hər ikisi yalnız <strong>topic</strong> adını bilir. Bu ayrılma (decoupling) IoT memarlığının bütün gücüdür: yeni alıcı əlavə etmək üçün göndərəni dəyişmək lazım gəlmir.
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02 — Protokol</p>
+  <h2>MQTT-nin anatomiyası: altı anlayış</h2>
+  <p>MQTT (Message Queuing Telemetry Transport) 1999-cu ildə neft boru kəmərlərini peyk üzərindən izləmək üçün yaradılıb — yəni <strong>zəif şəbəkə və az enerji</strong> üçün dizayn edilib. Bu, onu sensor dünyasının standartı edib. Altı anlayışı bilmək kifayətdir.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Anlayış</th><th>Nədir</th><th>Bizim sistemdə</th></tr></thead>
+    <tbody>
+      <tr><td class="code">Broker</td><td>Mesajları qəbul edib paylayan mərkəzi server</td><td>Mosquitto, <code class="inl">localhost:1883</code></td></tr>
+      <tr><td class="code">Client</td><td>Brokerə qoşulan hər şey — həm göndərən, həm alan</td><td>Simulyator, körpü, gələcəkdə gateway</td></tr>
+      <tr><td class="code">Publish</td><td>Bir topic-ə mesaj göndərmək</td><td>Simulyator ölçməni göndərir</td></tr>
+      <tr><td class="code">Subscribe</td><td>Bir topic-ə abunə olub mesajları almaq</td><td>Körpü bazaya yazmaq üçün dinləyir</td></tr>
+      <tr><td class="code">Topic</td><td>Mesajın "ünvanı" — iyerarxik mətn yolu</td><td><code class="inl">zavod/siyezen/S001/olcme</code></td></tr>
+      <tr><td class="code">Payload</td><td>Mesajın məzmunu — istənilən bayt (biz JSON)</td><td><code class="inl">{"qiymet": 24.3, ...}</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="k">Diqqət</span>
+    Broker <strong>payload-ın içinə baxmır</strong>. Onun üçün mesaj sadəcə baytlar yığınıdır. JSON istifadə etməyimiz bizim seçimimizdir (oxunaqlı, universal) — broker CSV, binar, hətta şəkil də daşıya bilər. Bu o deməkdir ki, <strong>formatı publisher və subscriber öz aralarında razılaşdırmalıdır</strong>. Bu razılaşma — Dərs 04-T-də danışdığımız "müqavilə"dir.
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03 — Topic</p>
+  <h2>Topic dizaynı — ən vacib memarlıq qərarı</h2>
+  <p>Topic sadəcə mətndir, amma <strong>onun strukturu bütün sistemin çevikliyini müəyyən edir</strong>. Səhv topic sxemi gələcəkdə hər şeyi yenidən yazmağa məcbur edir. Ona görə bu bölməyə diqqətlə yanaşırıq.</p>
+
+  <h3>İyerarxiya: ümumidən xüsusiyə</h3>
+  <p>Topic <code class="inl">/</code> ilə ayrılan səviyyələrdən ibarətdir — qovluq yolu kimi. Qayda: <strong>soldan sağa daralır</strong> (ölkə → zavod → cihaz → ölçü növü).</p>
+
+  <div class="codebox">
+    <div class="cap">Bizim topic sxemi</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>zavod/siyezen/S001/olcme      <span class="cmt"># S001 cihazının ölçməsi</span>
+zavod/siyezen/S002/olcme      <span class="cmt"># S002 cihazının ölçməsi</span>
+zavod/siyezen/S003/olcme
+zavod/siyezen/S004/olcme
+zavod/siyezen/S005/olcme
+
+zavod/siyezen/S001/status     <span class="cmt"># cihazın online/offline vəziyyəti (LWT)</span>
+zavod/siyezen/S002/status
+
+<span class="cmt"># Struktur:  [sahe] / [zavod] / [cihaz] / [mesaj növü]
+#              ↑        ↑         ↑          ↑
+#           MQTT_TOPIC_BASE (.env)    cihaz.kod   olcme | status</span></pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə cihaz kodu topic-də, payload-da yox?</span>
+    Cihaz kodunu <strong>topic-ə</strong> qoymağın üstünlüyü: abunəçi yalnız bir cihazı dinləyə bilər (<code class="inl">.../S004/olcme</code>) və broker digər cihazların mesajlarını ona <em>heç göndərmir</em>. Əgər kod yalnız payload-da olsaydı, abunəçi bütün mesajları alıb özü süzməli olardı — şəbəkə və CPU israfı. Praktikada kodu <strong>hər iki yerdə</strong> saxlayırıq (topic-də marşrutlaşma üçün, payload-da isə yoxlama üçün).
+  </div>
+
+  <h3>Joker simvollar (wildcards)</h3>
+  <p>Abunə olarkən iki xüsusi simvol var. Bunlar yalnız <strong>subscribe</strong>-da işləyir, publish-də yox.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Simvol</th><th>Mənası</th><th>Nümunə</th><th>Nəyi tutur</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="code">+</td>
+        <td>Bir səviyyəni əvəz edir</td>
+        <td class="mono">zavod/siyezen/+/olcme</td>
+        <td>Bütün cihazların <strong>yalnız ölçmələri</strong> (status-ları yox)</td>
+      </tr>
+      <tr>
+        <td class="code">#</td>
+        <td>Bütün alt səviyyələri əvəz edir (yalnız sonda)</td>
+        <td class="mono">zavod/siyezen/#</td>
+        <td><strong>Hər şey</strong> — ölçmələr, statuslar, gələcəkdə əlavə olunan hər nə</td>
+      </tr>
+      <tr>
+        <td class="code">—</td>
+        <td>Joker yoxdur</td>
+        <td class="mono">zavod/siyezen/S004/olcme</td>
+        <td>Yalnız vibrasiya sensoru (məsələn, xüsusi alert servisi üçün)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">Praktik qayda</span>
+    Bazaya yazan körpü üçün <code class="inl">zavod/siyezen/+/olcme</code> istifadə edirik — <strong>#</strong> yox. Səbəb: <code class="inl">#</code> gələcəkdə əlavə edəcəyimiz status, log, diaqnostika mesajlarını da tutar və körpü onları <em>ölçmə sanıb</em> bazaya yazmağa çalışar. <code class="inl">+</code> isə dəqiq deyir: "yalnız <span class="mono">olcme</span> ilə bitənlər". Bu, gələcək genişlənməni təhlükəsiz edir.
+  </div>
+
+  <h3>Topic dizaynında qaydalar</h3>
+  <ul class="check">
+    <li>Kiçik hərflər və ASCII istifadə edin — Azərbaycan hərfləri (ə, ü, ş) topic-də <strong>işləməz</strong>.</li>
+    <li>Boşluq qoymayın. Söz ayırıcısı <code class="inl">_</code> və ya <code class="inl">-</code>.</li>
+    <li>Topic-i <code class="inl">/</code> ilə <strong>başlamayın</strong> — <code class="inl">/zavod/...</code> boş bir səviyyə yaradır və gizli xətaya səbəb olur.</li>
+    <li>Sonda <code class="inl">/</code> qoymayın.</li>
+    <li>Mesaj növünü sona qoyun (<code class="inl">/olcme</code>, <code class="inl">/status</code>) — gələcəkdə yeni növ əlavə etmək asan olur.</li>
+  </ul>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04 — QoS</p>
+  <h2>QoS: çatdırılma zəmanətinin üç səviyyəsi</h2>
+  <p>MQTT-nin ən çox səhv başa düşülən hissəsi budur. QoS (Quality of Service) hər mesaj üçün ayrıca təyin olunur və <strong>şəbəkə kəsiləndə nə olacağını</strong> müəyyən edir.</p>
+
+  <table class="tbl">
+    <thead><tr><th>QoS</th><th>Adı</th><th>Necə işləyir</th><th>Nəticə</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="code">0</td>
+        <td>Ən çox bir dəfə<br><span class="mono" style="font-size:12px;">at most once</span></td>
+        <td>Göndər və unut. Təsdiq gözlənilmir.</td>
+        <td>Şəbəkə kəsilsə — <strong>mesaj itir</strong>. Ən sürətli, ən yüngül.</td>
+      </tr>
+      <tr>
+        <td class="code">1</td>
+        <td>Ən azı bir dəfə<br><span class="mono" style="font-size:12px;">at least once</span></td>
+        <td>Broker təsdiq (<span class="mono">PUBACK</span>) göndərir. Təsdiq gəlməsə, yenidən göndərilir.</td>
+        <td>Mesaj <strong>itmir</strong>, amma <strong>təkrarlana bilər</strong> (dublikat).</td>
+      </tr>
+      <tr>
+        <td class="code">2</td>
+        <td>Dəqiq bir dəfə<br><span class="mono" style="font-size:12px;">exactly once</span></td>
+        <td>Dörd mərhələli əl sıxma (PUBREC/PUBREL/PUBCOMP).</td>
+        <td>Nə itir, nə təkrarlanır. Amma <strong>ən yavaş</strong> və ən çox resurs yeyir.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Biz hansını seçirik və niyə?</span>
+    <strong>QoS 1</strong> — sensor ölçmələri üçün.<br><br>
+    <strong>QoS 0 niyə yox:</strong> zavodda Wi-Fi kəsilməsi normaldır; itən temperatur oxuması gələcəkdə tarixçədə "boşluq" yaradır və trend təhlilini pozur.<br>
+    <strong>QoS 2 niyə yox:</strong> dörd mərhələli əl sıxma saniyədə yüzlərlə mesajda brokeri yükləyir, faydası isə cüzidir — çünki <em>dublikat problemini biz onsuz da bazada həll edirik</em>.<br><br>
+    <strong>Dublikatı necə həll edirik?</strong> Hər ölçmənin <code class="inl">(cihaz_kod, olcme_vaxti)</code> cütü təbii unikal açardır. Eyni mesaj iki dəfə gəlsə, baza onu ya rədd edir, ya da eyni sətri yenidən yazır — nəticə dəyişmir. Buna <strong>idempotentlik</strong> deyilir. Yəni QoS 2-nin işini bazaya tapşırırıq — daha ucuz və daha etibarlı.
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Vacib incəlik</span>
+    QoS <strong>iki dəfə</strong> təyin olunur: publisher göndərəndə və subscriber abunə olanda. Faktiki QoS <strong>ikisinin kiçiyi</strong> olur. Yəni publisher QoS 1 göndərsə, amma subscriber QoS 0 ilə abunə olsa — nəticə QoS 0-dır və mesaj itə bilər. Hər iki tərəfdə eyni səviyyəni qoymaq lazımdır.
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05 — Retain / LWT</p>
+  <h2>Retain və Last Will: susan cihazı necə tuturuq</h2>
+
+  <h3>Retain — "son məlum dəyər"</h3>
+  <p>Adi halda broker mesajı yalnız <strong>o an qoşulu olan</strong> abunəçilərə çatdırır. Sonra mesaj yox olur. Yəni dashboard-ı yeni açsanız, növbəti ölçmə gələnə qədər (bəlkə 30 saniyə) ekran <strong>boş</strong> qalır.</p>
+  <p><strong>Retain bayrağı</strong> bunu həll edir: broker həmin topic-in <em>son</em> mesajını yadda saxlayır və yeni abunəçi qoşulan kimi ona dərhal göndərir.</p>
+
+  <div class="codebox">
+    <div class="cap">Retain-in effekti</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># retain OLMADAN göndər — sonra abunə ol → heç nə gəlmir</span>
+mosquitto_pub -t <span class="st">"test/a"</span> -m <span class="st">"salam"</span>
+mosquitto_sub -t <span class="st">"test/a"</span> -C 1        <span class="cmt"># gözləyir, boşdur...</span>
+
+<span class="cmt"># retain İLƏ göndər (-r) — sonra abunə ol → dərhal gəlir</span>
+mosquitto_pub -t <span class="st">"test/b"</span> -m <span class="st">"salam"</span> -r
+mosquitto_sub -t <span class="st">"test/b"</span> -C 1        <span class="cmt"># dərhal "salam" çıxır</span></pre>
+  </div>
+
+  <div class="callout">
+    <span class="k">Biz harada istifadə edirik</span>
+    Ölçmə mesajlarında <strong>retain = true</strong>. Beləliklə dashboard açılan kimi hər cihazın son dəyərini dərhal göstərir — gözləmə yoxdur. Diqqət: retain <em>yalnız sonuncunu</em> saxlayır, tarixçəni yox. Tarixçə bazanın işidir.
+  </div>
+
+  <h3>LWT — Last Will and Testament ("vəsiyyət")</h3>
+  <p>Bu, MQTT-nin ən zərif ideyasıdır və bizim üçün <strong>kritik əhəmiyyət daşıyır</strong>. Xatırlayın: <code class="inl">xeberdarliq</code> cədvəlində <code class="inl">novu</code> sütununda üç dəyər var idi:</p>
+  <div class="codebox">
+    <div class="cap">Dərs 02-dən — xeberdarliq cədvəli</div>
+<pre>CHECK (novu IN (<span class="st">'yuxari_hedd'</span>, <span class="st">'asagi_hedd'</span>, <span class="st">'cihaz_susur'</span>))
+                                              <span class="cmt">↑ bax bura</span></pre>
+  </div>
+  <p>İlk ikisi asandır — dəyəri həddlə müqayisə edirik. Amma <strong><code class="inl">cihaz_susur</code></strong> — cihaz heç nə göndərmirsə, onu necə bilək? Yoxluğu necə aşkar edək?</p>
+  <p>Cavab: <strong>LWT</strong>. Client brokerə qoşulanda ona bir "vəsiyyət" verir: <em>"Əgər mən gözlənilmədən yox olsam, bu mesajı bu topic-ə mənim əvəzimə sən göndər."</em> Broker isə client-in nəbzini (<span class="mono">keepalive</span>) izləyir — nəbz kəsiləndə vəsiyyəti icra edir.</p>
+
+  <div class="arch">
+    <div class="lbl">LWT-nin işləmə məntiqi</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">1. Qoşulma</span><span class="s">LWT elan olunur</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">2. Normal iş</span><span class="s">online, keepalive</span></div>
+      <span class="ar">►</span>
+      <div class="bx" style="border-color:var(--danger)"><span class="t">3. Kabel qopur</span><span class="s">nəbz kəsilir</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">4. Broker</span><span class="s">"offline" göndərir</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">5. Xəbərdarlıq</span><span class="s">cihaz_susur</span></div>
+    </div>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">LWT-ni əl ilə sınamaq</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Terminal 1 — status topic-lərini dinlə</span>
+mosquitto_sub -t <span class="st">"zavod/siyezen/+/status"</span> -v
+
+<span class="cmt"># Terminal 2 — LWT elan edib qoşul, sonra Ctrl+C ilə "kobud" çıx</span>
+mosquitto_sub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  --will-topic <span class="st">"zavod/siyezen/S001/status"</span> \
+  --will-payload <span class="st">"offline"</span> \
+  --will-retain \
+  --will-qos 1
+
+<span class="cmt"># Ctrl+C basın → Terminal 1-də dərhal görünəcək:
+#   zavod/siyezen/S001/status offline</span></pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə bu qədər vacibdir?</span>
+    Yem zavodunda <strong>susan sensor, xarab sensordan da təhlükəlidir</strong>. Temperatur 40°C-ə qalxsa — xəbərdarlıq gəlir, müdaxilə edirsən. Amma sensor sadəcə sussa, ekranda son normal dəyər (24°C) qalır və hamı "hər şey qaydasındadır" düşünür — bu vaxt silo qızır. LWT məhz bunun qarşısını alır: susmanın özü bir hadisəyə çevrilir.
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06 — Quraşdırma</p>
+  <h2>Mosquitto-nun quraşdırılması və PATH problemi</h2>
+  <p>Mosquitto — Eclipse Foundation-un açıq mənbəli MQTT brokeridir. Yüngüldür (bir neçə MB), sənayedə geniş istifadə olunur və Homebrew ilə asan quraşdırılır.</p>
+
+  <div class="codebox">
+    <div class="cap">1. Quraşdırma və yoxlama</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>brew install mosquitto
+
+<span class="cmt"># Quraşdırıldığını yoxla</span>
+brew list --versions | grep mosquitto</pre>
+  </div>
+
+  <div class="callout err">
+    <span class="k">Tipik xəta: command not found</span>
+    Quraşdırmadan sonra <code class="inl">mosquitto</code> yazanda <span class="mono">command not found</span> çıxa bilər — halbuki paket quraşdırılıb.<br><br>
+    <strong>Səbəb:</strong> Homebrew server proqramlarını <code class="inl">bin</code> yox, <code class="inl">sbin</code> qovluğuna qoyur (<em>s</em> = system/server). Intel Mac-də <code class="inl">/usr/local/sbin</code> adətən PATH-də <strong>olmur</strong>. Müştəri alətləri (<span class="mono">mosquitto_pub</span>, <span class="mono">mosquitto_sub</span>) isə <code class="inl">bin</code>-dədir və işləyir — bu, insanı çaşdırır.
+  </div>
+
+  <div class="codebox">
+    <div class="cap">2. PATH düzəlişi (Intel Mac — /usr/local)</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Əvvəlcə faktı yoxla — fayl həqiqətən oradadırmı?</span>
+ls -la /usr/local/sbin/mosquitto
+
+<span class="cmt"># PATH-ə əlavə et (daimi)</span>
+echo <span class="st">'export PATH="/usr/local/sbin:$PATH"'</span> &gt;&gt; ~/.bash_profile
+source ~/.bash_profile
+
+<span class="cmt"># Üç alətin də yerini təsdiqlə</span>
+which mosquitto mosquitto_pub mosquitto_sub</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row"><div class="c">mosquitto</div><div class="d"><strong>Brokerin özü</strong> (server). Bu proses işləməsə, heç nə işləmir.</div></div>
+    <div class="row"><div class="c">mosquitto_pub</div><div class="d"><strong>Publisher aləti</strong> — terminaldan mesaj göndərmək. Test və diaqnostika üçün əvəzsizdir.</div></div>
+    <div class="row"><div class="c">mosquitto_sub</div><div class="d"><strong>Subscriber aləti</strong> — terminaldan mesajları dinləmək. Sistemin "gözü" — nə gedib-gəldiyini görürsünüz.</div></div>
+  </div>
+
+  <div class="callout">
+    <span class="k">Apple Silicon fərqi</span>
+    Əgər M1/M2/M3 Mac-də işləyirsinizsə, Homebrew <code class="inl">/opt/homebrew</code>-dədir və yol <code class="inl">/opt/homebrew/sbin</code> olur. Universal həll: <code class="inl">export PATH="$(brew --prefix)/sbin:$PATH"</code> — bu, hər iki memarlıqda işləyir.
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07 — Konfiqurasiya</p>
+  <h2>mosquitto.conf — hər sətrin izahı</h2>
+  <p>Mosquitto konfiqurasiyasız da işləyir (<code class="inl">mosquitto</code> yazmaqla), amma o zaman yalnız <strong>localhost</strong>-dan qoşulmalara icazə verir və heç nə saxlamır. Bizə konfiqurasiya lazımdır. Fayl: <code class="inl">01_config/mosquitto.conf</code>.</p>
+
+  <div class="codebox">
+    <div class="cap">01_config/mosquitto.conf — tam fayl</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># ============================================================
+# Zarat Faza 2 — Mosquitto broker konfiqurasiyası
+# İnkişaf (development) rejimi — istehsalat üçün auth əlavə olunacaq
+# ============================================================</span>
+
+<span class="cmt"># ---- Dinləmə (listener) ----</span>
+<span class="kw">listener</span> 1883 0.0.0.0
+
+<span class="cmt"># ---- İcazələr ----</span>
+<span class="kw">allow_anonymous</span> true
+
+<span class="cmt"># ---- Davamlılıq (persistence) ----</span>
+<span class="kw">persistence</span> true
+<span class="kw">persistence_location</span> ./_DATA/mosquitto/
+<span class="kw">autosave_interval</span> 60
+
+<span class="cmt"># ---- Loglar ----</span>
+<span class="kw">log_dest</span> stdout
+<span class="kw">log_dest</span> file ./_LOG/mosquitto.log
+<span class="kw">log_type</span> error
+<span class="kw">log_type</span> warning
+<span class="kw">log_type</span> notice
+<span class="kw">log_type</span> information
+<span class="kw">connection_messages</span> true
+<span class="kw">log_timestamp</span> true
+
+<span class="cmt"># ---- Məhdudiyyətlər ----</span>
+<span class="kw">max_queued_messages</span> 1000
+<span class="kw">message_size_limit</span> 8192</pre>
+  </div>
+
+  <h3>Sətir-sətir: nə edir və niyə</h3>
+  <div class="expl">
+    <div class="row">
+      <div class="c">listener 1883 0.0.0.0</div>
+      <div class="d"><strong>Nə:</strong> brokeri 1883 portunda, bütün şəbəkə interfeyslərində açır.<br>
+        <strong>Niyə <span class="mono">0.0.0.0</span>:</strong> yalnız <span class="mono">localhost</span> yazsaq, broker <em>yalnız bu kompüterdən</em> qoşulmalara cavab verər. Real zavodda gateway ayrı cihazdır — şəbəkədən qoşulmalıdır. <span class="mono">0.0.0.0</span> = "hər yerdən dinlə".<br>
+        <strong>Niyə 1883:</strong> MQTT-nin standart portu. Şifrələnmiş versiya (TLS) 8883 portundan istifadə edir.</div>
+    </div>
+    <div class="row">
+      <div class="c">allow_anonymous true</div>
+      <div class="d"><strong>Nə:</strong> istifadəçi adı/parol tələb etmir.<br>
+        <strong>Niyə:</strong> inkişaf mərhələsində auth qurmaq işi ləngidir və heç nə qazandırmır — hər şey lokal maşındadır.<br>
+        <strong>⚠ Diqqət:</strong> istehsalatda bu <strong>mütləq <span class="mono">false</span> olmalıdır</strong>. Əks halda şəbəkədəki hər kəs sensor məlumatlarını oxuya və <em>saxta ölçmə göndərə</em> bilər. Bölmə 11-də bunu necə edəcəyimizi göstərəcəyik.</div>
+    </div>
+    <div class="row">
+      <div class="c">persistence true</div>
+      <div class="d"><strong>Nə:</strong> brokerə mesajları diskə yazmağı əmr edir.<br>
+        <strong>Niyə kritikdir:</strong> bu olmasa, broker restart olunanda <em>bütün retain mesajları və çatdırılmamış növbələr silinir</em>. Yəni broker yenidən başlayanda dashboard boş qalır və QoS 1-in zəmanəti pozulur.</div>
+    </div>
+    <div class="row">
+      <div class="c">persistence_location ./_DATA/mosquitto/</div>
+      <div class="d"><strong>Nə:</strong> həmin faylların saxlanma yeri (<span class="mono">mosquitto.db</span>).<br>
+        <strong>Niyə layihə içində:</strong> sistem qovluğu (<span class="mono">/usr/local/var</span>) əvəzinə layihə qovluğunda saxlayırıq — hər şey bir yerdə, köçürmək və yedəkləmək asan.<br>
+        <strong>⚠ Qovluq əvvəlcədən mövcud olmalıdır</strong>, yoxsa broker start-da xəta verir.</div>
+    </div>
+    <div class="row">
+      <div class="c">autosave_interval 60</div>
+      <div class="d"><strong>Nə:</strong> hər 60 saniyədən bir diskə yazır.<br>
+        <strong>Niyə 60:</strong> balansdır. Çox tez-tez (məs. 5 san.) = disk yükü. Çox nadir (məs. 600 san.) = qəza zamanı 10 dəqiqəlik retain itkisi.</div>
+    </div>
+    <div class="row">
+      <div class="c">log_dest stdout<br>log_dest file ./_LOG/mosquitto.log</div>
+      <div class="d"><strong>Nə:</strong> logları <em>həm</em> ekrana, <em>həm</em> fayla yazır. Bəli, ikisini birdən yazmaq olar — sadəcə iki sətir yazırsınız.<br>
+        <strong>Niyə hər ikisi:</strong> ekran — dərhal görmək üçün (inkişaf); fayl — sonradan araşdırmaq üçün ("dünən gecə niyə kəsildi?").</div>
+    </div>
+    <div class="row">
+      <div class="c">log_type error / warning /<br>notice / information</div>
+      <div class="d"><strong>Nə:</strong> hansı səviyyəli logların yazılacağı. Hər növ ayrı sətirdə göstərilir.<br>
+        <strong>Niyə hamısı:</strong> inkişafda maksimum görünürlük istəyirik — kim qoşuldu, kim ayrıldı, hansı topic-ə abunə oldu. İstehsalatda <span class="mono">information</span>-u söndürmək olar (log faylı şişməsin deyə).</div>
+    </div>
+    <div class="row">
+      <div class="c">connection_messages true</div>
+      <div class="d"><strong>Nə:</strong> hər qoşulma/ayrılmanı loga yazır.<br>
+        <strong>Niyə:</strong> "simulyator qoşuldumu?" sualının ən sürətli cavabı budur. Diaqnostikada birinci baxdığımız yer.</div>
+    </div>
+    <div class="row">
+      <div class="c">max_queued_messages 1000</div>
+      <div class="d"><strong>Nə:</strong> offline abunəçi üçün maksimum neçə mesaj növbədə saxlanacaq.<br>
+        <strong>Niyə lazımdır:</strong> körpü söndürülübsə, broker mesajları yığır. Limit olmasa — yaddaş dolur və broker çökür. 1000 mesaj bizim tempdə (5 cihaz × 10 san.) təxminən <strong>30 dəqiqəlik</strong> buferdir.</div>
+    </div>
+    <div class="row">
+      <div class="c">message_size_limit 8192</div>
+      <div class="d"><strong>Nə:</strong> bir mesajın maksimum ölçüsü (8 KB).<br>
+        <strong>Niyə:</strong> bizim JSON ölçməsi ~150 baytdır. 8 KB limiti səhv/zərərli nəhəng mesajların brokeri boğmasının qarşısını alır. Sadə, amma effektiv qorunma.</div>
+    </div>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">Konfiqurasiyanın tələb etdiyi qovluqları yaradın</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+mkdir -p _DATA/mosquitto _LOG
+ls -la _DATA _LOG</pre>
+  </div>
+  <div class="callout warn">
+    <span class="k">Niyə bu addım vacibdir</span>
+    Mosquitto qovluqları <strong>özü yaratmır</strong>. <span class="mono">persistence_location</span> göstərilən qovluq yoxdursa, broker <em>başlamır</em> və "Unable to open ... for writing" xətası verir. Bu, ən çox rast gəlinən start xətasıdır.
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08 — İşə salma</p>
+  <h2>Brokeri işə salmağın üç yolu</h2>
+
+  <h3>Yol 1 — Ön planda, verbose (inkişaf üçün ideal)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+mosquitto -c 01_config/mosquitto.conf -v</pre>
+  </div>
+  <div class="expl">
+    <div class="row"><div class="c">-c &lt;fayl&gt;</div><div class="d">Konfiqurasiya faylını göstərir. Bu olmasa, broker default parametrlərlə (persistence yox, yalnız localhost) işləyər.</div></div>
+    <div class="row"><div class="c">-v</div><div class="d"><strong>Verbose</strong> — bütün mesaj hərəkətini ekrana yazır: kim qoşuldu, hansı topic-ə nə göndərildi. İnkişafda əvəzsizdir; istehsalatda logu şişirdir.</div></div>
+  </div>
+  <div class="callout">
+    <span class="k">Bu terminalı bağlamayın</span>
+    Broker <strong>ön planda</strong> işləyir — terminal pəncərəsi "tutulur". Bu, sizin "broker pəncərəniz"dir. Digər işlər üçün <strong>yeni terminal</strong> açın (<span class="mono">Cmd + T</span>). Brokeri dayandırmaq: <span class="mono">Ctrl + C</span>.
+  </div>
+
+  <h3>Yol 2 — Arxa planda (daemon)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># -d = daemon (arxa planda işlə, terminalı azad et)</span>
+mosquitto -c 01_config/mosquitto.conf -d
+
+<span class="cmt"># İşlədiyini yoxla</span>
+ps aux | grep <span class="st">"[m]osquitto"</span>
+
+<span class="cmt"># Portu kim tutub? (1883 açıqdırmı?)</span>
+lsof -i :1883
+
+<span class="cmt"># Dayandırmaq</span>
+pkill mosquitto</pre>
+  </div>
+
+  <h3>Yol 3 — brew services (avtomatik, sistem xidməti)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>brew services start mosquitto
+brew services list | grep mosquitto</pre>
+  </div>
+  <div class="callout warn">
+    <span class="k">Diqqət — bu bizim konfiqurasiyanı OXUMUR</span>
+    <span class="mono">brew services</span> Homebrew-un öz konfiqurasiya faylını istifadə edir (<span class="mono">/usr/local/etc/mosquitto/mosquitto.conf</span>), <strong>bizimkini yox</strong>. Yəni persistence, log yolları və limitlərimiz tətbiq olunmur.<br><br>
+    <strong>Tövsiyə:</strong> inkişaf mərhələsində <strong>Yol 1</strong>-i (ön plan, <span class="mono">-v</span>) istifadə edin — nə baş verdiyini görürsünüz. Sistem xidmətini yalnız istehsalatda, öz konfiqurasiyamızı Homebrew-un yoluna kopyaladıqdan sonra qururuq.
+  </div>
+
+  <h3>Uğurlu start necə görünür</h3>
+  <div class="codebox">
+    <div class="cap">Gözlənilən çıxış</div>
+<pre>1783246... : mosquitto version 2.1.2 starting
+1783246... : Config loaded from 01_config/mosquitto.conf.
+1783246... : Opening ipv4 listen socket on port 1883.
+1783246... : mosquitto version 2.1.2 running</pre>
+  </div>
+  <p>Sonuncu sətir — <strong>running</strong> — brokerin hazır olduğunu bildirir. İndi qoşulmaları gözləyir.</p>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09 — Test</p>
+  <h2>Publish / Subscribe testləri</h2>
+  <p>Python-a keçməzdən əvvəl brokerin işlədiyinə <strong>terminal alətləri ilə</strong> əmin oluruq. Bu, çox vacib bir vərdişdir: problem çıxanda "Python-da səhv var, yoxsa broker işləmir?" sualını dərhal ayırd edə bilirsiniz.</p>
+  <p>Üç terminal pəncərəsi açırıq: <strong>①</strong> broker, <strong>②</strong> dinləyici, <strong>③</strong> göndərən.</p>
+
+  <h3>Test 1 — Sadə əl sıxma</h3>
+  <div class="codebox">
+    <div class="cap">Terminal ② — dinlə</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>mosquitto_sub -h localhost -p 1883 -t <span class="st">"zavod/siyezen/#"</span> -v</pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">Terminal ③ — göndər</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>mosquitto_pub -h localhost -p 1883 \
+  -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  -m <span class="st">'{"cihaz_kod":"S001","qiymet":24.3,"olcme_vaxti":"2026-07-11T09:15:00+04:00"}'</span></pre>
+  </div>
+  <p>Terminal ②-də dərhal görünməlidir:</p>
+  <div class="codebox">
+<pre>zavod/siyezen/S001/olcme {"cihaz_kod":"S001","qiymet":24.3,"olcme_vaxti":"2026-07-11T09:15:00+04:00"}</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row"><div class="c">-h localhost</div><div class="d">Brokerin ünvanı. Uzaq brokerdə IP yazılır (məs. <span class="mono">-h 192.168.1.50</span>).</div></div>
+    <div class="row"><div class="c">-p 1883</div><div class="d">Port. Default onsuz da 1883-dür, amma açıq yazmaq yaxşı vərdişdir.</div></div>
+    <div class="row"><div class="c">-t "..."</div><div class="d">Topic. <strong>Dırnaq mütləqdir</strong> — çünki <span class="mono">#</span> bash-də şərh simvoludur və dırnaqsız yazsanız, bash onu kəsib atar.</div></div>
+    <div class="row"><div class="c">-m '...'</div><div class="d">Mesaj (payload). JSON-da ikiqat dırnaq olduğu üçün <strong>tək dırnaqla</strong> əhatə edirik.</div></div>
+    <div class="row"><div class="c">-v</div><div class="d">Verbose — <strong>topic adını da</strong> göstərir. Onsuz yalnız payload çıxır və hansı cihazdan gəldiyi bilinmir. Joker istifadə edəndə mütləqdir.</div></div>
+  </div>
+
+  <h3>Test 2 — Joker simvolların fərqi</h3>
+  <div class="codebox">
+    <div class="cap">İki dinləyici — fərqi görün</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Dinləyici A — YALNIZ ölçmələr (körpünün istifadə edəcəyi)</span>
+mosquitto_sub -t <span class="st">"zavod/siyezen/+/olcme"</span> -v
+
+<span class="cmt"># Dinləyici B — HƏR ŞEY (diaqnostika üçün)</span>
+mosquitto_sub -t <span class="st">"zavod/siyezen/#"</span> -v
+
+<span class="cmt"># İndi iki fərqli mesaj göndərin:</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span>  -m <span class="st">'{"qiymet":25.1}'</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/status"</span> -m <span class="st">'online'</span>
+
+<span class="cmt"># Nəticə:
+#   Dinləyici A → yalnız olcme mesajını görür
+#   Dinləyici B → HƏR İKİSİNİ görür</span></pre>
+  </div>
+  <div class="callout why">
+    <span class="k">Dərs</span>
+    Budur <code class="inl">+</code> ilə <code class="inl">#</code> arasındakı fərqin praktik nəticəsi. Körpü <code class="inl">#</code> istifadə etsəydi, <span class="mono">"online"</span> mətnini alıб onu JSON kimi oxumağa çalışardı → xəta. <code class="inl">+</code> onu bu problemdən qoruyur.
+  </div>
+
+  <h3>Test 3 — Retain-i sınayın</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># retain ilə göndər (-r), heç kim dinləmir</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> -m <span class="st">'{"qiymet":26.7}'</span> -r
+
+<span class="cmt"># İNDİ abunə ol — mesaj dərhal gəlir (-C 1 = bir mesaj alıb çıx)</span>
+mosquitto_sub -t <span class="st">"zavod/siyezen/S001/olcme"</span> -v -C 1
+
+<span class="cmt"># Retain-i təmizləmək: BOŞ mesajı retain ilə göndər</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> -m <span class="st">""</span> -r -n</pre>
+  </div>
+
+  <h3>Test 4 — QoS və offline növbə</h3>
+  <p>Bu test brokerin əsl gücünü göstərir: abunəçi <strong>söndürülü olsa da</strong>, mesajlar itmir.</p>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># 1) Sabit client ID ilə abunə ol, sonra Ctrl+C ilə çıx
+#    -i = client ID (sabit olmalıdır!)
+#    -c = "clean session" SÖNDÜR (yəni sessiyanı yadda saxla)</span>
+mosquitto_sub -t <span class="st">"zavod/siyezen/+/olcme"</span> -q 1 -i <span class="st">"kopru-test"</span> -c -v
+<span class="cmt">#    → Ctrl+C ilə çıxın (abunəçi indi "offline"dır)</span>
+
+<span class="cmt"># 2) O yoxkən üç mesaj göndər (QoS 1 ilə)</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> -m <span class="st">'{"n":1}'</span> -q 1
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> -m <span class="st">'{"n":2}'</span> -q 1
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> -m <span class="st">'{"n":3}'</span> -q 1
+
+<span class="cmt"># 3) EYNİ client ID ilə qayıt — üç mesaj DA DƏRHAL GƏLİR!</span>
+mosquitto_sub -t <span class="st">"zavod/siyezen/+/olcme"</span> -q 1 -i <span class="st">"kopru-test"</span> -c -v</pre>
+  </div>
+  <div class="callout why">
+    <span class="k">Nə baş verdi?</span>
+    Broker "kopru-test" adlı client-in abunəsini <strong>yadda saxladı</strong> və o yoxkən gələn mesajları onun üçün <strong>növbəyə yığdı</strong>. Qayıdan kimi hamısını çatdırdı.<br><br>
+    <strong>Bu, bizim sistem üçün həyati vacibdir:</strong> körpü servisi yenilənmə üçün 2 dəqiqə söndürülsə, o 2 dəqiqənin sensor məlumatı <em>itmir</em> — broker saxlayır və körpü qayıdanda bazaya yazılır. Bax, birbaşa yazmada bu mümkün deyildi.<br><br>
+    <strong>Şərtlər:</strong> ① sabit <span class="mono">client ID</span>, ② <span class="mono">clean session = false</span>, ③ QoS ≥ 1. Üçü də olmasa, mexanizm işləmir. Hissə B-də Python client-ini məhz bu üç parametrlə quracağıq.
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10 — Diaqnostika</p>
+  <h2>Tipik xətalar və həlli</h2>
+  <table class="tbl">
+    <thead><tr><th>Xəta</th><th>Səbəb</th><th>Həll</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">command not found: mosquitto</td>
+        <td><code class="inl">/usr/local/sbin</code> PATH-də deyil</td>
+        <td><code class="inl">export PATH="$(brew --prefix)/sbin:$PATH"</code> → <span class="mono">.bash_profile</span>-a əlavə et</td>
+      </tr>
+      <tr>
+        <td class="mono">Address already in use</td>
+        <td>1883 portunu başqa proses tutub (çox güman köhnə mosquitto)</td>
+        <td><code class="inl">lsof -i :1883</code> ilə tap → <code class="inl">pkill mosquitto</code> → yenidən başlat</td>
+      </tr>
+      <tr>
+        <td class="mono">Unable to open ... for writing</td>
+        <td><code class="inl">_DATA/mosquitto/</code> və ya <code class="inl">_LOG/</code> qovluğu yoxdur</td>
+        <td><code class="inl">mkdir -p _DATA/mosquitto _LOG</code></td>
+      </tr>
+      <tr>
+        <td class="mono">Connection refused</td>
+        <td>Broker işləmir, yaxud yanlış host/port</td>
+        <td><code class="inl">ps aux | grep [m]osquitto</code> ilə yoxla; brokeri başlat</td>
+      </tr>
+      <tr>
+        <td class="mono">Connection Refused: not authorised</td>
+        <td><code class="inl">allow_anonymous false</code>, amma parol verilməyib</td>
+        <td>İnkişafda <span class="mono">true</span> et, yaxud <code class="inl">-u user -P parol</code> əlavə et</td>
+      </tr>
+      <tr>
+        <td>Mesaj göndərilir, amma <strong>gəlmir</strong></td>
+        <td>Topic uyğunsuzluğu — ən çox rast gəlinən səhv</td>
+        <td><code class="inl">mosquitto_sub -t "#" -v</code> ilə <strong>hər şeyi</strong> dinlə → əsl topic adını gör</td>
+      </tr>
+      <tr>
+        <td>Terminalda <code class="inl">#</code> işləmir</td>
+        <td>Dırnaq qoyulmayıb — bash <span class="mono">#</span>-i şərh sanır</td>
+        <td>Həmişə dırnaq: <code class="inl">-t "zavod/siyezen/#"</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="k">Universal diaqnostika əmri</span>
+    Nə baş verdiyini bilmirsinizsə, bunu işlədin — brokerdən keçən <strong>hər şeyi</strong> göstərir:<br>
+    <code class="inl">mosquitto_sub -h localhost -t "#" -v</code><br>
+    Əgər burada heç nə görünmürsə, problem <strong>göndərən tərəfdədir</strong>. Görünürsə, amma sizin proqram almırsa — problem <strong>abunə topic-indədir</strong>. Bu iki halı ayırd etmək problemin yarısını həll edir.
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11 — Gələcək</p>
+  <h2>Sonra buraya nə əlavə edə bilərik?</h2>
+  <p>Bu konfiqurasiya <strong>inkişaf üçün</strong>dur. İstehsalata (real zavoda) keçəndə aşağıdakılar əlavə olunur. Hər birini indi qurmaq lazım deyil — amma sistemin bunlara <em>hazır</em> olduğunu bilmək vacibdir.</p>
+
+  <ul class="next">
+    <li><strong>Autentifikasiya (istifadəçi/parol).</strong> <code class="inl">allow_anonymous false</code> + <code class="inl">password_file</code>. Parol faylı <span class="mono">mosquitto_passwd -c passwd zarat_gateway</span> ilə yaradılır. Bu, ilk və ən vacib təhlükəsizlik addımıdır.</li>
+    <li><strong>ACL (icazə siyahısı).</strong> Gateway yalnız <em>yaza</em> bilsin, dashboard yalnız <em>oxusun</em>. <code class="inl">acl_file</code> ilə: <span class="mono">topic write zavod/siyezen/+/olcme</span>. Beləliklə oğurlanmış dashboard paroluyla saxta ölçmə göndərmək mümkün olmur.</li>
+    <li><strong>TLS şifrələmə (port 8883).</strong> <code class="inl">cafile</code>, <code class="inl">certfile</code>, <code class="inl">keyfile</code>. Zavod ilə mərkəz arasında internet varsa — <strong>mütləqdir</strong>. Lokal şəbəkədə isə opsional.</li>
+    <li><strong>Bridge (körpü rejimi).</strong> Zavoddakı broker ilə mərkəzdəki broker arasında avtomatik körpü. Bu, Dərs 07-dəki sinxronizasiyaya <em>alternativ</em> yanaşmadır — sensor məlumatı brokerdən-brokerə axır. Böyük sistemlərdə istifadə olunur.</li>
+    <li><strong>WebSockets (port 9001).</strong> <code class="inl">listener 9001</code> + <code class="inl">protocol websockets</code>. Brauzerin birbaşa MQTT-yə qoşulmasına imkan verir — dashboard-da <em>real-vaxt</em> qrafiklər (səhifə yeniləmədən) üçün.</li>
+    <li><strong>$SYS topic-ləri ilə monitorinq.</strong> Broker öz statistikasını yayımlayır: <code class="inl">mosquitto_sub -t '$SYS/broker/clients/connected' -v</code>. Neçə client qoşulub, neçə mesaj keçib, yaddaş nə qədərdir — hamısı buradan.</li>
+    <li><strong>Persistence tənzimləməsi.</strong> Yüksək tempdə (saniyədə yüzlərlə mesaj) <code class="inl">autosave_interval</code> və <code class="inl">max_inflight_messages</code> tənzimlənməlidir.</li>
+  </ul>
+
+  <div class="callout warn">
+    <span class="k">İstehsalat üçün minimum</span>
+    Real zavodda <strong>ən azı</strong> ilk iki bənd (auth + ACL) olmalıdır. Anonim brokerlə işləyən sistem — şəbəkəyə çıxan hər kəsə açıq qapıdır. Saxta temperatur mesajı göndərən şəxs bütün alert sistemini yanılda bilər.
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Yoxlama siyahısı — Hissə B-yə keçməzdən əvvəl</h2>
+  <ul class="check">
+    <li><code class="inl">which mosquitto</code> yol göstərir (PATH düzəlib).</li>
+    <li><code class="inl">_DATA/mosquitto/</code> və <code class="inl">_LOG/</code> qovluqları mövcuddur.</li>
+    <li>Broker <code class="inl">mosquitto -c 01_config/mosquitto.conf -v</code> ilə işə düşür və <strong>"running"</strong> yazır.</li>
+    <li><code class="inl">mosquitto_sub</code> + <code class="inl">mosquitto_pub</code> arasında test mesajı keçir.</li>
+    <li>Joker fərqini başa düşürsünüz: <code class="inl">+</code> = bir səviyyə, <code class="inl">#</code> = hamısı.</li>
+    <li>QoS 1-i və niyə QoS 2 seçmədiyimizi izah edə bilirsiniz.</li>
+    <li>LWT-nin <code class="inl">cihaz_susur</code> xəbərdarlığı ilə əlaqəsini anlayırsınız.</li>
+    <li>Offline növbə testi (Test 4) işlədi — mesajlar itmədi.</li>
+  </ul>
+
+  <div class="callout">
+    <span class="k">Növbəti: Hissə B</span>
+    İndi broker hazırdır və <strong>terminal alətləri ilə</strong> onunla danışa bilirik. Hissə B-də eyni işi <strong>Python ilə</strong> edəcəyik:<br>
+    ① <span class="mono">paho-mqtt</span> kitabxanası və client həyat dövrü;<br>
+    ② simulyatoru bazaya yox, <strong>brokerə</strong> yazan hala gətirmək (publisher);<br>
+    ③ brokerdən oxuyub bazaya yazan <strong>körpü</strong> servisi (subscriber);<br>
+    ④ LWT, avtomatik yenidən qoşulma və xəta idarəsi;<br>
+    ⑤ üç terminalda uçdan-uca test və bazada nəticənin yoxlanması.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 04-A — MQTT Broker: Memarlıq, Mosquitto və Topic Dizaynı</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>

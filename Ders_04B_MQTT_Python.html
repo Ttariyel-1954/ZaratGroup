@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 04-B — Python ilə MQTT: Publisher, Körpü və Uçdan-uca Axın</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524; --blue:#5aa9e6;
+    --green:#5bd08a; --paper:#f6f4ef; --paper-2:#efece4;
+    --ink:#1a222c; --danger:#e5695f; --violet:#a78bfa;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1200px 400px at 78% -10%,rgba(90,169,230,.15),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:66px 32px 54px;border-bottom:3px solid var(--blue);}
+  .wrap{max-width:980px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--blue);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(29px,4.8vw,48px);line-height:1.08;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:760px;margin:0;line-height:1.7;}
+  .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(90,169,230,.12);
+    border:1px solid rgba(90,169,230,.35);color:#a8d4f5;padding:6px 13px;border-radius:2px;}
+
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:980px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;}
+  .toc a{color:var(--teal-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:980px;margin:0 auto;padding:0 32px;}
+  section{padding:46px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--blue);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.3vw,32px);line-height:1.15;margin:0 0 20px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;margin:32px 0 10px;}
+  h4{font-family:"Oswald",Arial,sans-serif;font-weight:500;font-size:17px;margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:17px 22px;border-radius:0 4px 4px 0;margin:22px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:#b9781a;} .callout.why .k{color:#6d4fc4;} .callout.err .k{color:#c0453a;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--blue);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+
+  .codebox{position:relative;margin:20px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.7;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .fn{color:var(--blue);} .nm{color:#c3a6f0;}
+  .copybtn{position:absolute;top:32px;right:10px;background:rgba(90,169,230,.14);color:#a8d4f5;
+    border:1px solid rgba(90,169,230,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(90,169,230,.28);}
+
+  .expl{margin:18px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;}
+  .expl .row{display:flex;border-bottom:1px solid #e8e3d8;}
+  .expl .row:last-child{border-bottom:none;}
+  .expl .row:nth-child(even){background:var(--paper-2);}
+  .expl .c{flex:0 0 40%;padding:11px 14px;font-family:ui-monospace,Menlo,monospace;
+    font-size:12.5px;color:#0b5f57;background:rgba(13,148,136,.05);
+    border-right:1px solid #e8e3d8;word-break:break-word;}
+  .expl .d{flex:1;padding:11px 14px;font-size:14.5px;line-height:1.55;}
+
+  .arch{background:var(--graphite);border-radius:10px;padding:30px 24px;margin:26px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--blue);margin-bottom:16px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:13px 14px;
+    text-align:center;min-width:120px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;color:#fff;text-transform:uppercase;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:11px;color:#8fa6ba;display:block;margin-top:3px;}
+  .bx.hl{border-color:var(--blue);box-shadow:0 0 0 1px rgba(90,169,230,.3);}
+  .ar{color:var(--blue);font-size:20px;}
+
+  .term{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0;}
+  .term .t1{flex:1;min-width:230px;background:var(--graphite);border:1px solid var(--line);
+    border-radius:8px;padding:14px 16px;color:#cdd9e5;}
+  .term .t1 .h{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--teal);margin-bottom:8px;}
+  .term .t1 .c{font-family:ui-monospace,monospace;font-size:12px;color:#9fb4c7;line-height:1.6;}
+
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{padding:12px 16px 12px 44px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--green);}
+  .check li::before{content:"✓";position:absolute;left:15px;top:10px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;}
+
+  .next{list-style:none;padding:0;margin:20px 0;}
+  .next li{padding:13px 16px 13px 44px;position:relative;background:#eef5fb;
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--blue);}
+  .next li::before{content:"→";position:absolute;left:16px;top:12px;color:var(--blue);
+    font-weight:bold;font-size:17px;font-family:Arial,sans-serif;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--blue);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+
+  @media (max-width:700px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .expl .row{flex-direction:column;} .expl .c{flex:1;border-right:none;border-bottom:1px solid #e8e3d8;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Dərs 04 — Hissə B</p>
+    <h1>Python ilə MQTT: Publisher, Körpü və Uçdan-uca Axın</h1>
+    <p class="lede">Hissə A-da brokeri qurduq və terminal alətləri ilə sınadıq. İndi eyni işi <strong>Python ilə</strong> edirik: simulyatoru brokerə yazan hala gətiririk, brokerdən oxuyub bazaya yazan <strong>körpü servisi</strong> qurur, LWT və yenidən qoşulmanı əlavə edirik. Sonda üç terminalda tam axını işlədib bazada nəticəni görürük.</p>
+    <div class="meta">
+      <span class="chip">paho-mqtt 2.x</span>
+      <span class="chip">Publisher (simulyator)</span>
+      <span class="chip">Körpü (subscriber)</span>
+      <span class="chip">LWT · Reconnect</span>
+      <span class="chip">Uçdan-uca test</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Memarlıq dəyişikliyi</a></li>
+    <li><a href="#s2">paho-mqtt və client həyat dövrü</a></li>
+    <li><a href="#s3">Publisher: simulyatorun yenidən qurulması</a></li>
+    <li><a href="#s4">Random walk — niyə sadə random yox?</a></li>
+    <li><a href="#s5">Payload müqaviləsi (JSON)</a></li>
+    <li><a href="#s6">Körpü servisi: brokerdən bazaya</a></li>
+    <li><a href="#s7">Hədd yoxlaması və xəbərdarlıq</a></li>
+    <li><a href="#s8">Uçdan-uca test — üç terminal</a></li>
+    <li><a href="#s9">Bazada nəticəni yoxlamaq</a></li>
+    <li><a href="#s10">Tipik xətalar</a></li>
+    <li><a href="#s11">Sonra nə əlavə edəcəyik?</a></li>
+    <li><a href="#s12">Yoxlama siyahısı</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01 — Memarlıq</p>
+  <h2>Nə dəyişir: bir proqram → iki proqram</h2>
+  <p>Dərs 03-də <strong>bir</strong> proqram var idi: simulyator həm ölçmə yaradırdı, həm də bazaya yazırdı. İndi onu <strong>ikiyə bölürük</strong> — və bu bölünmə təsadüfi deyil, real dünyanı əks etdirir.</p>
+
+  <div class="arch">
+    <div class="lbl">Yeni memarlıq — iki müstəqil proses</div>
+    <div class="rowf">
+      <div class="bx hl"><span class="t">sensor_simulyator.py</span><span class="s">PUBLISHER</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">Mosquitto</span><span class="s">:1883</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">mqtt_kopru.py</span><span class="s">SUBSCRIBER</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">zavod_edge_db</span><span class="s">:5434</span></div>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Proqram</th><th>Real dünyada kim olacaq</th><th>Bilməli olduğu</th><th>Bilməməli olduğu</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="code">sensor_simulyator.py</td>
+        <td><strong>Gateway / PLC</strong> (zavoddakı fiziki qutu)</td>
+        <td>Broker ünvanı, topic adı, JSON formatı</td>
+        <td><strong>Bazanı</strong> — nə ünvanını, nə sxemini, nə parolunu</td>
+      </tr>
+      <tr>
+        <td class="code">mqtt_kopru.py</td>
+        <td><strong>Bizim serverimiz</strong> (Dərs 05-də FastAPI olacaq)</td>
+        <td>Broker ünvanı, topic, JSON formatı, baza sxemi</td>
+        <td>Sensorun fiziki tipini, kabelini, gateway markasını</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Niyə bu bölünmə bu qədər vacibdir?</span>
+    Simulyatoru gələcəkdə <strong>silib atacağıq</strong> — onun yerinə real gateway gələcək. Əgər simulyator bazaya birbaşa yazsaydı, onunla birlikdə bazaya yazma məntiqi də silinərdi və hər şeyi yenidən yazmalı olardıq.<br><br>
+    İndi isə: <strong>körpü qalır</strong>, yalnız publisher dəyişir. Gateway eyni topic-ə, eyni JSON formatında yazacaq — körpü fərqi <em>hiss belə etməyəcək</em>. Bax, bu, düzgün memarlığın praktik faydasıdır: sınaq mühitindən istehsalata keçid <strong>bir kabel dəyişikliyinə</strong> çevrilir.
+  </div>
+
+  <h3>Qovluq strukturu</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+mkdir -p 03_src/publisher 03_src/kopru
+ls -la 03_src/</pre>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02 — Kitabxana</p>
+  <h2>paho-mqtt: client həyat dövrü</h2>
+  <p><strong>paho-mqtt</strong> — Eclipse-in rəsmi Python MQTT kitabxanasıdır. Onu və iki köməkçi paketi quraşdırırıq.</p>
+
+  <div class="codebox">
+    <div class="cap">Quraşdırma (venv aktiv olmalıdır!)</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+
+pip install paho-mqtt psycopg[binary] python-dotenv
+
+<span class="cmt"># requirements.txt-ə yaz ki, digər kompüterdə də quraşdırılsın</span>
+pip freeze | grep -E <span class="st">"paho|psycopg|dotenv"</span> &gt;&gt; requirements.txt</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row"><div class="c">paho-mqtt</div><div class="d">MQTT client kitabxanası — brokerə qoşulmaq, publish/subscribe etmək.</div></div>
+    <div class="row"><div class="c">psycopg[binary]</div><div class="d">PostgreSQL sürücüsü (v3). <code class="inl">[binary]</code> = hazır kompilyasiya olunmuş versiya, Mac-də ağrısız quraşdırılır.</div></div>
+    <div class="row"><div class="c">python-dotenv</div><div class="d"><code class="inl">.env</code> faylını oxuyur. <strong>Niyə lazımdır:</strong> host/port/parol kodda <em>sabit yazılmamalıdır</em>. Zavod maşınında və mərkəzdə fərqli dəyərlər olacaq — kodu dəyişmək əvəzinə yalnız <span class="mono">.env</span>-i dəyişirik.</div></div>
+  </div>
+
+  <h3>Client-in dörd mərhələsi</h3>
+  <p>Hər MQTT client eyni həyat dövrünü yaşayır. Bunu başa düşsəniz, həm publisher, həm subscriber kodu aydın olacaq.</p>
+  <table class="tbl">
+    <thead><tr><th>Mərhələ</th><th>Metod</th><th>Nə edir</th></tr></thead>
+    <tbody>
+      <tr><td>1. Yaratma</td><td class="code">mqtt.Client(...)</td><td>Client obyektini qurur — ID, sessiya rejimi, protokol versiyası</td></tr>
+      <tr><td>2. Hazırlıq</td><td class="code">will_set(...)<br>on_connect = ...</td><td>LWT elan olunur, callback funksiyaları bağlanır</td></tr>
+      <tr><td>3. Qoşulma</td><td class="code">connect()<br>loop_start()</td><td>Brokerə qoşulur və <strong>fon sapını</strong> (thread) başladır</td></tr>
+      <tr><td>4. İş</td><td class="code">publish() / on_message</td><td>Mesaj göndərir və ya qəbul edir</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">loop_start() vs loop_forever() — ən çox səhv edilən yer</span>
+    MQTT client-in <strong>daim işləyən bir dövrü</strong> olmalıdır: o, şəbəkəni dinləyir, keepalive nəbzini göndərir, yenidən qoşulur. Bunsuz client "ölür".<br><br>
+    <code class="inl">loop_start()</code> — dövrü <strong>ayrı sapda (thread)</strong> başladır, əsas proqram davam edir. <strong>Publisher üçün</strong>: biz öz döngəmizdə ölçmə yaradıб göndəririk.<br>
+    <code class="inl">loop_forever()</code> — dövrü <strong>əsas sapda</strong> işlədir və proqramı bloklayır. <strong>Subscriber üçün</strong>: körpünün başqa işi yoxdur — sadəcə gözləyib mesaj alır.<br><br>
+    <strong>Bu ikisini qarışdırmaq</strong> ən çox rast gəlinən səhvdir: <span class="mono">loop_start()</span> yazıб sonra proqramı bitirsəniz, mesajlar göndərilmədən proses ölür.
+  </div>
+
+  <div class="callout err">
+    <span class="k">Versiya tələsi — paho-mqtt 2.x</span>
+    paho-mqtt 2.0-da callback imzaları <strong>dəyişdi</strong>. İnternetdəki köhnə nümunələr (2024-dən əvvəl) işləməyəcək və <span class="mono">TypeError</span> verəcək.<br><br>
+    Həll: client yaradanda versiyanı açıq göstərin —<br>
+    <code class="inl">mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, ...)</code><br>
+    Aşağıdakı bütün kod məhz bu API ilə yazılıb.
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03 — Publisher</p>
+  <h2>sensor_simulyator.py — tam kod</h2>
+  <p>Bu proqram real gateway-in rolunu oynayır: cihazları bazadan oxuyur (real cihaz siyahısı ilə işləmək üçün), hər biri üçün məntiqli dəyər yaradır və <strong>brokerə göndərir</strong>.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/publisher/sensor_simulyator.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">#!/usr/bin/env python3
+"""
+Zarat Faza 2 — Sensor simulyatoru (PUBLISHER)
+Rolu: real zavodda bu, gateway/PLC olacaq.
+Cihazları bazadan oxuyur, ölçmə yaradır, MQTT brokerə göndərir.
+Bazaya YAZMIR — yalnız oxuyur (cihaz siyahısı üçün).
+"""</span>
+<span class="kw">import</span> os, sys, json, time, random, signal
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timezone
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="kw">import</span> psycopg
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+<span class="kw">import</span> paho.mqtt.client <span class="kw">as</span> mqtt
+
+<span class="cmt"># ---- 1. Konfiqurasiya (.env-dən) ----</span>
+KOK = Path(__file__).resolve().parents[<span class="nm">2</span>]
+load_dotenv(KOK / <span class="st">"01_config"</span> / <span class="st">".env"</span>)
+
+MQTT_HOST  = os.getenv(<span class="st">"MQTT_HOST"</span>, <span class="st">"localhost"</span>)
+MQTT_PORT  = int(os.getenv(<span class="st">"MQTT_PORT"</span>, <span class="st">"1883"</span>))
+TOPIC_BASE = os.getenv(<span class="st">"MQTT_TOPIC_BASE"</span>, <span class="st">"zavod/siyezen"</span>)
+INTERVAL   = float(os.getenv(<span class="st">"SIM_INTERVAL"</span>, <span class="st">"5"</span>))   <span class="cmt"># saniyə</span>
+
+EDGE_DSN = (
+    <span class="st">f"host={os.getenv('EDGE_DB_HOST')} "</span>
+    <span class="st">f"port={os.getenv('EDGE_DB_PORT')} "</span>
+    <span class="st">f"dbname={os.getenv('EDGE_DB_NAME')} "</span>
+    <span class="st">f"user={os.getenv('EDGE_DB_USER')}"</span>
+)
+
+CLIENT_ID = <span class="st">"zarat-simulyator"</span>
+isleyir = True   <span class="cmt"># Ctrl+C üçün bayraq</span>
+
+
+<span class="cmt"># ---- 2. Cihazları bazadan oxu ----</span>
+<span class="kw">def</span> <span class="fn">cihazlari_oxu</span>():
+    <span class="st">"""Aktiv cihazları və onların hədlərini bazadan gətirir."""</span>
+    sql = <span class="st">"""
+        SELECT c.kod, t.kod AS tip, t.min_hedd, t.max_hedd, t.vahid
+        FROM cihaz c
+        JOIN sensor_tipi t ON c.sensor_tipi_kod = t.kod
+        WHERE c.status = 'aktiv'
+        ORDER BY c.kod
+    """</span>
+    <span class="kw">with</span> psycopg.connect(EDGE_DSN) <span class="kw">as</span> conn, conn.cursor() <span class="kw">as</span> cur:
+        cur.execute(sql)
+        setirler = cur.fetchall()
+
+    cihazlar = []
+    <span class="kw">for</span> kod, tip, mn, mx, vahid <span class="kw">in</span> setirler:
+        mn, mx = float(mn), float(mx)
+        cihazlar.append({
+            <span class="st">"kod"</span>:   kod,
+            <span class="st">"tip"</span>:   tip,
+            <span class="st">"min"</span>:   mn,
+            <span class="st">"max"</span>:   mx,
+            <span class="st">"vahid"</span>: vahid,
+            <span class="st">"cari"</span>:  (mn + mx) / <span class="nm">2</span>,        <span class="cmt"># başlanğıc: orta nöqtə</span>
+            <span class="st">"addim"</span>: (mx - mn) * <span class="nm">0.02</span>,     <span class="cmt"># bir addımın maks. ölçüsü</span>
+        })
+    <span class="kw">return</span> cihazlar
+
+
+<span class="cmt"># ---- 3. Növbəti dəyər (random walk) ----</span>
+<span class="kw">def</span> <span class="fn">novbeti_qiymet</span>(c):
+    <span class="st">"""Əvvəlki dəyərdən kiçik addımla sürüşür — real sensor kimi."""</span>
+    delta = random.uniform(-c[<span class="st">"addim"</span>], c[<span class="st">"addim"</span>])
+    yeni  = c[<span class="st">"cari"</span>] + delta
+
+    <span class="cmt"># 2% ehtimalla anomaliya sıçrayışı → Dərs 6-nı sınamaq üçün</span>
+    <span class="kw">if</span> random.random() &lt; <span class="nm">0.02</span>:
+        yeni = c[<span class="st">"max"</span>] * random.uniform(<span class="nm">1.05</span>, <span class="nm">1.20</span>)
+
+    <span class="cmt"># həddən çox uzaqlaşmasın (fizika məntiqi)</span>
+    genislik = c[<span class="st">"max"</span>] - c[<span class="st">"min"</span>]
+    asagi  = c[<span class="st">"min"</span>] - genislik * <span class="nm">0.3</span>
+    yuxari = c[<span class="st">"max"</span>] + genislik * <span class="nm">0.3</span>
+    c[<span class="st">"cari"</span>] = max(asagi, min(yuxari, yeni))
+
+    <span class="kw">return</span> round(c[<span class="st">"cari"</span>], <span class="nm">3</span>)
+
+
+<span class="cmt"># ---- 4. MQTT callback-ləri (paho 2.x imzaları!) ----</span>
+<span class="kw">def</span> <span class="fn">on_connect</span>(client, userdata, flags, reason_code, properties):
+    <span class="kw">if</span> reason_code == <span class="nm">0</span>:
+        print(<span class="st">f"[MQTT] Qoşuldu: {MQTT_HOST}:{MQTT_PORT}"</span>)
+        <span class="cmt"># Qoşulan kimi "online" statusunu retain ilə elan et</span>
+        client.publish(<span class="st">f"{TOPIC_BASE}/simulyator/status"</span>,
+                       <span class="st">"online"</span>, qos=<span class="nm">1</span>, retain=<span class="kw">True</span>)
+    <span class="kw">else</span>:
+        print(<span class="st">f"[MQTT] XƏTA — qoşulma alınmadı: {reason_code}"</span>)
+
+
+<span class="kw">def</span> <span class="fn">on_disconnect</span>(client, userdata, flags, reason_code, properties):
+    <span class="kw">if</span> reason_code != <span class="nm">0</span>:
+        print(<span class="st">f"[MQTT] Gözlənilməz kəsilmə ({reason_code}) — yenidən qoşulur..."</span>)
+
+
+<span class="cmt"># ---- 5. Ctrl+C-ni səliqəli tut ----</span>
+<span class="kw">def</span> <span class="fn">dayandir</span>(signum, frame):
+    <span class="kw">global</span> isleyir
+    print(<span class="st">"\n[SİM] Dayandırılır..."</span>)
+    isleyir = <span class="kw">False</span>
+
+signal.signal(signal.SIGINT, dayandir)
+
+
+<span class="cmt"># ---- 6. Əsas döngə ----</span>
+<span class="kw">def</span> <span class="fn">main</span>():
+    cihazlar = cihazlari_oxu()
+    <span class="kw">if</span> <span class="kw">not</span> cihazlar:
+        print(<span class="st">"[XƏTA] Bazada aktiv cihaz yoxdur. 03_seed.sql işlədilibmi?"</span>)
+        sys.exit(<span class="nm">1</span>)
+    print(<span class="st">f"[SİM] {len(cihazlar)} aktiv cihaz tapıldı: "</span>
+          + <span class="st">", "</span>.join(c[<span class="st">"kod"</span>] <span class="kw">for</span> c <span class="kw">in</span> cihazlar))
+
+    <span class="cmt"># Client yarat — VERSION2 API, sabit ID</span>
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,
+                         client_id=CLIENT_ID)
+    client.on_connect    = on_connect
+    client.on_disconnect = on_disconnect
+
+    <span class="cmt"># LWT — "vəsiyyət": mən yox olsam, bunu sən göndər</span>
+    client.will_set(<span class="st">f"{TOPIC_BASE}/simulyator/status"</span>,
+                    payload=<span class="st">"offline"</span>, qos=<span class="nm">1</span>, retain=<span class="kw">True</span>)
+
+    <span class="cmt"># Avtomatik yenidən qoşulma: 1 san-dən 30 san-ə qədər artan gözləmə</span>
+    client.reconnect_delay_set(min_delay=<span class="nm">1</span>, max_delay=<span class="nm">30</span>)
+
+    client.connect(MQTT_HOST, MQTT_PORT, keepalive=<span class="nm">30</span>)
+    client.loop_start()   <span class="cmt"># fon sapı — şəbəkəni idarə edir</span>
+
+    sayqac = <span class="nm">0</span>
+    <span class="kw">while</span> isleyir:
+        indi = datetime.now(timezone.utc).isoformat()
+
+        <span class="kw">for</span> c <span class="kw">in</span> cihazlar:
+            qiymet = novbeti_qiymet(c)
+            topic  = <span class="st">f"{TOPIC_BASE}/{c['kod']}/olcme"</span>
+            payload = json.dumps({
+                <span class="st">"cihaz_kod"</span>:   c[<span class="st">"kod"</span>],
+                <span class="st">"qiymet"</span>:      qiymet,
+                <span class="st">"olcme_vaxti"</span>: indi,
+                <span class="st">"vahid"</span>:       c[<span class="st">"vahid"</span>],
+            })
+
+            netice = client.publish(topic, payload, qos=<span class="nm">1</span>, retain=<span class="kw">True</span>)
+            <span class="kw">if</span> netice.rc != mqtt.MQTT_ERR_SUCCESS:
+                print(<span class="st">f"[XƏTA] Göndərilmədi: {topic} (rc={netice.rc})"</span>)
+            <span class="kw">else</span>:
+                sayqac += <span class="nm">1</span>
+                print(<span class="st">f"  → {c['kod']:6} {qiymet:9.3f} {c['vahid']}"</span>)
+
+        print(<span class="st">f"[SİM] Cəmi göndərilib: {sayqac}\n"</span>)
+        time.sleep(INTERVAL)
+
+    <span class="cmt"># Səliqəli çıxış: "offline" elan et, sonra ayrıl</span>
+    client.publish(<span class="st">f"{TOPIC_BASE}/simulyator/status"</span>,
+                   <span class="st">"offline"</span>, qos=<span class="nm">1</span>, retain=<span class="kw">True</span>)
+    time.sleep(<span class="nm">0.5</span>)          <span class="cmt"># mesajın çıxmasına imkan ver</span>
+    client.loop_stop()
+    client.disconnect()
+    print(<span class="st">f"[SİM] Bitdi. Ümumi: {sayqac} mesaj."</span>)
+
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    main()</pre>
+  </div>
+
+  <h3>Kritik sətirlərin izahı</h3>
+  <div class="expl">
+    <div class="row">
+      <div class="c">KOK = Path(__file__).resolve().parents[2]</div>
+      <div class="d"><strong>Nə:</strong> layihənin kök qovluğunu tapır. Fayl <span class="mono">03_src/publisher/</span>-dədir → iki səviyyə yuxarı qalxırıq.<br>
+        <strong>Niyə:</strong> proqramı <em>hansı qovluqdan</em> işə salsanız da, <span class="mono">.env</span>-i tapa bilsin. <span class="mono">"01_config/.env"</span> kimi nisbi yol yazsaq, yalnız kök qovluqdan işlədəndə işləyər.</div>
+    </div>
+    <div class="row">
+      <div class="c">cihazlari_oxu()</div>
+      <div class="d"><strong>Nə:</strong> cihaz siyahısını <em>bazadan</em> oxuyur, kodda sabit yazmır.<br>
+        <strong>Niyə:</strong> S006 cihazı əlavə edəndə <em>kodu dəyişmək lazım gəlmir</em> — sadəcə bazaya bir sətir <span class="mono">INSERT</span> edirsiniz və simulyator onu avtomatik götürür. Həmçinin hədləri (<span class="mono">min_hedd/max_hedd</span>) də oradan alır — dəyərlər real diapazona uyğun olur.</div>
+    </div>
+    <div class="row">
+      <div class="c">client_id=CLIENT_ID</div>
+      <div class="d"><strong>Nə:</strong> sabit client ID.<br>
+        <strong>Niyə:</strong> Hissə A, Test 4-də gördük — offline növbə <strong>yalnız sabit ID ilə</strong> işləyir. Təsadüfi ID hər restartda yeni client yaradar və broker köhnə sessiyanı tapa bilməz.</div>
+    </div>
+    <div class="row">
+      <div class="c">client.will_set(...)</div>
+      <div class="d"><strong>Nə:</strong> LWT elan edir — <span class="mono">connect()</span>-dən <strong>ƏVVƏL</strong> çağırılmalıdır.<br>
+        <strong>Niyə:</strong> vəsiyyət qoşulma paketinin içində brokerə ötürülür. Qoşulduqdan sonra elan etsəniz — <em>təsir etmir</em>, səssizcə göz ardı edilir. Bu, çox gizli bir səhvdir.</div>
+    </div>
+    <div class="row">
+      <div class="c">reconnect_delay_set(1, 30)</div>
+      <div class="d"><strong>Nə:</strong> qoşulma kəsilsə, 1 saniyədən başlayıб tədricən 30 saniyəyə qədər artan intervallarla yenidən cəhd edir.<br>
+        <strong>Niyə artan:</strong> broker çökübsə, hər 100 ms-də cəhd etmək şəbəkəni və CPU-nu boş yerə yükləyir. Bu, "exponential backoff" adlanan standart yanaşmadır.</div>
+    </div>
+    <div class="row">
+      <div class="c">keepalive=30</div>
+      <div class="d"><strong>Nə:</strong> hər 30 saniyədə bir brokerə "sağam" nəbzi göndərilir.<br>
+        <strong>Niyə vacibdir:</strong> LWT məhz buna əsaslanır. Broker <strong>1,5 × keepalive</strong> (45 san.) müddətində nəbz almasa, client-i ölü sayır və vəsiyyəti icra edir. Çox böyük dəyər = susma gec aşkarlanır. Çox kiçik = şəbəkə boş yerə yüklənir.</div>
+    </div>
+    <div class="row">
+      <div class="c">client.loop_start()</div>
+      <div class="d"><strong>Nə:</strong> şəbəkə dövrünü <strong>ayrı sapda</strong> başladır.<br>
+        <strong>Niyə burada məhz bu:</strong> əsas sapda bizim öz <span class="mono">while</span> döngəmiz var (ölçmə yaradıб göndərir). <span class="mono">loop_forever()</span> istifadə etsək, o, əsas sapı bloklayardı və döngəmiz heç vaxt işləməzdi.</div>
+    </div>
+    <div class="row">
+      <div class="c">qos=1, retain=True</div>
+      <div class="d"><strong>QoS 1:</strong> mesaj itməsin (Hissə A-da müzakirə etdik).<br>
+        <strong>retain=True:</strong> dashboard açılan kimi hər cihazın son dəyərini dərhal görsün — 5 saniyə boş ekrana baxmasın.</div>
+    </div>
+    <div class="row">
+      <div class="c">signal.signal(SIGINT, dayandir)</div>
+      <div class="d"><strong>Nə:</strong> Ctrl+C basılanda proqram dərhal ölmür — bayrağı endirir, döngə bitir, sonra <strong>"offline"</strong> elan edib səliqəli ayrılır.<br>
+        <strong>Niyə:</strong> kobud ölüm LWT-ni işə salardı və "cihaz susdu" xəbərdarlığı yaranardı — halbuki biz onu <em>bilərəkdən</em> dayandırmışıq. Bu, saxta alert-in qarşısını alır.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04 — Data keyfiyyəti</p>
+  <h2>Random walk: niyə sadə <span class="mono">random.uniform()</span> yaramır?</h2>
+  <p>Ən sadə yanaşma belə olardı:</p>
+  <div class="codebox">
+    <div class="cap">SƏHV yanaşma</div>
+<pre>qiymet = random.uniform(mn, mx)   <span class="cmt"># hər dəfə tam təsadüfi</span></pre>
+  </div>
+  <p>Bu, işləyər — amma yaratdığı data <strong>yalandır</strong> və bütün gələcək işi korlayar. Səbəb: real dünyada temperatur bir saniyədə 5°C-dən 34°C-ə tullanmır. O, <strong>tədricən sürüşür</strong>.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Yanaşma</th><th>Data necə görünür</th><th>Nəticə</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="mono">random.uniform()</span></td>
+        <td>Xaotik zil-zil — qrafik "diş" kimi</td>
+        <td>Trend təhlili mənasızdır; anomaliya aşkarlaması işləmir (hər şey anomaliyadır)</td>
+      </tr>
+      <tr>
+        <td><strong>Random walk</strong></td>
+        <td>Yumşaq sürüşən əyri — real sensor kimi</td>
+        <td>Trend görünür; anomaliya <strong>seçilir</strong>; qrafiklər inandırıcıdır</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Məntiq</span>
+    <code class="inl">yeni = cari + kiçik_təsadüfi_addım</code><br><br>
+    Addımın ölçüsü diapazonun <strong>2 %-i</strong>dir. Temperatur üçün (−5…35 °C, diapazon 40) bu, <strong>±0,8 °C</strong> deməkdir — real siloda 5 saniyədə baş verə biləcək dəyişiklik. Dəyər əvvəlki dəyərdən "yapışır" və təbii axın yaranır.<br><br>
+    <strong>2 % anomaliya sıçrayışı</strong> isə bilərəkdən qoyulub: Dərs 6-da anomaliya sistemini qurduqda onu <em>sınamaq üçün</em> real hədd aşımları lazımdır. Sırf normal data ilə alert kodunun işlədiyini heç vaxt yoxlaya bilməzdik.
+  </div>
+
+  <h4>Sonra buraya nə əlavə edə bilərik</h4>
+  <ul class="next">
+    <li><strong>Gündəlik dövr:</strong> temperatur gündüz qalxsın, gecə düşsün — <span class="mono">math.sin()</span> ilə saat əsaslı əyri.</li>
+    <li><strong>Cihaz nasazlığı:</strong> təsadüfən sensorun "ilişməsi" (eyni dəyəri təkrarlaması) — bu, real dünyada olur və aşkarlanması ayrıca bir bacarıqdır.</li>
+    <li><strong>Korrelyasiya:</strong> vibrasiya qalxanda enerji sərfiyyəti də qalxsın — real fizikaya uyğun.</li>
+    <li><strong>Növbə rejimi:</strong> gecə xətt dayanır → çəki və enerji sıfıra düşür.</li>
+  </ul>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05 — Müqavilə</p>
+  <h2>Payload formatı: publisher ilə körpü arasında müqavilə</h2>
+  <p>Broker payload-ın içinə baxmır. Yəni formatın düzgünlüyünə <strong>heç kim nəzarət etmir</strong> — bu, tamamilə bizim məsuliyyətimizdir. Ona görə formatı <em>sənəd kimi</em> qeyd edirik.</p>
+
+  <div class="codebox">
+    <div class="cap">Ölçmə mesajının formatı — DƏYİŞMƏZ MÜQAVİLƏ</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>Topic:   zavod/siyezen/{cihaz_kod}/olcme
+QoS:     1
+Retain:  true
+
+Payload (JSON):
+{
+  <span class="st">"cihaz_kod"</span>:   <span class="st">"S001"</span>,                        <span class="cmt">// məcburi — cihaz cədvəlində olmalıdır</span>
+  <span class="st">"qiymet"</span>:      24.317,                       <span class="cmt">// məcburi — ədəd (int və ya float)</span>
+  <span class="st">"olcme_vaxti"</span>: <span class="st">"2026-07-11T09:15:00+00:00"</span>,  <span class="cmt">// məcburi — ISO 8601, zaman zonası ilə</span>
+  <span class="st">"vahid"</span>:       <span class="st">"°C"</span>                          <span class="cmt">// opsional — yalnız məlumat üçün</span>
+}</pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Niyə "zaman zonası ilə" bu qədər vurğulanır?</span>
+    <code class="inl">olcme</code> cədvəlində sütun tipi <strong><span class="mono">TIMESTAMPTZ</span></strong>-dir (zonalı). Əgər zonasız vaxt göndərsək (<span class="mono">"2026-07-11T09:15:00"</span>), PostgreSQL onu <em>serverin zonası</em> ilə şərh edir. Zavod və mərkəz fərqli zonalarda olsa (yaxud yay vaxtı dəyişsə), ölçmələr <strong>səhv saata düşər</strong> və heç kim səbəbini tapa bilməz.<br><br>
+    Ona görə kodda <code class="inl">datetime.now(timezone.utc).isoformat()</code> istifadə edirik — həmişə UTC, həmişə açıq zona.
+  </div>
+
+  <div class="callout why">
+    <span class="k">Bu müqavilənin real dəyəri</span>
+    Bu format <strong>sizin ilə gələcək gateway inteqratoru arasındakı sənəddir</strong> (Dərs 04-T-də danışdığımız TZ-nin bir hissəsi). Gateway məhz bu topic-ə, məhz bu sahələrlə yazacaq. Əgər inteqrator <span class="mono">"value"</span> yazsa, <span class="mono">"qiymet"</span> yox — körpü mesajı oxuya bilməyəcək. Formatı əvvəlcədən yazıб təhvil vermək bu problemi yaranmamış həll edir.
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06 — Körpü</p>
+  <h2>mqtt_kopru.py — brokerdən bazaya</h2>
+  <p>Bu, sistemin ikinci yarısıdır: brokerə abunə olur, gələn hər mesajı yoxlayır, bazaya yazır və hədd aşılıbsa xəbərdarlıq yaradır.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/kopru/mqtt_kopru.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">#!/usr/bin/env python3
+"""
+Zarat Faza 2 — MQTT → PostgreSQL körpüsü (SUBSCRIBER)
+Brokerdən ölçmələri alır, validasiyadan keçirir, olcme cədvəlinə yazır.
+Hədd aşılanda xeberdarliq yaradır.
+Dərs 05-də bu məntiq FastAPI servisinə köçəcək.
+"""</span>
+<span class="kw">import</span> os, json, signal, sys
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="kw">import</span> psycopg
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+<span class="kw">import</span> paho.mqtt.client <span class="kw">as</span> mqtt
+
+KOK = Path(__file__).resolve().parents[<span class="nm">2</span>]
+load_dotenv(KOK / <span class="st">"01_config"</span> / <span class="st">".env"</span>)
+
+MQTT_HOST  = os.getenv(<span class="st">"MQTT_HOST"</span>, <span class="st">"localhost"</span>)
+MQTT_PORT  = int(os.getenv(<span class="st">"MQTT_PORT"</span>, <span class="st">"1883"</span>))
+TOPIC_BASE = os.getenv(<span class="st">"MQTT_TOPIC_BASE"</span>, <span class="st">"zavod/siyezen"</span>)
+
+EDGE_DSN = (
+    <span class="st">f"host={os.getenv('EDGE_DB_HOST')} "</span>
+    <span class="st">f"port={os.getenv('EDGE_DB_PORT')} "</span>
+    <span class="st">f"dbname={os.getenv('EDGE_DB_NAME')} "</span>
+    <span class="st">f"user={os.getenv('EDGE_DB_USER')}"</span>
+)
+
+CLIENT_ID = <span class="st">"zarat-kopru"</span>          <span class="cmt"># SABİT — offline növbə üçün!</span>
+TOPIC_SUB = <span class="st">f"{TOPIC_BASE}/+/olcme"</span>  <span class="cmt"># yalnız ölçmələr, "#" YOX!</span>
+
+SQL_OLCME = <span class="st">"""
+    INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet, keyfiyyet)
+    VALUES (%s, %s, %s, %s)
+"""</span>
+SQL_XEBER = <span class="st">"""
+    INSERT INTO xeberdarliq (cihaz_kod, olcme_vaxti, qiymet, novu, mesaj)
+    VALUES (%s, %s, %s, %s, %s)
+"""</span>
+
+conn = <span class="kw">None</span>
+hedler = {}      <span class="cmt"># {cihaz_kod: (min, max, vahid)}</span>
+sayqac = {<span class="st">"ok"</span>: <span class="nm">0</span>, <span class="st">"xeta"</span>: <span class="nm">0</span>, <span class="st">"alert"</span>: <span class="nm">0</span>}
+
+
+<span class="cmt"># ---- Hədləri bir dəfə yaddaşa yüklə ----</span>
+<span class="kw">def</span> <span class="fn">hedleri_yukle</span>():
+    <span class="st">"""Hər mesajda bazaya sorğu atmamaq üçün hədləri kеşləyirik."""</span>
+    sql = <span class="st">"""
+        SELECT c.kod, t.min_hedd, t.max_hedd, t.vahid
+        FROM cihaz c JOIN sensor_tipi t ON c.sensor_tipi_kod = t.kod
+    """</span>
+    <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+        cur.execute(sql)
+        <span class="kw">for</span> kod, mn, mx, vahid <span class="kw">in</span> cur.fetchall():
+            hedler[kod] = (float(mn), float(mx), vahid)
+    print(<span class="st">f"[KÖRPÜ] {len(hedler)} cihazın həddi yükləndi."</span>)
+
+
+<span class="cmt"># ---- Callback: qoşuldu ----</span>
+<span class="kw">def</span> <span class="fn">on_connect</span>(client, userdata, flags, reason_code, properties):
+    <span class="kw">if</span> reason_code == <span class="nm">0</span>:
+        print(<span class="st">f"[MQTT] Qoşuldu. Abunə: {TOPIC_SUB}"</span>)
+        <span class="cmt"># Abunə MÜTLƏQ burada olmalıdır — on_connect içində!</span>
+        client.subscribe(TOPIC_SUB, qos=<span class="nm">1</span>)
+    <span class="kw">else</span>:
+        print(<span class="st">f"[MQTT] Qoşulma xətası: {reason_code}"</span>)
+
+
+<span class="cmt"># ---- Callback: mesaj gəldi — ƏSAS İŞ BURADADIR ----</span>
+<span class="kw">def</span> <span class="fn">on_message</span>(client, userdata, msg):
+    <span class="kw">global</span> conn
+    <span class="kw">try</span>:
+        <span class="cmt"># 1) JSON-u aç</span>
+        data = json.loads(msg.payload.decode(<span class="st">"utf-8"</span>))
+
+        <span class="cmt"># 2) Məcburi sahələri yoxla</span>
+        kod   = data[<span class="st">"cihaz_kod"</span>]
+        qiy   = float(data[<span class="st">"qiymet"</span>])
+        vaxt  = datetime.fromisoformat(data[<span class="st">"olcme_vaxti"</span>])
+
+        <span class="cmt"># 3) Cihaz tanınırmı?</span>
+        <span class="kw">if</span> kod <span class="kw">not</span> <span class="kw">in</span> hedler:
+            print(<span class="st">f"[XƏBƏRDARLIQ] Naməlum cihaz: {kod} — atıldı"</span>)
+            sayqac[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+            <span class="kw">return</span>
+
+        mn, mx, vahid = hedler[kod]
+
+        <span class="cmt"># 4) Keyfiyyət bayrağı: hədd aşılıbsa 0, normaldırsa 1</span>
+        keyfiyyet = <span class="nm">1</span> <span class="kw">if</span> mn &lt;= qiy &lt;= mx <span class="kw">else</span> <span class="nm">0</span>
+
+        <span class="cmt"># 5) Bazaya yaz (ölçmə + lazımsa xəbərdarlıq — BİR tranzaksiyada)</span>
+        <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            cur.execute(SQL_OLCME, (kod, vaxt, qiy, keyfiyyet))
+
+            <span class="kw">if</span> qiy &gt; mx:
+                cur.execute(SQL_XEBER, (kod, vaxt, qiy, <span class="st">"yuxari_hedd"</span>,
+                    <span class="st">f"{kod}: {qiy} {vahid} > maks {mx} {vahid}"</span>))
+                sayqac[<span class="st">"alert"</span>] += <span class="nm">1</span>
+                print(<span class="st">f"  ⚠ ALERT {kod}: {qiy} {vahid} (maks {mx})"</span>)
+            <span class="kw">elif</span> qiy &lt; mn:
+                cur.execute(SQL_XEBER, (kod, vaxt, qiy, <span class="st">"asagi_hedd"</span>,
+                    <span class="st">f"{kod}: {qiy} {vahid} < min {mn} {vahid}"</span>))
+                sayqac[<span class="st">"alert"</span>] += <span class="nm">1</span>
+                print(<span class="st">f"  ⚠ ALERT {kod}: {qiy} {vahid} (min {mn})"</span>)
+
+        conn.commit()      <span class="cmt"># hər ikisi birlikdə təsdiqlənir</span>
+        sayqac[<span class="st">"ok"</span>] += <span class="nm">1</span>
+        print(<span class="st">f"  ✓ {kod:6} {qiy:9.3f} {vahid}   "</span>
+              <span class="st">f"[ok={sayqac['ok']} alert={sayqac['alert']} xeta={sayqac['xeta']}]"</span>)
+
+    <span class="kw">except</span> (KeyError, ValueError, json.JSONDecodeError) <span class="kw">as</span> e:
+        <span class="cmt"># Pozuq mesaj — logla, amma servisi ÖLDÜRMƏ</span>
+        print(<span class="st">f"[XƏTA] Pozuq mesaj ({msg.topic}): {e}"</span>)
+        sayqac[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+
+    <span class="kw">except</span> psycopg.Error <span class="kw">as</span> e:
+        <span class="cmt"># Baza xətası — geri qaytar, bağlantını bərpa etməyə çalış</span>
+        print(<span class="st">f"[BAZA XƏTASI] {e}"</span>)
+        sayqac[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+        <span class="kw">try</span>:
+            conn.rollback()
+        <span class="kw">except</span> Exception:
+            print(<span class="st">"[BAZA] Bağlantı bərpa edilir..."</span>)
+            conn = psycopg.connect(EDGE_DSN)
+
+
+<span class="kw">def</span> <span class="fn">dayandir</span>(signum, frame):
+    print(<span class="st">f"\n[KÖRPÜ] Dayandırılır. Yekun: {sayqac}"</span>)
+    sys.exit(<span class="nm">0</span>)
+
+signal.signal(signal.SIGINT, dayandir)
+
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">global</span> conn
+    conn = psycopg.connect(EDGE_DSN)
+    print(<span class="st">f"[BAZA] Qoşuldu: {os.getenv('EDGE_DB_NAME')}"</span>)
+    hedleri_yukle()
+
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,
+                         client_id=CLIENT_ID,
+                         clean_session=<span class="kw">False</span>)   <span class="cmt"># ← offline növbə üçün!</span>
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.reconnect_delay_set(min_delay=<span class="nm">1</span>, max_delay=<span class="nm">30</span>)
+
+    client.connect(MQTT_HOST, MQTT_PORT, keepalive=<span class="nm">60</span>)
+    client.loop_forever()   <span class="cmt"># əsas sapda — başqa işimiz yoxdur</span>
+
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    main()</pre>
+  </div>
+
+  <h3>Ən vacib qərarlar</h3>
+  <div class="expl">
+    <div class="row">
+      <div class="c">clean_session=False</div>
+      <div class="d"><strong>Nə:</strong> brokerə deyir ki, sessiyanı yadda saxla.<br>
+        <strong>Niyə həyati:</strong> körpü söndürülsə (yenilənmə, restart, çökmə), broker o müddətdə gələn mesajları <strong>onun üçün növbəyə yığır</strong> və qayıdanda çatdırır. Bu olmasa, körpünün söndüyü hər saniyənin sensor məlumatı <em>həmişəlik itir</em>. Sabit <span class="mono">client_id</span> ilə birlikdə işləyir — biri olmasa, digəri mənasızdır.</div>
+    </div>
+    <div class="row">
+      <div class="c">client.subscribe() — on_connect içində</div>
+      <div class="d"><strong>Niyə burada, main-də yox:</strong> qoşulma kəsilib bərpa olunanda abunə <strong>itir</strong>. <span class="mono">on_connect</span> hər yenidən qoşulmada çağırıldığı üçün abunə avtomatik bərpa olunur. <span class="mono">main()</span>-də yazsanız — ilk kəsilmədən sonra körpü qoşulu görünər, amma <em>heç nə almaz</em>. Bu, tapılması ən çətin xətalardandır.</div>
+    </div>
+    <div class="row">
+      <div class="c">hedleri_yukle() — keş</div>
+      <div class="d"><strong>Niyə:</strong> hər mesajda hədləri bazadan soruşsaq, saniyədə onlarla lüzumsuz sorğu olar. Hədlər nadir dəyişir — bir dəfə yükləyib yaddaşda saxlayırıq.<br>
+        <strong>Kompromis:</strong> yeni cihaz əlavə edəndə körpünü <em>restart</em> etmək lazımdır. Kiçik qiymət, böyük qazanc.</div>
+    </div>
+    <div class="row">
+      <div class="c">keyfiyyet = 1 if mn &lt;= qiy &lt;= mx else 0</div>
+      <div class="d"><strong>Nə:</strong> Dərs 02-də <span class="mono">olcme.keyfiyyet</span> sütununu məhz bunun üçün yaratmışdıq.<br>
+        <strong>Niyə dəyəri atmırıq:</strong> anomal dəyər də <strong>faktdır</strong> — silo həqiqətən 40°C-yə qalxıb. Onu bazadan silmək = həqiqəti gizlətmək. Ona görə yazırıq, amma <em>bayraqlayırıq</em>: dashboard normal qrafiki <span class="mono">keyfiyyet=1</span> ilə çəkir, anomaliyaları isə ayrıca göstərir.</div>
+    </div>
+    <div class="row">
+      <div class="c">try / except — üç səviyyə</div>
+      <div class="d"><strong>Niyə ayrı-ayrı tuturuq:</strong><br>
+        • <span class="mono">JSONDecodeError/KeyError</span> → pozuq mesaj. Logla, at, <strong>davam et</strong>. Bir pozuq mesaj bütün servisi öldürməməlidir.<br>
+        • <span class="mono">psycopg.Error</span> → baza problemi. <span class="mono">rollback()</span> et; bağlantı ölübsə, yenidən qur.<br>
+        <strong>Ümumi prinsip:</strong> körpü <strong>7/24 işləyən servisdir</strong>. O, heç bir halda ölməməlidir — yalnız logla və işləməyə davam et.</div>
+    </div>
+    <div class="row">
+      <div class="c">conn.commit() — sonda, bir dəfə</div>
+      <div class="d"><strong>Nə:</strong> ölçmə və xəbərdarlıq <strong>bir tranzaksiyada</strong> təsdiqlənir.<br>
+        <strong>Niyə:</strong> ölçmə yazılıб, xəbərdarlıq yazılmasa — baza yalan danışır (anomal dəyər var, amma alert yoxdur). Ya hər ikisi, ya heç biri.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07 — Alert</p>
+  <h2>Hədd yoxlaması: sadə, amma dolğun</h2>
+  <p>Körpüdəki alert məntiqi hazırda ən sadə formadadır — <strong>hər</strong> hədd aşımı üçün bir xəbərdarlıq yaradır. Bu, işləyir, amma bir problemi var və onu indi tanımaq vacibdir.</p>
+
+  <div class="callout warn">
+    <span class="k">Problem: "alert seli" (alert storm)</span>
+    Temperatur 36 °C-də ilişib qalsa və simulyator hər 5 saniyədə göndərsə — <strong>dəqiqədə 12 xəbərdarlıq</strong>, saatda 720. Bir günə <span class="mono">xeberdarliq</span> cədvəlində 17 min sətir. Operator bu selin içində əsl vacib hadisəni görməyəcək.<br><br>
+    <strong>Bu, indi problem deyil</strong> — sınaq mərhələsindəyik və hər aşımı görmək istəyirik. Amma Dərs 6-da bunu həll edəcəyik.
+  </div>
+
+  <h4>Dərs 6-da nə əlavə edəcəyik</h4>
+  <ul class="next">
+    <li><strong>Debouncing:</strong> aktiv (həll olunmamış) xəbərdarlıq varsa, yenisini yaratma — mövcudu yenilə. <span class="mono">hell_olundu</span> sütunu məhz bunun üçün var.</li>
+    <li><strong>Hysteresis:</strong> hədd 35 °C-dirsə, alert 35-də açılsın, amma yalnız <strong>33</strong>-ə düşəndə bağlansın. Əks halda 34,9 ↔ 35,1 arasında titrəyən dəyər onlarla alert yaradar.</li>
+    <li><strong>Ardıcıllıq şərti:</strong> bir anlıq sıçrayış (elektrik maneəsi) alert yaratmasın — <strong>ardıcıl 3 ölçmə</strong> həddi aşarsa yaransın.</li>
+    <li><strong>Səviyyələr:</strong> <span class="mono">xəbərdarlıq</span> (həddə yaxın) / <span class="mono">kritik</span> (həddi 20 % aşıb) — reaksiya fərqli olmalıdır.</li>
+    <li><strong>Bildiriş:</strong> e-poçt / Telegram / SMS — kritik alert operatora dərhal çatsın.</li>
+    <li><strong><span class="mono">cihaz_susur</span>:</strong> LWT status mesajlarını dinləyib susan cihazı aşkarlamaq (Hissə A, bölmə 05).</li>
+  </ul>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08 — Test</p>
+  <h2>Uçdan-uca axın: üç terminal</h2>
+  <p>İndi bütün zənciri işlədirik. Hər komponent <strong>ayrı terminalda</strong> işləyir — bu, real sistemdə onların ayrı serverlərdə işləməsini təqlid edir.</p>
+
+  <div class="term">
+    <div class="t1">
+      <div class="h">① Terminal — Broker</div>
+      <div class="c">cd ~/Desktop/Zarat_Faza2_Zavod<br>mosquitto -c 01_config/mosquitto.conf -v</div>
+    </div>
+    <div class="t1">
+      <div class="h">② Terminal — Körpü</div>
+      <div class="c">cd ~/Desktop/Zarat_Faza2_Zavod<br>source 00_env/bin/activate<br>python 03_src/kopru/mqtt_kopru.py</div>
+    </div>
+    <div class="t1">
+      <div class="h">③ Terminal — Simulyator</div>
+      <div class="c">cd ~/Desktop/Zarat_Faza2_Zavod<br>source 00_env/bin/activate<br>python 03_src/publisher/sensor_simulyator.py</div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Başlatma SIRASI vacibdir</span>
+    <strong>① broker → ② körpü → ③ simulyator.</strong><br><br>
+    <strong>Niyə:</strong> körpü simulyatordan <em>əvvəl</em> qoşulmalıdır ki, abunəsi qeydə alınsın. Əks halda ilk mesajlar heç kimə çatmaz və itər (retain sayəsində sonuncusu qalar, amma qalanları yox). Real sistemdə də eyni qayda: qəbul edən tərəf həmişə göndərəndən əvvəl hazır olmalıdır.
+  </div>
+
+  <h3>Gözlənilən çıxış</h3>
+  <div class="codebox">
+    <div class="cap">③ Simulyator</div>
+<pre>[SİM] 5 aktiv cihaz tapıldı: S001, S002, S003, S004, S005
+[MQTT] Qoşuldu: localhost:1883
+  → S001     24.183 °C
+  → S002     12.940 %
+  → S003    247.510 kg
+  → S004      3.221 mm/s
+  → S005     29.847 kW
+[SİM] Cəmi göndərilib: 5</pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">② Körpü</div>
+<pre>[BAZA] Qoşuldu: zavod_edge_db
+[KÖRPÜ] 5 cihazın həddi yükləndi.
+[MQTT] Qoşuldu. Abunə: zavod/siyezen/+/olcme
+  ✓ S001     24.183 °C     [ok=1 alert=0 xeta=0]
+  ✓ S002     12.940 %      [ok=2 alert=0 xeta=0]
+  ✓ S003    247.510 kg     [ok=3 alert=0 xeta=0]
+  ⚠ ALERT S004: 8.14 mm/s (maks 7.0)
+  ✓ S004      8.140 mm/s   [ok=4 alert=1 xeta=0]
+  ✓ S005     29.847 kW     [ok=5 alert=1 xeta=0]</pre>
+  </div>
+  <p>Diqqət edin: S004-də anomaliya sıçrayışı işə düşdü (2 % ehtimal) və körpü avtomatik xəbərdarlıq yaratdı. Məhz bunun üçün simulyatora o 2 %-i qoymuşduq.</p>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09 — Təsdiq</p>
+  <h2>Bazada nəticəni yoxlayaq</h2>
+  <p>Ekranda gözəl mesajlar görmək kifayət deyil — <strong>data həqiqətən bazadadırmı?</strong> Dördüncü terminal açıб yoxlayırıq.</p>
+
+  <div class="codebox">
+    <div class="cap">④ Terminal — SQL yoxlaması</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5434 -d zavod_edge_db</pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">Yoxlama sorğuları</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- 1) Ümumi mənzərə: hər cihazdan neçə ölçmə gəlib?</span>
+SELECT cihaz_kod,
+       count(*)                          AS say,
+       round(avg(qiymet), 2)             AS orta,
+       round(min(qiymet), 2)             AS minimum,
+       round(max(qiymet), 2)             AS maksimum,
+       count(*) FILTER (WHERE keyfiyyet = 0) AS anomal,
+       max(olcme_vaxti)                  AS sonuncu
+FROM olcme
+GROUP BY cihaz_kod
+ORDER BY cihaz_kod;
+
+<span class="cmt">-- 2) Son 10 ölçmə</span>
+SELECT cihaz_kod, olcme_vaxti, qiymet, keyfiyyet, sync_status
+FROM olcme
+ORDER BY olcme_vaxti DESC
+LIMIT 10;
+
+<span class="cmt">-- 3) Yaranan xəbərdarlıqlar</span>
+SELECT cihaz_kod, novu, qiymet, mesaj, yaradilma
+FROM xeberdarliq
+ORDER BY yaradilma DESC
+LIMIT 10;
+
+<span class="cmt">-- 4) Partisiyalar işləyirmi? (Dərs 02-nin təsdiqi)</span>
+SELECT tableoid::regclass AS partisiya, count(*)
+FROM olcme
+GROUP BY 1;
+
+<span class="cmt">-- 5) Sync gözləyən sətirlər (Dərs 07 üçün hazırlıq)</span>
+SELECT count(*) AS sync_gozleyir
+FROM olcme WHERE sync_status = 0;</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">4-cü sorğuya diqqət</span>
+    <code class="inl">tableoid::regclass</code> hər sətrin <strong>hansı fiziki partisiyada</strong> saxlandığını göstərir. Nəticədə <span class="mono">olcme_2026_07</span> görməlisiniz — yəni PostgreSQL ölçmə vaxtına baxıб sətirləri avtomatik düzgün aylıq partisiyaya yönləndirir. Dərs 02-də qurduğumuz partisiyalı dizayn <strong>real işləyir</strong> və bunun sübutu budur.<br><br>
+    Əgər sətirlər <span class="mono">olcme_default</span>-a düşübsə — tarixdə problem var (gələcək ay üçün partisiya yaradılmayıb). O zaman <code class="inl">SELECT partisiya_yarat('2026-08-01');</code> işlədin.
+  </div>
+
+  <h3>Ən vacib test: broker həqiqətən qoruyurmu?</h3>
+  <p>İndi brokerin əsl dəyərini praktikada görək — <strong>körpünü öldürün, simulyatoru işlək saxlayın</strong>.</p>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># 1) ② terminalda körpünü dayandırın (Ctrl+C). Simulyator İŞLƏYİR.
+# 2) 30-60 saniyə gözləyin — simulyator göndərməyə davam edir,
+#    broker isə körpü üçün mesajları NÖVBƏYƏ yığır.
+# 3) Körpünü yenidən başladın:</span>
+
+python 03_src/kopru/mqtt_kopru.py
+
+<span class="cmt"># 4) Diqqətlə baxın: körpü qoşulan kimi bütün yığılmış mesajları
+#    BİRDƏN alıб bazaya yazır. Heç nə itmir!
+# 5) Bazada təsdiqləyin — boşluq varmı?</span></pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">Boşluq testi — ardıcıl ölçmələr arasında fasilə</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>SELECT cihaz_kod, olcme_vaxti,
+       olcme_vaxti - lag(olcme_vaxti) OVER (
+           PARTITION BY cihaz_kod ORDER BY olcme_vaxti
+       ) AS fasile
+FROM olcme
+WHERE cihaz_kod = 'S001'
+ORDER BY olcme_vaxti DESC
+LIMIT 20;</pre>
+  </div>
+  <div class="callout why">
+    <span class="k">Nəticəni oxumaq</span>
+    <span class="mono">fasile</span> sütunu təxminən <strong>5 saniyə</strong> olmalıdır — körpünün söndüyü müddətdə də! Yəni ölçmələr arasında boşluq <em>yoxdur</em>.<br><br>
+    Bu, Dərs 03-dəki birbaşa yazma memarlığında <strong>mümkün deyildi</strong>: proqram sönəndə həmin müddətin datası həmişəlik itirdi. Bax, brokerin bütün dəyəri məhz bu bir sütunda görünür.
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10 — Diaqnostika</p>
+  <h2>Tipik xətalar və həlli</h2>
+  <table class="tbl">
+    <thead><tr><th>Əlamət</th><th>Səbəb</th><th>Həll</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">TypeError: on_connect() takes 4 positional arguments but 5 were given</td>
+        <td>paho-mqtt 2.x köhnə callback imzası ilə istifadə olunub</td>
+        <td>Client yaradanda <code class="inl">mqtt.CallbackAPIVersion.VERSION2</code> göstərin və callback-lərə <span class="mono">properties</span> parametrini əlavə edin</td>
+      </tr>
+      <tr>
+        <td>Simulyator göndərir, körpü <strong>heç nə almır</strong></td>
+        <td>Topic uyğunsuzluğu, yaxud abunə <span class="mono">on_connect</span>-də deyil</td>
+        <td><code class="inl">mosquitto_sub -t "#" -v</code> ilə əsl topic-i görün; abunənin <span class="mono">on_connect</span> içində olduğunu yoxlayın</td>
+      </tr>
+      <tr>
+        <td class="mono">ModuleNotFoundError: paho</td>
+        <td><span class="mono">venv</span> aktiv deyil</td>
+        <td><code class="inl">source 00_env/bin/activate</code> — prompt-da <span class="mono">(00_env)</span> görünməlidir</td>
+      </tr>
+      <tr>
+        <td class="mono">ForeignKeyViolation: cihaz_kod</td>
+        <td>Payload-da bazada olmayan cihaz kodu var</td>
+        <td>Körpüdəki "naməlum cihaz" yoxlaması bunu tutur; bazaya cihazı əlavə edin və körpünü restart edin</td>
+      </tr>
+      <tr>
+        <td class="mono">connection refused (5434)</td>
+        <td>Edge PostgreSQL işləmir</td>
+        <td><code class="inl">./05_servisler/edge_start.sh</code></td>
+      </tr>
+      <tr>
+        <td>Ölçmələr <span class="mono">olcme_default</span>-a düşür</td>
+        <td>Həmin ay üçün partisiya yoxdur</td>
+        <td><code class="inl">SELECT partisiya_yarat('2026-08-01');</code></td>
+      </tr>
+      <tr>
+        <td>Körpü restartdan sonra <strong>köhnə mesajları almır</strong></td>
+        <td><span class="mono">clean_session=True</span> və ya təsadüfi <span class="mono">client_id</span></td>
+        <td>Hər ikisini düzəldin: sabit ID + <span class="mono">clean_session=False</span> + QoS 1. Üçü birlikdə işləyir.</td>
+      </tr>
+      <tr>
+        <td>Vaxtlar <strong>səhv saatda</strong> görünür</td>
+        <td>Zaman zonası olmadan göndərilib</td>
+        <td><code class="inl">datetime.now(timezone.utc).isoformat()</code> — həmişə zonalı</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11 — Gələcək</p>
+  <h2>Buradan hara gedirik?</h2>
+  <p>Bu körpü <strong>işləyən, amma sadə</strong> bir servisdir. Növbəti dərslərdə hər hissəsi güclənəcək — və indi hara nə əlavə olunacağını dəqiq bilirik.</p>
+
+  <ul class="next">
+    <li><strong>Dərs 05 — FastAPI:</strong> körpünün məntiqi HTTP servisinə köçəcək. Nə qazanırıq: sağlamlıq yoxlaması (<span class="mono">/health</span>), metrikalar, HTTP ilə əl ilə ölçmə əlavə etmək imkanı, və <em>Pydantic ilə ciddi validasiya</em> (indiki <span class="mono">try/except</span> əvəzinə).</li>
+    <li><strong>Dərs 06 — Anomaliya:</strong> debouncing, hysteresis, alert səviyyələri, <span class="mono">cihaz_susur</span> (LWT status dinləmə), bildiriş göndərmə.</li>
+    <li><strong>Dərs 07 — Sinxronizasiya:</strong> <span class="mono">sync_status=0</span> olan sətirləri mərkəzi <span class="mono">zarat_erp_2</span>-yə köçürmək (outbox pattern), təkrar cəhd və konflikt idarəsi.</li>
+    <li><strong>Batch INSERT:</strong> hazırda hər mesaj ayrıca <span class="mono">INSERT</span>-dir. Yüksək tempdə (saniyədə yüzlərlə) bu yavaşdır — mesajları 100-lük dəstələrə yığıб <span class="mono">executemany()</span> ilə yazmaq lazım gələcək.</li>
+    <li><strong>Idempotentlik:</strong> QoS 1 dublikat yarada bilər. <code class="inl">ON CONFLICT (cihaz_kod, olcme_vaxti) DO NOTHING</code> əlavə etmək üçün əvvəlcə həmin cütə <span class="mono">UNIQUE</span> məhdudiyyət qoyulmalıdır.</li>
+    <li><strong>Strukturlu loglama:</strong> <span class="mono">print()</span> əvəzinə <span class="mono">logging</span> modulu — səviyyələr, fayl rotasiyası, timestamp.</li>
+    <li><strong>Servis kimi işlətmək:</strong> körpü 7/24 işləməlidir — <span class="mono">launchd</span> (Mac) və ya <span class="mono">systemd</span> (Linux) ilə avtomatik başlatma və çökəndə yenidən qaldırma.</li>
+    <li><strong>Real gateway:</strong> simulyator silinir, yerinə fiziki gateway gəlir. Körpü <strong>dəyişmir</strong> — çünki müqavilə (topic + JSON) eynidir. Dərs 04-T-də danışdığımız təhvil məhz bu andır.</li>
+  </ul>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Yoxlama siyahısı</h2>
+  <ul class="check">
+    <li><code class="inl">pip list</code>-də <span class="mono">paho-mqtt</span>, <span class="mono">psycopg</span>, <span class="mono">python-dotenv</span> görünür.</li>
+    <li>Üç terminal düzgün sıra ilə işə düşür: broker → körpü → simulyator.</li>
+    <li>Simulyator 5 cihazı bazadan oxuyur və hər 5 saniyədə göndərir.</li>
+    <li>Körpü mesajları alır və <code class="inl">olcme</code> cədvəlinə yazır.</li>
+    <li>Anomaliya sıçrayışı olanda <code class="inl">xeberdarliq</code> yaranır.</li>
+    <li>Ölçmələr düzgün partisiyaya (<span class="mono">olcme_2026_07</span>) düşür.</li>
+    <li><strong>Boşluq testi keçir:</strong> körpü söndürülüb-açılanda data itmir.</li>
+    <li>Ctrl+C ilə səliqəli çıxış işləyir — LWT saxta alert yaratmır.</li>
+  </ul>
+
+  <div class="callout">
+    <span class="k">Nə qazandıq</span>
+    Sistem artıq <strong>sənaye memarlığındadır</strong>: göndərən və qəbul edən bir-birindən müstəqildir, aralarındakı yeganə əlaqə <em>topic adı və JSON formatıdır</em>. Simulyatoru real gateway ilə əvəz etmək üçün <strong>körpüdə bir sətir də dəyişmək lazım gəlməyəcək</strong>.<br><br>
+    Bax, Dərs 04-ün əsl nəticəsi budur — kod deyil, <strong>arxitektura</strong>.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 04-B — Python ilə MQTT: Publisher, Körpü və Uçdan-uca Axın</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>

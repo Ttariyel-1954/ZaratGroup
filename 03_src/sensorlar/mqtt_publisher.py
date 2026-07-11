@@ -1,6 +1,9 @@
 """
 Simulyator -> MQTT broker publisher.
 Fayl: 03_src/sensorlar/mqtt_publisher.py
+Her sensor oxunusunu muvafiq topic-e JSON kimi publish edir.
+Ishe salmaq:  python mqtt_publisher.py
+Dayandirmaq:  CTRL+C
 """
 import os
 import sys
@@ -9,6 +12,7 @@ import time
 import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 
+# toplama qovlugunu yola elave edek (mqtt_komekci ucun)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "toplama"))
 
 from sensorlar import butun_sensorlar
@@ -32,7 +36,7 @@ def main():
     client.loop_start()
 
     sensorlar = butun_sensorlar()
-    print("Publisher basladi. CTRL+C ile dayandirin.\n")
+    print("Publisher başladi. CTRL+C ile dayandirin.\n")
 
     try:
         while True:
