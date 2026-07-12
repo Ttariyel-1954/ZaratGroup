@@ -1,10 +1,12 @@
-"""Yazici - novbeden mesajlari deste ile oxuyub bazaya yazir."""
+"""Yazici - novbeden desteni oxuyur, bazaya yazir, alert muherrikini isledir."""
 import asyncio
 import logging
 
 import psycopg
 
 from .baza import hovuz, HEDLER
+from . import alert as alert_modul
+from .bildiris import bildiris_gonder
 
 log = logging.getLogger("zarat.yazici")
 
@@ -19,16 +21,11 @@ SQL_OLCME = """
     VALUES (%s, %s, %s, %s)
     ON CONFLICT (cihaz_kod, olcme_vaxti) DO NOTHING
 """
-SQL_XEBER = """
-    INSERT INTO xeberdarliq (cihaz_kod, olcme_vaxti, qiymet, novu, mesaj)
-    VALUES (%s, %s, %s, %s, %s)
-"""
 
 
 async def deste_topla(novbe):
     """Ya BATCH_OLCU mesaj yigilana, ya BATCH_VAXT kecene qeder."""
     deste = [await novbe.get()]
-
     son_vaxt = asyncio.get_running_loop().time() + BATCH_VAXT
     while len(deste) < BATCH_OLCU:
         qalan = son_vaxt - asyncio.get_running_loop().time()
@@ -42,52 +39,57 @@ async def deste_topla(novbe):
 
 
 async def deste_yaz(deste):
-    """Desteni BIR tranzaksiyada bazaya yazir."""
+    """Desteni bir tranzaksiyada yazir + alert muherrikini isledir."""
     olcme_setirleri = []
-    xeber_setirleri = []
+    emrler = []
 
+    # ---- 1. Qiymetlendir (bazasiz, suretli) ----
     for o in deste:
-        if o.cihaz_kod not in HEDLER:
-            log.warning("Namelum cihaz: %s - atildi", o.cihaz_kod)
+        h = HEDLER.get(o.cihaz_kod)
+        if h is None:
+            log.warning("Namelum cihaz: %s", o.cihaz_kod)
             YAZICI_METRIKA["xeta"] += 1
             continue
 
-        mn, mx, vahid = HEDLER[o.cihaz_kod]
-        keyfiyyet = 1 if mn <= o.qiymet <= mx else 0
-
+        keyfiyyet = 1 if h["min"] <= o.qiymet <= h["max"] else 0
         olcme_setirleri.append((o.cihaz_kod, o.olcme_vaxti, o.qiymet, keyfiyyet))
+        if keyfiyyet == 0:
+            YAZICI_METRIKA["anomal"] += 1
 
-        if o.qiymet > mx:
-            xeber_setirleri.append((
-                o.cihaz_kod, o.olcme_vaxti, o.qiymet, "yuxari_hedd",
-                f"{o.cihaz_kod}: {o.qiymet} {vahid} > maks {mx}",
-            ))
-            YAZICI_METRIKA["anomal"] += 1
-        elif o.qiymet < mn:
-            xeber_setirleri.append((
-                o.cihaz_kod, o.olcme_vaxti, o.qiymet, "asagi_hedd",
-                f"{o.cihaz_kod}: {o.qiymet} {vahid} < min {mn}",
-            ))
-            YAZICI_METRIKA["anomal"] += 1
+        # Alert muherriki - QERAR verir, yazmir
+        emrler.append(alert_modul.qiymetlendir(
+            o.cihaz_kod, o.qiymet, o.olcme_vaxti))
 
     if not olcme_setirleri:
         return
 
+    yeni_kritikler = []
+
+    # ---- 2. Bir tranzaksiyada her seyi yaz ----
     try:
         async with hovuz.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.executemany(SQL_OLCME, olcme_setirleri)
-                if xeber_setirleri:
-                    await cur.executemany(SQL_XEBER, xeber_setirleri)
+
+            for emr in emrler:
+                if emr.emr == "ac_ve_ya_yenile":
+                    netice = await alert_modul.alerti_yaz(conn, emr)
+                    if netice and netice["yeni"] and netice["seviyye"] == "kritik":
+                        yeni_kritikler.append(emr)
+                elif emr.emr == "bagla":
+                    await alert_modul.alertleri_bagla(conn, emr)
 
         YAZICI_METRIKA["yazilan"] += len(olcme_setirleri)
         YAZICI_METRIKA["batch"] += 1
-        log.info("Deste yazildi: %d olcme, %d alert",
-                 len(olcme_setirleri), len(xeber_setirleri))
 
     except psycopg.Error as e:
         YAZICI_METRIKA["xeta"] += len(olcme_setirleri)
         log.error("Baza xetasi, deste (%d) itdi: %s", len(olcme_setirleri), e)
+        return
+
+    # ---- 3. Bildiris TRANZAKSIYADAN SONRA ----
+    for emr in yeni_kritikler:
+        await bildiris_gonder(baslik=f"KRITIK: {emr.cihaz_kod}", metn=emr.mesaj)
 
 
 async def yazici_dovru(novbe):
@@ -99,11 +101,9 @@ async def yazici_dovru(novbe):
             await deste_yaz(deste)
             for _ in deste:
                 novbe.task_done()
-
         except asyncio.CancelledError:
             log.info("Yazici dayandirilir...")
             raise
-
         except Exception as e:
             log.exception("Yazicida gozlenilmez xeta: %s", e)
             await asyncio.sleep(1)

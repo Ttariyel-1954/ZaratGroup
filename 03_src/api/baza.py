@@ -11,12 +11,15 @@ hovuz = AsyncConnectionPool(
     max_lifetime=3600,
 )
 
-HEDLER: dict[str, tuple[float, float, str]] = {}
+HEDLER: dict[str, dict] = {}
 
 
 async def hedleri_yukle() -> int:
+    """Cihaz hedleri VE alert parametrleri. Berpa/kritik hedler BURADA hesablanir."""
     sql = """
-        SELECT c.kod, t.min_hedd, t.max_hedd, t.vahid
+        SELECT c.kod, t.kod AS tip, t.vahid,
+               t.min_hedd, t.max_hedd,
+               t.ardicil_hedd, t.hysteresis_faiz, t.kritik_faiz
         FROM cihaz c
         JOIN sensor_tipi t ON c.sensor_tipi_kod = t.kod
         WHERE c.status = 'aktiv'
@@ -24,9 +27,29 @@ async def hedleri_yukle() -> int:
     async with hovuz.connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(sql)
-            HEDLER.clear()
-            for kod, mn, mx, vahid in await cur.fetchall():
-                HEDLER[kod] = (float(mn), float(mx), vahid)
+            setirler = await cur.fetchall()
+
+    HEDLER.clear()
+    for (kod, tip, vahid, mn, mx, ardicil, hyst_faiz, kritik_faiz) in setirler:
+        mn, mx = float(mn), float(mx)
+        diapazon = mx - mn
+        hyst = float(hyst_faiz) / 100
+        krit = float(kritik_faiz) / 100
+
+        HEDLER[kod] = {
+            "tip": tip,
+            "vahid": vahid,
+            "min": mn,
+            "max": mx,
+            # Hysteresis: alert BU deyerlerde baglanir
+            "berpa_yuxari": mx - diapazon * hyst,
+            "berpa_asagi":  mn + diapazon * hyst,
+            # Kritik: bu deyerlerden sonra seviyye = "kritik"
+            "kritik_yuxari": mx * (1 + krit),
+            "kritik_asagi":  mn * (1 - krit) if mn > 0 else mn * (1 + krit),
+            "ardicil_hedd": int(ardicil),
+        }
+
     return len(HEDLER)
 
 

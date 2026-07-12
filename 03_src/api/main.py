@@ -1,4 +1,4 @@
-"""Zarat Faza 2 - Zavod telemetriya API-si (MQTT + HTTP)."""
+"""Zarat Faza 2 - Zavod telemetriya API-si (MQTT + HTTP + Alert)."""
 from .loglama import qur as loglama_qur
 loglama_qur()
 
@@ -16,7 +16,10 @@ from .baza import (hovuz, HEDLER, hedleri_yukle,
 from .modeller import (OlcmeIn, OlcmeOut, CihazOut,
                        QebulCavabi, SaglamliqCavabi)
 from . import mqtt as mqtt_modul
+from . import alert as alert_modul
+from . import nezaretci as nezaret_modul
 from .yazici import yazici_dovru, YAZICI_METRIKA
+from .bildiris import BILDIRIS_METRIKA
 
 log = logging.getLogger("zarat.api")
 
@@ -26,7 +29,6 @@ METRIKA = {"qebul": 0, "anomal": 0, "xeta": 0,
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ---------- BASLANGIC ----------
     await hovuz.open()
     await hovuz.wait()
     say = await hedleri_yukle()
@@ -34,33 +36,35 @@ async def lifespan(app: FastAPI):
 
     loop = asyncio.get_running_loop()
     novbe = mqtt_modul.basla(loop)
-    yazici_task = asyncio.create_task(yazici_dovru(novbe))
-    log.info("Servis hazir - versiya %s", VERSIYA)
 
+    yazici_task = asyncio.create_task(yazici_dovru(novbe))
+    nezaret_task = asyncio.create_task(nezaret_modul.nezaretci_dovru())
+
+    log.info("Servis hazir - versiya %s", VERSIYA)
     yield
 
-    # ---------- SONME (sira vacibdir!) ----------
+    # ---- SONME (sira vacibdir) ----
     log.info("Sonme basladi...")
-    mqtt_modul.dayandir()                       # 1) yeni mesaj gelmesin
-
-    try:                                        # 2) novbedeki qaliq yazilsin
+    mqtt_modul.dayandir()
+    try:
         await asyncio.wait_for(novbe.join(), timeout=5.0)
     except asyncio.TimeoutError:
         log.warning("Novbede %d mesaj qaldi", novbe.qsize())
 
-    yazici_task.cancel()                        # 3) yazici dayansin
-    try:
-        await yazici_task
-    except asyncio.CancelledError:
-        pass
+    for task in (yazici_task, nezaret_task):
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
-    await hovuz.close()                         # 4) hovuz baglansin
+    await hovuz.close()
     log.info("Servis sondu.")
 
 
 app = FastAPI(
     title="Zarat Zavod Telemetriya API",
-    description="Siyezen yem zavodu - MQTT + HTTP telemetriya",
+    description="Siyezen yem zavodu - MQTT + HTTP + Alert muherriki",
     version=VERSIYA,
     lifespan=lifespan,
 )
@@ -74,7 +78,6 @@ async def saglamliq():
                 await cur.execute("SELECT 1")
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Baza elcatmazdir: {e}")
-
     return SaglamliqCavabi(status="ok", baza="ok",
                            cihaz_sayi=len(HEDLER), versiya=VERSIYA)
 
@@ -84,11 +87,12 @@ async def metrikalar():
     novbe = mqtt_modul.novbe
     muddet = datetime.now(timezone.utc) - METRIKA["basladi"]
     return {
-        "mqtt": {
-            **mqtt_modul.MQTT_METRIKA,
-            "novbe_uzunlugu": novbe.qsize() if novbe else 0,
-        },
+        "mqtt": {**mqtt_modul.MQTT_METRIKA,
+                 "novbe_uzunlugu": novbe.qsize() if novbe else 0},
         "yazici": YAZICI_METRIKA,
+        "alert": alert_modul.ALERT_METRIKA,
+        "nezaretci": nezaret_modul.NEZARET_METRIKA,
+        "bildiris": BILDIRIS_METRIKA,
         "http": {"qebul": METRIKA["qebul"], "anomal": METRIKA["anomal"],
                  "xeta": METRIKA["xeta"]},
         "isleme_saniye": int(muddet.total_seconds()),
@@ -104,8 +108,7 @@ async def olcme_qebul(olcme: OlcmeIn):
         raise HTTPException(
             status_code=404,
             detail=f"Namelum cihaz: {olcme.cihaz_kod}. "
-                   f"Taninanlar: {sorted(HEDLER.keys())}",
-        )
+                   f"Taninanlar: {sorted(HEDLER.keys())}")
 
     try:
         netice = await olcme_yaz(olcme.cihaz_kod, olcme.olcme_vaxti, olcme.qiymet)
@@ -119,11 +122,8 @@ async def olcme_qebul(olcme: OlcmeIn):
 
     return QebulCavabi(
         status="anomal" if netice["keyfiyyet"] == 0 else "qebul",
-        cihaz_kod=olcme.cihaz_kod,
-        qiymet=olcme.qiymet,
-        keyfiyyet=netice["keyfiyyet"],
-        xeberdarliq=netice["xeberdarliq"],
-    )
+        cihaz_kod=olcme.cihaz_kod, qiymet=olcme.qiymet,
+        keyfiyyet=netice["keyfiyyet"], xeberdarliq=netice["xeberdarliq"])
 
 
 @app.get("/olcme/son", response_model=list[OlcmeOut], tags=["Olcme"])
@@ -142,3 +142,85 @@ async def hedleri_yenile():
     say = await hedleri_yukle()
     return {"status": "yenilendi", "cihaz_sayi": say,
             "cihazlar": sorted(HEDLER.keys())}
+
+
+# ============ YENI: Xeberdarliq endpoint-leri ============
+
+@app.get("/xeberdarliq/aktiv", tags=["Xeberdarliq"])
+async def aktiv_alertler():
+    """Hell olunmamis alertler - kritikler onde."""
+    sql = """
+        SELECT id, cihaz_kod, novu, seviyye, mesaj,
+               acilma_vaxti, tetik_sayi,
+               ilk_qiymet, son_qiymet, pik_qiymet,
+               now() - acilma_vaxti AS muddet
+        FROM xeberdarliq
+        WHERE hell_olundu = FALSE
+        ORDER BY (seviyye = 'kritik') DESC, acilma_vaxti ASC
+    """
+    async with hovuz.connection() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(sql)
+            setirler = await cur.fetchall()
+
+    return [
+        {"id": r[0], "cihaz_kod": r[1], "novu": r[2],
+         "seviyye": r[3], "mesaj": r[4],
+         "acilma_vaxti": r[5], "tetik_sayi": r[6],
+         "ilk_qiymet": float(r[7]) if r[7] is not None else None,
+         "son_qiymet": float(r[8]) if r[8] is not None else None,
+         "pik_qiymet": float(r[9]) if r[9] is not None else None,
+         "muddet": str(r[10]) if r[10] else None}
+        for r in setirler
+    ]
+
+
+@app.post("/xeberdarliq/{alert_id}/hell-et", tags=["Xeberdarliq"])
+async def alerti_hell_et(alert_id: int, qeyd: str | None = None):
+    """Operator alerti el ile baglayir."""
+    sql = """
+        UPDATE xeberdarliq
+        SET hell_olundu = TRUE, baglanma_vaxti = now()
+        WHERE id = %s AND hell_olundu = FALSE
+        RETURNING id, cihaz_kod, novu,
+                  (baglanma_vaxti - acilma_vaxti) AS muddet
+    """
+    async with hovuz.connection() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(sql, (alert_id,))
+            setir = await cur.fetchone()
+
+    if setir is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Alert {alert_id} tapilmadi ve ya artiq baglanib")
+
+    log.info("Operator alerti bagladi: id=%s, qeyd=%s", alert_id, qeyd)
+    return {"status": "hell olundu", "id": setir[0],
+            "cihaz_kod": setir[1], "muddet": str(setir[3])}
+
+
+@app.get("/xeberdarliq/tarixce", tags=["Xeberdarliq"])
+async def alert_tarixcesi(limit: int = Query(50, ge=1, le=500),
+                          cihaz: str | None = Query(None)):
+    sql = """
+        SELECT id, cihaz_kod, novu, seviyye, tetik_sayi,
+               acilma_vaxti, baglanma_vaxti, pik_qiymet, hell_olundu
+        FROM xeberdarliq
+        WHERE (%s::text IS NULL OR cihaz_kod = %s)
+        ORDER BY acilma_vaxti DESC NULLS LAST
+        LIMIT %s
+    """
+    async with hovuz.connection() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(sql, (cihaz, cihaz, limit))
+            setirler = await cur.fetchall()
+
+    return [
+        {"id": r[0], "cihaz_kod": r[1], "novu": r[2],
+         "seviyye": r[3], "tetik_sayi": r[4],
+         "acilma_vaxti": r[5], "baglanma_vaxti": r[6],
+         "pik_qiymet": float(r[7]) if r[7] is not None else None,
+         "hell_olundu": r[8]}
+        for r in setirler
+    ]

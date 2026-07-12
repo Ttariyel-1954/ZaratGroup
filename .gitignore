@@ -16,3 +16,4 @@ _LOG/*.log
 # PostgreSQL data (ehtiyat ucun)
 *_pgdata/
 *.bak
+*.bak

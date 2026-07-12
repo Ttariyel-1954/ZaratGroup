@@ -51,14 +51,31 @@ def cihazlari_oxu():
 
 
 def novbeti_qiymet(c):
+    """
+    Random walk + GERI QAYITMA (mean reversion).
+    Real sensor kimi: deyer merkeze dogru cekilir.
+    """
+    merkez = (c["min"] + c["max"]) / 2
+
+    # 1) Tesadufi addim
     delta = random.uniform(-c["addim"], c["addim"])
-    yeni = c["cari"] + delta
+
+    # 2) GERI QAYITMA: merkezden ne qeder uzaqsansa,
+    #    o qeder guclu geri cekilirsen (fizika!)
+    ceki = (merkez - c["cari"]) * 0.08
+
+    yeni = c["cari"] + delta + ceki
+
+    # 3) 2% ehtimalla anomaliya sicrayisi (Ders 6-ni sinamaq ucun)
     if random.random() < 0.02:
         yeni = c["max"] * random.uniform(1.05, 1.20)
+
+    # 4) Fiziki hudud
     genislik = c["max"] - c["min"]
-    asagi  = c["min"] - genislik * 0.3
+    asagi = c["min"] - genislik * 0.3
     yuxari = c["max"] + genislik * 0.3
     c["cari"] = max(asagi, min(yuxari, yeni))
+
     return round(c["cari"], 3)
 
 
