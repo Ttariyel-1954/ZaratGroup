@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAŞLAMA — Zarat Faza 2 Sisteminin İşə Salınması və Yoxlanması</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524; --amber-deep:#b9781a;
+    --blue:#5aa9e6; --green:#5bd08a; --green-deep:#2f8f5b;
+    --violet:#a78bfa; --danger:#e5695f; --danger-deep:#c0453a;
+    --paper:#f6f4ef; --paper-2:#efece4; --ink:#1a222c;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1200px 400px at 80% -10%,rgba(45,212,191,.15),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:60px 32px 48px;border-bottom:3px solid var(--teal);}
+  .wrap{max-width:1000px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--teal);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(30px,5vw,50px);line-height:1.05;margin:0 0 16px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:740px;margin:0;line-height:1.7;}
+  .meta{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(45,212,191,.12);
+    border:1px solid rgba(45,212,191,.35);color:#8fe6da;padding:6px 13px;border-radius:2px;}
+
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc-in{max-width:1000px;margin:0 auto;}
+  .toc-t{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.2em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:10px;}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;} .toc a{color:var(--teal-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:1000px;margin:0 auto;padding:0 32px;}
+  section{padding:44px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--teal-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.4vw,33px);line-height:1.15;margin:0 0 18px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;margin:30px 0 10px;}
+  p{margin:0 0 15px;}
+
+  /* Terminal kartları */
+  .term-card{border:1px solid #ddd8cc;border-radius:10px;overflow:hidden;margin:24px 0;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .term-head{display:flex;align-items:center;gap:14px;padding:14px 20px;
+    background:var(--graphite);color:#fff;}
+  .term-num{font-family:"Oswald",Arial,sans-serif;font-size:22px;font-weight:700;
+    width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;flex-shrink:0;}
+  .t1 .term-num{background:var(--blue);}
+  .t2 .term-num{background:var(--amber);}
+  .t3 .term-num{background:var(--violet);}
+  .t4 .term-num{background:var(--green);}
+  .term-head .h{font-family:"Oswald",Arial,sans-serif;font-size:17px;
+    text-transform:uppercase;letter-spacing:.05em;}
+  .term-head .s{font-family:ui-monospace,monospace;font-size:12px;color:#8fa6ba;
+    margin-left:auto;text-align:right;}
+  .term-body{padding:18px 20px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:15px 20px;border-radius:0 4px 4px 0;margin:18px 0;font-size:15.5px;line-height:1.65;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout.ok{border-left-color:var(--green);background:#eaf7f0;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:11.5px;color:var(--teal-deep);display:block;margin-bottom:3px;}
+  .callout.warn .k{color:var(--amber-deep);} .callout.why .k{color:#6d4fc4;}
+  .callout.err .k{color:var(--danger-deep);} .callout.ok .k{color:var(--green-deep);}
+
+  .codebox{position:relative;margin:16px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:11.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:16px 18px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.65;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .ok{color:var(--green);}
+  .copybtn{position:absolute;top:30px;right:9px;background:rgba(45,212,191,.14);color:#8fe6da;
+    border:1px solid rgba(45,212,191,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(45,212,191,.28);}
+
+  .exp{background:#f0f4f8;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:14.5px;
+    line-height:1.6;border-left:3px solid var(--blue);}
+  .exp b{font-family:"Oswald",Arial,sans-serif;font-weight:500;
+    text-transform:uppercase;font-size:12px;letter-spacing:.08em;color:#3d6b8f;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;line-height:1.5;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:10px 12px;font-size:12.5px;
+    text-transform:uppercase;border-bottom:2px solid var(--teal);}
+  .tbl tbody td{padding:10px 12px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--teal-deep);font-weight:bold;}
+  .yes{color:var(--green-deep);font-weight:bold;}
+  .no{color:var(--danger-deep);font-weight:bold;}
+
+  /* Test kartları */
+  .test{border:1px solid #ddd8cc;border-radius:8px;margin:20px 0;overflow:hidden;background:#fff;}
+  .test-h{display:flex;align-items:center;gap:12px;padding:12px 18px;
+    background:var(--paper-2);border-bottom:1px solid #ddd8cc;}
+  .test-n{font-family:"Oswald",Arial,sans-serif;font-weight:700;font-size:14px;
+    background:var(--teal-deep);color:#fff;padding:3px 11px;border-radius:12px;flex-shrink:0;}
+  .test-t{font-family:"Oswald",Arial,sans-serif;font-size:16px;font-weight:500;}
+  .test-b{padding:16px 18px;}
+  .verdict{margin-top:12px;padding:11px 15px;border-radius:5px;font-size:15px;
+    background:#eaf7f0;border-left:3px solid var(--green);}
+  .verdict b{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--green-deep);display:block;margin-bottom:2px;}
+
+  .arch{background:var(--graphite);border-radius:10px;padding:26px 22px;margin:24px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--teal);margin-bottom:14px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:12px 13px;
+    text-align:center;min-width:112px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:12.5px;color:#fff;text-transform:uppercase;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:10.5px;color:#8fa6ba;display:block;margin-top:3px;}
+  .ar{color:var(--teal);font-size:19px;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:30px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--teal);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+  @media (max-width:700px){
+    .hero{padding:44px 20px 36px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+    .term-head .s{margin-left:0;width:100%;text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · İstismar Sənədi</p>
+    <h1>BAŞLAMA</h1>
+    <p class="lede">Sistemi sıfırdan işə salmaq və tam hazır olduğunu yoxlamaq üçün addım-addım təlimat. Dörd terminal, on test. Hər əmrin yanında <strong>nə edirik / niyə</strong> izahı.</p>
+    <div class="meta">
+      <span class="chip">Addım 0 — Təmizlik</span>
+      <span class="chip">4 Terminal</span>
+      <span class="chip">10 Test</span>
+      <span class="chip">Diaqnostika</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="toc-in">
+    <p class="toc-t">Məzmun</p>
+    <ol>
+      <li><a href="#arch">Sistem nədən ibarətdir</a></li>
+      <li><a href="#s0">Addım 0 — Təmizlik</a></li>
+      <li><a href="#t1">① Terminal — Broker</a></li>
+      <li><a href="#t2">② Terminal — FastAPI</a></li>
+      <li><a href="#t3">③ Terminal — Simulyator</a></li>
+      <li><a href="#t4">④ Terminal — Yoxlama</a></li>
+      <li><a href="#tests">10 Test</a></li>
+      <li><a href="#stop">Səliqəli dayandırma</a></li>
+      <li><a href="#diag">Diaqnostika cədvəli</a></li>
+      <li><a href="#quick">Sürətli başlama (təcrübəlilər üçün)</a></li>
+    </ol>
+  </div>
+</nav>
+
+<main>
+
+<!-- ARCH -->
+<section id="arch">
+  <p class="sec-num">Giriş</p>
+  <h2>Sistem nədən ibarətdir</h2>
+  <p>Dörd komponent işləyir. Üçünü siz əl ilə başladırsınız, biri (baza) fonda daim işləyir.</p>
+
+  <div class="arch">
+    <div class="lbl">Data axını</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">③ Simulyator</span><span class="s">gateway rolu</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">① Mosquitto</span><span class="s">:1883</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">② FastAPI</span><span class="s">:8000</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">PostgreSQL</span><span class="s">:5434 — fonda</span></div>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Komponent</th><th>Port</th><th>Necə başlayır</th><th>Rolu</th></tr></thead>
+    <tbody>
+      <tr><td><strong>PostgreSQL (edge)</strong></td><td class="code">5434</td><td>Fonda daim işləyir</td><td>Data saxlayır</td></tr>
+      <tr><td><strong>① Mosquitto</strong></td><td class="code">1883</td><td>① terminalda</td><td>MQTT brokeri — mesaj poçtu</td></tr>
+      <tr><td><strong>② FastAPI</strong></td><td class="code">8000</td><td>② terminalda</td><td>Validasiya + yazma + alert mühərriki + nəzarətçi</td></tr>
+      <tr><td><strong>③ Simulyator</strong></td><td>—</td><td>③ terminalda</td><td>Sensor məlumatı yaradır</td></tr>
+      <tr><td><strong>④ Yoxlama</strong></td><td>—</td><td>④ terminalda</td><td>Testlər üçün boş terminal</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">Başlatma sırası VACİBDİR</span>
+    <strong>① Broker → ② FastAPI → ③ Simulyator.</strong><br><br>
+    <strong>Niyə:</strong> FastAPI simulyatordan <em>əvvəl</em> brokerə abunə olmalıdır. Əks halda ilk mesajlar heç kimə çatmaz və itər. Real sistemdə də qayda eynidir: <em>qəbul edən həmişə göndərəndən əvvəl hazır olmalıdır</em>.
+  </div>
+</section>
+
+<!-- ADDIM 0 -->
+<section id="s0">
+  <p class="sec-num">Addım 0</p>
+  <h2>Təmizlik — köhnə prosesləri öldürmək</h2>
+  <p>Əvvəlki sessiyadan qalan proseslər portları tutmuş ola bilər. Onları təmizləyirik.</p>
+
+  <div class="codebox">
+    <div class="cap">İstənilən terminalda</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>pkill -f sensor_simulyator
+pkill -f uvicorn
+brew services stop mosquitto 2&gt;/dev/null
+pkill mosquitto
+sleep 2</pre>
+  </div>
+
+  <div class="exp">
+    <b>Nə edirik</b> Simulyator, FastAPI və Mosquitto proseslərini dayandırırıq.<br>
+    <b>Niyə</b> Köhnə proses portu tutubsa, yenisi <span class="mono">Address already in use</span> xətası verər. <span class="mono">brew services stop</span> ayrıca lazımdır — Homebrew mosquitto-nu fonda avtomatik başlada bilər.
+  </div>
+
+  <h3>Təmizlik uğurlu oldumu?</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Qalan proseslər — BOŞ olmalıdır</span>
+ps aux | grep -E <span class="st">"[s]ensor_simulyator|[u]vicorn|[m]osquitto"</span>
+
+<span class="cmt"># Portlar — BOŞ olmalıdır</span>
+lsof -i :1883 -i :8000</pre>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Gözlənilən</span>
+    Hər iki əmr <strong>heç nə qaytarmamalıdır</strong>. Boş cavab = portlar azaddır, davam edə bilərik.
+  </div>
+
+  <h3>Baza işləyirmi? (ona toxunmuruq)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT count(*) AS cihaz_sayi FROM cihaz;"</span></pre>
+  </div>
+
+  <div class="exp">
+    <b>Nə edirik</b> Edge bazanın cavab verdiyini yoxlayırıq.<br>
+    <b>Niyə</b> FastAPI bazasız qalxa bilməz — onu <em>əvvəlcə</em> yoxlamaq vaxt qazandırır. <strong>5</strong> qaytarmalıdır.
+  </div>
+
+  <div class="callout err">
+    <span class="k">Baza cavab vermirsə</span>
+    <code class="inl">connection refused</code> alsanız, edge PostgreSQL sönüb. Qaldırın:<br>
+    <code class="inl">./05_servisler/edge_start.sh</code>
+  </div>
+</section>
+
+<!-- TERMINAL 1 -->
+<section id="t1">
+  <p class="sec-num">Birinci</p>
+  <h2>Terminal ① — MQTT Broker</h2>
+
+  <div class="term-card t1">
+    <div class="term-head">
+      <div class="term-num">1</div>
+      <div><div class="h">Mosquitto Broker</div></div>
+      <div class="s">port 1883 · açıq qalmalıdır</div>
+    </div>
+    <div class="term-body">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+mosquitto -c 01_config/mosquitto.conf -v</pre>
+      </div>
+
+      <div class="exp">
+        <b>Nə edirik</b> Brokeri <em>ön planda</em> (verbose rejimdə) başladırıq.<br>
+        <b>Niyə -v</b> Bütün qoşulmaları və mesajları ekranda göstərir — problem olanda dərhal görürsünüz.<br>
+        <b>Niyə ön planda</b> Fonda başlatsaq, logları görməzdik. İnkişaf mərhələsində görünürlük vacibdir.
+      </div>
+
+      <div class="codebox">
+        <div class="cap">Gözlənilən çıxış</div>
+<pre>1783xxxxxx: mosquitto version 2.1.2 starting
+1783xxxxxx: Config loaded from 01_config/mosquitto.conf.
+1783xxxxxx: Opening ipv4 listen socket on port 1883.
+1783xxxxxx: Opening ipv6 listen socket on port 1883.
+<span class="ok">1783xxxxxx: mosquitto version 2.1.2 running</span></pre>
+      </div>
+
+      <div class="callout err">
+        <span class="k">Xəta: Address already in use</span>
+        Port hələ tutuludur. Addım 0-a qayıdın və <code class="inl">pkill mosquitto</code> işlədin, 2 saniyə gözləyin.
+      </div>
+
+      <div class="callout warn">
+        <span class="k">Bu terminalı BAĞLAMAYIN</span>
+        Broker ön planda işləyir. Terminal bağlansa və ya <span class="mono">Ctrl+C</span> basılsa — <strong>broker ölür</strong> və bütün sistem dayanır.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL 2 -->
+<section id="t2">
+  <p class="sec-num">İkinci</p>
+  <h2>Terminal ② — FastAPI Servisi</h2>
+  <p><strong>Yeni terminal açın:</strong> <code class="inl">Cmd + T</code></p>
+
+  <div class="term-card t2">
+    <div class="term-head">
+      <div class="term-num">2</div>
+      <div><div class="h">FastAPI · MQTT · Alert · Nəzarətçi</div></div>
+      <div class="s">port 8000 · açıq qalmalıdır</div>
+    </div>
+    <div class="term-body">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+uvicorn api.main:app --app-dir 03_src --reload --port 8000</pre>
+      </div>
+
+      <div class="exp">
+        <b>source 00_env/bin/activate</b> Virtual mühiti aktivləşdirir. Prompt-da <span class="mono">(00_env)</span> görünməlidir — görünməsə, paketlər tapılmaz.<br>
+        <b>--app-dir 03_src</b> uvicorn-a deyir: "<span class="mono">03_src</span> qovluğunun içinə bax". <strong>Bu, məcburidir</strong> — <span class="mono">03_src</span> rəqəmlə başladığı üçün Python modul adı ola bilməz.<br>
+        <b>--reload</b> Kod dəyişəndə servisi avtomatik yenidən başladır. Yalnız inkişaf üçün.
+      </div>
+
+      <div class="callout ok">
+        <span class="k">Gözlənilən — DÖRD sətir</span>
+        <div class="codebox" style="margin:8px 0 0;">
+<pre>[INFO] zarat.api        | Baza hazir - <span class="ok">5 cihaz</span>
+[INFO] zarat.mqtt       | MQTT basladi: localhost:1883
+[INFO] zarat.yazici     | Yazici basladi (batch=100, vaxt=2.0s)
+[INFO] zarat.nezaretci  | Nezaretci basladi (interval=60s, hedd=5 deq.)
+[INFO] zarat.mqtt       | MQTT qosuldu, abune: zavod/siyezen/+/olcme
+INFO:     Application startup complete.</pre>
+        </div>
+      </div>
+
+      <div class="callout why">
+        <span class="k">Bu dörd sətir nə deməkdir</span>
+        <strong>①</strong> Baza hovuzu açıldı, 5 cihazın hədləri yükləndi.<br>
+        <strong>②</strong> MQTT client qoşuldu — indi FastAPI <em>həm</em> HTTP, <em>həm</em> MQTT qəbul edir.<br>
+        <strong>③</strong> Yazıcı fon tapşırığı işə düşdü — mesajları 100-lük dəstələrlə yazacaq.<br>
+        <strong>④</strong> Nəzarətçi işə düşdü — hər 60 saniyədə susan cihaz axtaracaq.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL 3 -->
+<section id="t3">
+  <p class="sec-num">Üçüncü</p>
+  <h2>Terminal ③ — Sensor Simulyatoru</h2>
+  <p><strong>Yeni terminal:</strong> <code class="inl">Cmd + T</code></p>
+
+  <div class="term-card t3">
+    <div class="term-head">
+      <div class="term-num">3</div>
+      <div><div class="h">Sensor Simulyatoru (Gateway rolu)</div></div>
+      <div class="s">hər 5 san. · 5 cihaz</div>
+    </div>
+    <div class="term-body">
+      <h3>Əvvəlcə: geri qayıtma qüvvəsi faylda varmı?</h3>
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+grep -n <span class="st">"ceki = "</span> 03_src/publisher/sensor_simulyator.py</pre>
+      </div>
+
+      <div class="exp">
+        <b>Nə axtarırıq</b> <code class="inl">ceki = (merkez - c["cari"]) * 0.08</code> sətrini.<br>
+        <b>Niyə vacibdir</b> Bu sətir olmasa, dəyərlər hədlərin yuxarısında <strong>ilişib qalır</strong> və alertlər heç vaxt bağlanmır. Real sensorda ətraf mühit dəyəri mərkəzə çəkir — bu sətir həmin fizikanı təqlid edir.
+      </div>
+
+      <div class="codebox">
+        <div class="cap">Başlat</div>
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>source 00_env/bin/activate
+python 03_src/publisher/sensor_simulyator.py</pre>
+      </div>
+
+      <div class="codebox">
+        <div class="cap">Gözlənilən çıxış</div>
+<pre>[SİM] 5 aktiv cihaz tapıldı: S001, S002, S003, S004, S005
+[MQTT] Qoşuldu: localhost:1883
+  → S001     24.183 °C
+  → S002     12.940 %
+  → S003    247.510 kg
+  → S004      3.221 mm/s
+  → S005     29.847 kW
+[SİM] Cəmi göndərilib: 5</pre>
+      </div>
+
+      <div class="callout why">
+        <span class="k">Nəyə diqqət etmək</span>
+        Dəyərlər <strong>mərkəzə doğru sürüşməlidir</strong>. S001 (temperatur, −5…35 °C) 15 ətrafında gəzməlidir; 40-a qalxıb orada qalmamalıdır.<br><br>
+        Vaxtaşırı (2 % ehtimalla) qəfil sıçrayış olacaq — bu, <strong>bilərəkdəndir</strong>: alert mühərrikini sınamaq üçün.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL 4 -->
+<section id="t4">
+  <p class="sec-num">Dördüncü</p>
+  <h2>Terminal ④ — Yoxlama</h2>
+  <p><strong>Yeni terminal:</strong> <code class="inl">Cmd + T</code>. Bu terminal boş qalır — testləri burada işlədəcəyik.</p>
+
+  <div class="term-card t4">
+    <div class="term-head">
+      <div class="term-num">4</div>
+      <div><div class="h">Yoxlama və Testlər</div></div>
+      <div class="s">boş terminal</div>
+    </div>
+    <div class="term-body">
+      <div class="codebox">
+        <div class="cap">Hazırlıq</div>
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+
+<span class="cmt"># Köməkçi funksiya: keçmiş vaxt yaradır
+# (validasiya gələcək vaxtı RƏDD edir!)</span>
+vaxt() { python3 -c <span class="st">"from datetime import datetime,timezone,timedelta
+print((datetime.now(timezone.utc)-timedelta(seconds=$1)).isoformat())"</span>; }
+
+<span class="cmt"># Sınayaq</span>
+echo <span class="st">"60 saniyə əvvəl: $(vaxt 60)"</span></pre>
+      </div>
+
+      <div class="exp">
+        <b>vaxt() funksiyası nə üçün</b> Pydantic validasiyası <strong>gələcəkdən gələn ölçməni rədd edir</strong>. Test mesajı göndərəndə keçmiş vaxt lazımdır. <code class="inl">$(vaxt 60)</code> = 60 saniyə əvvəl.<br>
+        <b>Diqqət</b> Bu funksiya yalnız cari terminalda yaşayır. Terminal bağlansa, yenidən yazmaq lazımdır.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">İlk testdən əvvəl 60–90 saniyə gözləyin</span>
+    Sistemin data toplaması, dəstələr yazması və nəzarətçinin ilk dövrünü keçirməsi üçün vaxt lazımdır.
+  </div>
+</section>
+
+<!-- TESTS -->
+<section id="tests">
+  <p class="sec-num">Yoxlama</p>
+  <h2>10 Test — sistem tam hazırdırmı?</h2>
+  <p>Hər test bir mexanizmi yoxlayır. Hamısı keçirsə — sistem istismara hazırdır.</p>
+
+  <!-- TEST 1 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 1</span><span class="test-t">Sağlamlıq — servis və baza</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>curl -s http://127.0.0.1:8000/health | python3 -m json.tool</pre>
+      </div>
+      <div class="exp"><b>Nə yoxlayır</b> FastAPI işləyirmi, bazaya çata bilirmi, neçə cihaz tanıyır.</div>
+      <div class="codebox">
+        <div class="cap">Gözlənilən</div>
+<pre>{
+    <span class="st">"status"</span>: <span class="ok">"ok"</span>,
+    <span class="st">"baza"</span>: <span class="ok">"ok"</span>,
+    <span class="st">"cihaz_sayi"</span>: <span class="ok">5</span>,
+    <span class="st">"versiya"</span>: <span class="st">"1.0.0"</span>
+}</pre>
+      </div>
+      <div class="verdict"><b>Keçdi əgər</b> <span class="mono">"baza": "ok"</span> və <span class="mono">"cihaz_sayi": 5</span></div>
+    </div>
+  </div>
+
+  <!-- TEST 2 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 2</span><span class="test-t">MQTT axını — data gəlirmi?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>curl -s http://127.0.0.1:8000/metrikalar | python3 -m json.tool</pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> Simulyator → broker → FastAPI zənciri işləyirmi.<br>
+        <b>Açar sətirlər</b> <span class="mono">mqtt.qosulub</span>, <span class="mono">mqtt.gelen</span>, <span class="mono">yazici.batch</span>
+      </div>
+      <div class="codebox">
+        <div class="cap">Gözlənilən (fraqment)</div>
+<pre><span class="st">"mqtt"</span>: {
+    <span class="st">"gelen"</span>: 145,        <span class="cmt">// brokerdən gələn</span>
+    <span class="st">"qebul"</span>: 145,        <span class="cmt">// validasiyadan keçən</span>
+    <span class="st">"redd"</span>: 0,
+    <span class="st">"qosulub"</span>: <span class="ok">true</span>,      <span class="cmt">// ← ƏSAS</span>
+    <span class="st">"novbe_uzunlugu"</span>: 0  <span class="cmt">// yazıcı geri qalmır</span>
+},
+<span class="st">"yazici"</span>: {
+    <span class="st">"yazilan"</span>: 145,
+    <span class="st">"batch"</span>: <span class="ok">27</span>          <span class="cmt">// ← 145 ölçmə cəmi 27 tranzaksiyada!</span>
+}</pre>
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        <span class="mono">"qosulub": true</span>, <span class="mono">gelen</span> artır, və <span class="mono">batch</span> <strong>ölçmə sayından xeyli azdır</strong> (dəstə yazma işləyir — körpüdə hər ölçmə ayrı tranzaksiya olardı).
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 3 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 3</span><span class="test-t">Validasiya — pozuq mesaj rədd olunurmu?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># a) Zaman zonası YOXDUR — köhnə körpü bunu QƏBUL edirdi!</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  -m <span class="st">'{"cihaz_kod":"S001","qiymet":24,"olcme_vaxti":"2026-07-12T12:00:00"}'</span>
+
+<span class="cmt"># b) Fiziki mümkünsüz dəyər</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  -m <span class="st">"{\"cihaz_kod\":\"S001\",\"qiymet\":999999999,\"olcme_vaxti\":\"$(vaxt 30)\"}"</span>
+
+<span class="cmt"># c) Pozuq JSON</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> -m <span class="st">'bu json deyil'</span>
+
+sleep 3
+curl -s http://127.0.0.1:8000/metrikalar | python3 -m json.tool | grep -A6 mqtt</pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> Pydantic validasiyası MQTT qapısında da işləyirmi.<br>
+        <b>Niyə vacibdir</b> Zonasız vaxt bazaya düşsə, ölçmələr <strong>səhv saata</strong> yazılar — və səbəb aylar sonra tapılar.
+      </div>
+      <div class="verdict"><b>Keçdi əgər</b> <span class="mono">"redd"</span> sayğacı <strong>3 artıb</strong>. Logda səbəblər görünür: <code class="inl">tail -10 _LOG/api.log</code></div>
+    </div>
+  </div>
+
+  <!-- TEST 4 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 4</span><span class="test-t">İdempotentlik — dublikat bazaya düşürmü?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># EYNİ mesajı 5 dəfə göndər</span>
+T=$(vaxt 45)
+<span class="kw">for</span> i <span class="kw">in</span> 1 2 3 4 5; <span class="kw">do</span>
+  mosquitto_pub -t <span class="st">"zavod/siyezen/S002/olcme"</span> \
+    -m <span class="st">"{\"cihaz_kod\":\"S002\",\"qiymet\":11.111,\"olcme_vaxti\":\"$T\"}"</span>
+<span class="kw">done</span>
+
+sleep 4
+
+<span class="cmt"># Bazada neçə sətir? BİR olmalıdır</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT count(*) AS setir_sayi FROM olcme WHERE cihaz_kod='S002' AND qiymet=11.111;"</span></pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> <span class="mono">UNIQUE(cihaz_kod, olcme_vaxti)</span> + <span class="mono">ON CONFLICT DO NOTHING</span> işləyirmi.<br>
+        <b>Niyə lazımdır</b> QoS 1 və retain mesajları dublikat yarada bilər. Bazada həll olunur.
+      </div>
+      <div class="verdict"><b>Keçdi əgər</b> <span class="mono">setir_sayi = 1</span> — beş eyni mesaj, bir sətir.</div>
+    </div>
+  </div>
+
+  <!-- TEST 5 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 5</span><span class="test-t">Ardıcıllıq — tək sıçrayış alert yaradırmı?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Əvvəlki sayğacı yadda saxla</span>
+curl -s http://127.0.0.1:8000/metrikalar | python3 -c \
+  <span class="st">"import sys,json; print('ƏVVƏL:', json.load(sys.stdin)['alert'])"</span>
+
+<span class="cmt"># BİR sıçrayış göndər (S002: hədd 20, göndəririk 28)</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S002/olcme"</span> \
+  -m <span class="st">"{\"cihaz_kod\":\"S002\",\"qiymet\":28.0,\"olcme_vaxti\":\"$(vaxt 25)\"}"</span>
+
+sleep 4
+curl -s http://127.0.0.1:8000/metrikalar | python3 -c \
+  <span class="st">"import sys,json; print('SONRA:', json.load(sys.stdin)['alert'])"</span></pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> Ardıcıllıq şərti (<span class="mono">ardicil_hedd</span>) yalan həyəcanı udurmu.<br>
+        <b>Niyə lazımdır</b> Real sensorda bir anlıq sıçrayış (elektrik maneəsi) olur — bu, <strong>problem deyil</strong>, səs-küydür.
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        <span class="mono">"udulan"</span> <strong>artıb</strong>, <span class="mono">"acilan"</span> isə <strong>artmayıb</strong>. Sıçrayış udulub — alert yaranmayıb.
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 6 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 6</span><span class="test-t">Debouncing — 20 aşım, neçə alert?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># S002-yə 20 ardıcıl aşım (ardicil_hedd = 3)</span>
+<span class="kw">for</span> i <span class="kw">in</span> $(seq 1 20); <span class="kw">do</span>
+  T=$(vaxt $((400 - i * 15)))
+  mosquitto_pub -t <span class="st">"zavod/siyezen/S002/olcme"</span> \
+    -m <span class="st">"{\"cihaz_kod\":\"S002\",\"qiymet\":25.5,\"olcme_vaxti\":\"$T\"}"</span>
+  sleep 0.2
+<span class="kw">done</span>
+
+sleep 5
+
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT cihaz_kod, novu, seviyye, tetik_sayi, ilk_qiymet, pik_qiymet FROM xeberdarliq WHERE cihaz_kod='S002' AND hell_olundu=FALSE;"</span></pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> Debouncing — <strong>bir problem = bir alert</strong>.<br>
+        <b>Köhnə sistemdə</b> 20 ayrı sətir yaranardı.
+      </div>
+      <div class="codebox">
+        <div class="cap">Gözlənilən — BİR sətir</div>
+<pre> cihaz_kod |    novu     |   seviyye   | tetik_sayi | pik_qiymet
+-----------+-------------+-------------+------------+------------
+ S002      | yuxari_hedd | xeberdarliq |         18 |    25.5000
+<span class="ok">(1 row)  ← 20 aşım, BİR alert!</span></pre>
+      </div>
+      <div class="verdict"><b>Keçdi əgər</b> <strong>1 sətir</strong> çıxır və <span class="mono">tetik_sayi</span> ≈ 18 (ilk 2-3 aşım ardıcıllıq şərtinə görə udulub).</div>
+    </div>
+  </div>
+
+  <!-- TEST 7 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 7</span><span class="test-t">Kritik səviyyə + bildiriş</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># S002: max=20, kritik = 20 * 1.20 = 24
+# İndi 35 göndərək — kritikdən çox yuxarı</span>
+<span class="kw">for</span> i <span class="kw">in</span> 1 2 3 4; <span class="kw">do</span>
+  mosquitto_pub -t <span class="st">"zavod/siyezen/S002/olcme"</span> \
+    -m <span class="st">"{\"cihaz_kod\":\"S002\",\"qiymet\":35.0,\"olcme_vaxti\":\"$(vaxt $((60 - i*8)))\"}"</span>
+  sleep 0.3
+<span class="kw">done</span>
+
+sleep 5
+
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT cihaz_kod, seviyye, tetik_sayi, pik_qiymet FROM xeberdarliq WHERE cihaz_kod='S002' AND hell_olundu=FALSE;"</span>
+
+<span class="cmt"># Bildiriş getdi?</span>
+tail -3 _LOG/bildiris.log</pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> Səviyyə <span class="mono">xeberdarliq</span> → <span class="mono">kritik</span> yüksəlirmi və bildiriş göndərilirmi.<br>
+        <b>Vacib</b> <strong>Yeni sətir yaranmamalıdır</strong> — eyni alert yüksəlir.
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        <span class="mono">seviyye = kritik</span>, <span class="mono">pik_qiymet = 35</span>, hələ də <strong>bir sətir</strong>, və <span class="mono">_LOG/bildiris.log</span> faylında yeni sətir var.
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 8 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 8</span><span class="test-t">Hysteresis — alert nə vaxt bağlanır?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># S002: min=0, max=20, hysteresis 5% → bərpa həddi = 20 - 20*0.05 = 19
+# a) 19.5 — hədddən aşağı, AMMA bərpa həddindən YUXARI</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S002/olcme"</span> \
+  -m <span class="st">"{\"cihaz_kod\":\"S002\",\"qiymet\":19.5,\"olcme_vaxti\":\"$(vaxt 20)\"}"</span>
+sleep 4
+
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT hell_olundu FROM xeberdarliq WHERE cihaz_kod='S002' AND novu='yuxari_hedd' ORDER BY id DESC LIMIT 1;"</span>
+<span class="cmt"># → f  (alert HƏLƏ AÇIQ — hysteresis zolağındayıq!)</span>
+
+<span class="cmt"># b) 10.0 — bərpa həddinin ALTINDA</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S002/olcme"</span> \
+  -m <span class="st">"{\"cihaz_kod\":\"S002\",\"qiymet\":10.0,\"olcme_vaxti\":\"$(vaxt 10)\"}"</span>
+sleep 4
+
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT hell_olundu, tetik_sayi, (baglanma_vaxti - acilma_vaxti) AS muddet FROM xeberdarliq WHERE cihaz_kod='S002' AND novu='yuxari_hedd' ORDER BY id DESC LIMIT 1;"</span>
+<span class="cmt"># → t  (alert BAĞLANDI)</span></pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> Hysteresis — alert <strong>35-də açılır, 33-də bağlanır</strong> məntiqinin işləməsi.<br>
+        <b>Niyə lazımdır</b> Sərhəddə titrəyən dəyər (19.9 ↔ 20.1) onlarla alert yaradardı. Hysteresis buna imkan vermir.
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        (a) <span class="mono">f</span> — alert açıq qalır (zolaqdayıq).<br>
+        (b) <span class="mono">t</span> — alert bağlanır və <span class="mono">muddet</span> hesablanır.
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 9 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 9</span><span class="test-t">Susan cihaz — LWT və nəzarətçi</span></div>
+    <div class="test-b">
+      <div class="callout warn">
+        <span class="k">Bu test 6–7 dəqiqə çəkir</span>
+        <span class="mono">SUSMA_HEDD_DEQ = 5</span> dəqiqədir, nəzarətçi hər 60 saniyədə yoxlayır.
+      </div>
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># 1) ③ TERMİNALDA simulyatoru DAYANDIRIN (Ctrl+C)
+# 2) 6 dəqiqə gözləyin</span>
+sleep 380
+
+<span class="cmt"># 3) Susma alertləri yarandımı?</span>
+curl -s http://127.0.0.1:8000/xeberdarliq/aktiv | python3 -m json.tool | grep -A2 cihaz_susur
+
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT cihaz_kod, novu, seviyye, hell_olundu FROM xeberdarliq WHERE novu='cihaz_susur' AND hell_olundu=FALSE;"</span>
+
+<span class="cmt"># 4) ③ TERMİNALDA simulyatoru YENİDƏN başladın
+#    python 03_src/publisher/sensor_simulyator.py
+# 5) 90 saniyə gözləyin — alertlər avtomatik BAĞLANMALIDIR</span>
+sleep 90
+
+curl -s http://127.0.0.1:8000/metrikalar | python3 -c \
+  <span class="st">"import sys,json; print(json.load(sys.stdin)['nezaretci'])"</span></pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> Susan cihazın aşkarlanması və bərpa olunanda alertin avtomatik bağlanması.<br>
+        <b>Niyə ən vacib testdir</b> Susan sensor <strong>xarab sensordan təhlükəlidir</strong>: səhv dəyər görünür, susma isə görünmür. Operator "hər şey normaldır" düşünür.
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        5 cihaz üçün <span class="mono">cihaz_susur</span> alerti (<span class="mono">seviyye: kritik</span>) yaranır, sonra simulyator qayıdanda <span class="mono">"berpa": 5</span> olur.
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 10 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Test 10</span><span class="test-t">Operator ekranı — alertlər aydındırmı?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Aktiv alertlər — kritiklər öndə</span>
+curl -s http://127.0.0.1:8000/xeberdarliq/aktiv | python3 -m json.tool
+
+<span class="cmt"># Tarixçə — bağlanmışlar da daxil</span>
+curl -s <span class="st">"http://127.0.0.1:8000/xeberdarliq/tarixce?limit=10"</span> | python3 -m json.tool
+
+<span class="cmt"># Swagger — bütün API brauzerdə</span>
+open http://127.0.0.1:8000/docs
+
+<span class="cmt"># ÜMUMİ alert sayı — çox olmamalıdır!</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT count(*) FILTER (WHERE hell_olundu=FALSE) AS aktiv, count(*) AS umumi FROM xeberdarliq;"</span></pre>
+      </div>
+      <div class="exp">
+        <b>Nə yoxlayır</b> Alert seli həqiqətən susdumu.<br>
+        <b>Tarixçə</b> Dərs 06-dan əvvəl bazada <strong>2589</strong> alert var idi — və hamısı <strong>5 problemi</strong> təsvir edirdi.
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        <span class="mono">aktiv</span> sayı <strong>10-dan azdır</strong> və hər alertdə <span class="mono">tetik_sayi</span>, <span class="mono">pik_qiymet</span>, <span class="mono">muddet</span> görünür — yəni bir sətir tam hekayəni danışır.
+      </div>
+    </div>
+  </div>
+
+  <h3>Yekun cədvəl</h3>
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Test</th><th>Açar göstərici</th><th>Keçdi?</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Sağlamlıq</td><td><span class="mono">"baza": "ok"</span>, 5 cihaz</td><td class="yes">☐</td></tr>
+      <tr><td>2</td><td>MQTT axını</td><td><span class="mono">"qosulub": true</span>, batch ≪ ölçmə</td><td class="yes">☐</td></tr>
+      <tr><td>3</td><td>Validasiya</td><td><span class="mono">"redd"</span> +3</td><td class="yes">☐</td></tr>
+      <tr><td>4</td><td>İdempotentlik</td><td>5 mesaj → 1 sətir</td><td class="yes">☐</td></tr>
+      <tr><td>5</td><td>Ardıcıllıq</td><td><span class="mono">"udulan"</span> artır, <span class="mono">"acilan"</span> yox</td><td class="yes">☐</td></tr>
+      <tr><td>6</td><td>Debouncing</td><td>20 aşım → 1 alert</td><td class="yes">☐</td></tr>
+      <tr><td>7</td><td>Kritik + bildiriş</td><td><span class="mono">seviyye = kritik</span>, log var</td><td class="yes">☐</td></tr>
+      <tr><td>8</td><td>Hysteresis</td><td>Zolaqda açıq, altında bağlı</td><td class="yes">☐</td></tr>
+      <tr><td>9</td><td>Susan cihaz</td><td><span class="mono">susan: 5 → berpa: 5</span></td><td class="yes">☐</td></tr>
+      <tr><td>10</td><td>Operator ekranı</td><td>Aktiv alert &lt; 10</td><td class="yes">☐</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout ok">
+    <span class="k">Hamısı keçdisə</span>
+    Sistem <strong>tam işlək vəziyyətdədir</strong>: data toplanır, validasiya olunur, dublikatlar rədd edilir, anomaliyalar ağıllı şəkildə aşkarlanır və susan cihaz görünür.
+  </div>
+</section>
+
+<!-- STOP -->
+<section id="stop">
+  <p class="sec-num">Dayandırma</p>
+  <h2>Səliqəli sönmə</h2>
+  <p>Sıra <strong>tərsinədir</strong>: göndərəndən başlayıb qəbul edənə doğru.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Sıra</th><th>Terminal</th><th>Necə</th><th>Niyə bu sıra</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>③ Simulyator</td><td><span class="mono">Ctrl+C</span></td><td>Yeni mesaj gəlməsin</td></tr>
+      <tr><td>2</td><td>② FastAPI</td><td><span class="mono">Ctrl+C</span></td><td>Növbədəki qalıq yazılsın, sonra sönsün</td></tr>
+      <tr><td>3</td><td>① Broker</td><td><span class="mono">Ctrl+C</span></td><td>Hamı ayrıldıqdan sonra</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">FastAPI-nin səliqəli sönməsi</span>
+    <span class="mono">Ctrl+C</span> basanda dörd addım işə düşür:<br>
+    <strong>①</strong> MQTT dayanır → yeni mesaj gəlmir<br>
+    <strong>②</strong> Növbədəki mesajlar yazılır → <em>data itmir</em><br>
+    <strong>③</strong> Yazıcı və nəzarətçi dayanır<br>
+    <strong>④</strong> Baza hovuzu bağlanır<br><br>
+    Logda görəcəksiniz: <span class="mono">Sonme basladi... → Novbede 0 mesaj qaldi → Servis sondu.</span>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Edge PostgreSQL-i dayandırmayın</span>
+    O, fonda işləməyə davam etməlidir. Yalnız kompüteri söndürəndə dayanır. Lazım olsa: <code class="inl">./05_servisler/edge_stop.sh</code>
+  </div>
+</section>
+
+<!-- DIAG -->
+<section id="diag">
+  <p class="sec-num">Problem</p>
+  <h2>Diaqnostika cədvəli</h2>
+  <table class="tbl">
+    <thead><tr><th>Əlamət</th><th>Səbəb</th><th>Həll</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Address already in use (1883)</td><td>Köhnə broker işləyir</td><td><code class="inl">brew services stop mosquitto; pkill mosquitto</code></td></tr>
+      <tr><td class="mono">Address already in use (8000)</td><td>Köhnə uvicorn işləyir</td><td><code class="inl">pkill -f uvicorn</code></td></tr>
+      <tr><td class="mono">Could not import module "03_src.api.main"</td><td><span class="mono">--app-dir</span> yazılmayıb</td><td><code class="inl">uvicorn api.main:app --app-dir 03_src</code></td></tr>
+      <tr><td class="mono">ModuleNotFoundError</td><td>venv aktiv deyil</td><td><code class="inl">source 00_env/bin/activate</code> — prompt-da <span class="mono">(00_env)</span></td></tr>
+      <tr><td class="mono">connection refused (5434)</td><td>Edge baza sönüb</td><td><code class="inl">./05_servisler/edge_start.sh</code></td></tr>
+      <tr><td><span class="mono">"qosulub": false</span></td><td>Broker işləmir</td><td>① terminalı yoxlayın</td></tr>
+      <tr><td><span class="mono">"gelen": 0</span></td><td>Simulyator işləmir, ya topic uyğunsuzdur</td><td><code class="inl">mosquitto_sub -t "#" -v</code> ilə əsl topic-i görün</td></tr>
+      <tr><td><span class="mono">"novbe_uzunlugu"</span> böyüyür</td><td>Yazıcı geri qalır — baza yavaşdır</td><td>Baza yükünü yoxlayın; <span class="mono">BATCH_OLCU</span> artırın</td></tr>
+      <tr><td>Alert <strong>heç vaxt bağlanmır</strong></td><td>Dəyərlər bərpa həddinə düşmür</td><td>Simulyatorda <span class="mono">ceki = </span> sətri varmı? (Terminal ③)</td></tr>
+      <tr><td>Alert <strong>heç vaxt açılmır</strong></td><td><span class="mono">ardicil_hedd</span> çox böyükdür</td><td><code class="inl">SELECT kod, ardicil_hedd FROM sensor_tipi;</code></td></tr>
+      <tr><td><span class="mono">"udulan"</span> artır, <span class="mono">"acilan"</span> yox</td><td><strong>Bu normaldır!</strong></td><td>Ardıcıllıq şərti işləyir — heç nə etməyin</td></tr>
+      <tr><td>Test mesajı <span class="mono">redd</span> olunur</td><td>Gələcək vaxt göndərmisiniz</td><td><code class="inl">$(vaxt 30)</code> funksiyasını istifadə edin</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- QUICK -->
+<section id="quick">
+  <p class="sec-num">Xülasə</p>
+  <h2>Sürətli başlama</h2>
+  <p>Hər şeyi bildikdən sonra — sadəcə bunlar:</p>
+
+  <div class="codebox">
+    <div class="cap">Addım 0 — hər hansı terminalda</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>pkill -f sensor_simulyator; pkill -f uvicorn
+brew services stop mosquitto 2&gt;/dev/null; pkill mosquitto; sleep 2
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT 1"</span></pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">① Broker</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod && mosquitto -c 01_config/mosquitto.conf -v</pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">② FastAPI</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod && source 00_env/bin/activate
+uvicorn api.main:app --app-dir 03_src --reload --port 8000</pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">③ Simulyator</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod && source 00_env/bin/activate
+python 03_src/publisher/sensor_simulyator.py</pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">④ Sürətli yoxlama</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+curl -s http://127.0.0.1:8000/health | python3 -m json.tool
+sleep 60
+curl -s http://127.0.0.1:8000/metrikalar | python3 -m json.tool
+curl -s http://127.0.0.1:8000/xeberdarliq/aktiv | python3 -m json.tool</pre>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Üç rəqəm — sistemin nəbzi</span>
+    <strong><span class="mono">"qosulub": true</span></strong> — MQTT işləyir<br>
+    <strong><span class="mono">"batch"</span> ≪ <span class="mono">"yazilan"</span></strong> — dəstə yazma işləyir<br>
+    <strong><span class="mono">"acilan"</span> ≈ 0, <span class="mono">"udulan"</span> &gt; 0</strong> — alert mühərriki səs-küyü udur<br><br>
+    Bu üçü qaydasındadırsa — sistem sağlamdır.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>BAŞLAMA — Sistemin İşə Salınması və Yoxlanması · Siyəzən yem zavodu</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>
