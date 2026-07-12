@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 05-B — MQTT + FastAPI: Vahid Servis, Batch Yazma və İstismar</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524;
+    --blue:#5aa9e6; --green:#5bd08a; --green-deep:#2f8f5b;
+    --paper:#f6f4ef; --paper-2:#efece4;
+    --ink:#1a222c; --danger:#e5695f; --violet:#a78bfa;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1200px 400px at 78% -10%,rgba(91,208,138,.15),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:66px 32px 54px;border-bottom:3px solid var(--green);}
+  .wrap{max-width:980px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--green);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(29px,4.8vw,48px);line-height:1.08;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:770px;margin:0;line-height:1.7;}
+  .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(91,208,138,.12);
+    border:1px solid rgba(91,208,138,.35);color:#a7e8c3;padding:6px 13px;border-radius:2px;}
+
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:980px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;} .toc a{color:var(--green-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:980px;margin:0 auto;padding:0 32px;}
+  section{padding:46px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--green-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.3vw,32px);line-height:1.15;margin:0 0 20px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;margin:32px 0 10px;}
+  h4{font-family:"Oswald",Arial,sans-serif;font-weight:500;font-size:17px;margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:17px 22px;border-radius:0 4px 4px 0;margin:22px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:#b9781a;} .callout.why .k{color:#6d4fc4;} .callout.err .k{color:#c0453a;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--green);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+
+  .codebox{position:relative;margin:20px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.7;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .fn{color:var(--blue);} .nm{color:#c3a6f0;}
+  .copybtn{position:absolute;top:32px;right:10px;background:rgba(91,208,138,.14);color:#a7e8c3;
+    border:1px solid rgba(91,208,138,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(91,208,138,.28);}
+
+  .expl{margin:18px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;}
+  .expl .row{display:flex;border-bottom:1px solid #e8e3d8;}
+  .expl .row:last-child{border-bottom:none;}
+  .expl .row:nth-child(even){background:var(--paper-2);}
+  .expl .c{flex:0 0 40%;padding:11px 14px;font-family:ui-monospace,Menlo,monospace;
+    font-size:12.5px;color:#0b5f57;background:rgba(13,148,136,.05);
+    border-right:1px solid #e8e3d8;word-break:break-word;}
+  .expl .d{flex:1;padding:11px 14px;font-size:14.5px;line-height:1.55;}
+
+  .arch{background:var(--graphite);border-radius:10px;padding:30px 24px;margin:26px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--green);margin-bottom:16px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:13px 14px;
+    text-align:center;min-width:120px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;color:#fff;text-transform:uppercase;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:11px;color:#8fa6ba;display:block;margin-top:3px;}
+  .bx.hl{border-color:var(--green);box-shadow:0 0 0 1px rgba(91,208,138,.3);}
+  .bx.old{opacity:.4;border-style:dashed;}
+  .ar{color:var(--green);font-size:20px;}
+
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{padding:12px 16px 12px 44px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--green);}
+  .check li::before{content:"✓";position:absolute;left:15px;top:10px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;}
+  .next{list-style:none;padding:0;margin:20px 0;}
+  .next li{padding:13px 16px 13px 44px;position:relative;background:#eef5fb;
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--blue);}
+  .next li::before{content:"→";position:absolute;left:16px;top:12px;color:var(--blue);
+    font-weight:bold;font-size:17px;font-family:Arial,sans-serif;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--green);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+  @media (max-width:700px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .expl .row{flex-direction:column;} .expl .c{flex:1;border-right:none;border-bottom:1px solid #e8e3d8;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Dərs 05 — Hissə B</p>
+    <h1>MQTT + FastAPI: Vahid Servis, Batch Yazma və İstismar</h1>
+    <p class="lede">Hissə A-da FastAPI HTTP qəbul edirdi, MQTT isə hələ köhnə körpüdən keçirdi — <strong>iki ayrı proses</strong>. İndi onları birləşdiririk: MQTT client FastAPI-nin içinə köçür, hər iki qapı <em>eyni validasiyadan</em> keçir. Sonra performansı 10-20 dəfə artırırıq (batch), dublikatları həll edirik (idempotentlik) və servisi 7/24 işlək hala gətiririk.</p>
+    <div class="meta">
+      <span class="chip">MQTT → FastAPI</span>
+      <span class="chip">Batch INSERT</span>
+      <span class="chip">Idempotentlik</span>
+      <span class="chip">launchd servisi</span>
+      <span class="chip">Loglama</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">İki proses → bir servis</a></li>
+    <li><a href="#s2">Sap problemi: paho + asyncio</a></li>
+    <li><a href="#s3">MQTT modulu — tam kod</a></li>
+    <li><a href="#s4">Yazıcı: batch INSERT</a></li>
+    <li><a href="#s5">Idempotentlik: dublikatları öldürmək</a></li>
+    <li><a href="#s6">main.py-ın yenilənməsi</a></li>
+    <li><a href="#s7">Loglama: print()-dən çıxmaq</a></li>
+    <li><a href="#s8">Uçdan-uca test</a></li>
+    <li><a href="#s9">Performans müqayisəsi</a></li>
+    <li><a href="#s10">7/24 servis: launchd</a></li>
+    <li><a href="#s11">Köhnə körpünü arxivləmək</a></li>
+    <li><a href="#s12">Yekun və Dərs 6-ya keçid</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01 — Konsolidasiya</p>
+  <h2>İki proses → bir servis</h2>
+  <p>Hazırkı vəziyyət ikili və ziddiyyətlidir:</p>
+
+  <div class="arch">
+    <div class="lbl">İndi — iki ayrı proses, iki fərqli validasiya</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">Mosquitto</span><span class="s">:1883</span></div>
+      <span class="ar">►</span>
+      <div class="bx old"><span class="t">mqtt_kopru.py</span><span class="s">zəif try/except</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">Edge DB</span><span class="s">:5434</span></div>
+      <span class="ar">◄</span>
+      <div class="bx hl"><span class="t">FastAPI</span><span class="s">:8000 — Pydantic</span></div>
+    </div>
+    <div class="lbl" style="margin-top:26px;">Olmalıdır — bir servis, bir validasiya</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">Mosquitto</span><span class="s">:1883</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">FastAPI</span><span class="s">MQTT + HTTP</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">Edge DB</span><span class="s">:5434</span></div>
+    </div>
+  </div>
+
+  <div class="callout err">
+    <span class="k">İkili validasiyanın təhlükəsi</span>
+    Hazırda <strong>eyni ölçmə iki fərqli qapıdan gələ bilər</strong> və hər qapıda <em>fərqli qaydalar</em> tətbiq olunur:<br><br>
+    • HTTP-dən gəlirsə → Pydantic zonasız vaxtı <strong>rədd edir</strong>.<br>
+    • MQTT-dən gəlirsə → körpü onu <strong>qəbul edir</strong>.<br><br>
+    Yəni bazada həm təmiz, həm çirkli data yığılır — və hansının hardan gəldiyini bilmirsiniz. Bu, <strong>data keyfiyyətinin ən pis düşmənidir</strong>: qaydalar var, amma hamıya tətbiq olunmur.
+  </div>
+
+  <h3>Birləşdirməyin faydaları</h3>
+  <table class="tbl">
+    <thead><tr><th>Aspekt</th><th>İki proses</th><th>Vahid servis</th></tr></thead>
+    <tbody>
+      <tr><td>Validasiya</td><td>İki fərqli məntiq</td><td><strong>Bir Pydantic modeli</strong> — hər iki qapı üçün</td></tr>
+      <tr><td>Baza bağlantısı</td><td>Körpüdə 1 tək bağlantı + API-də hovuz</td><td>Bir hovuz — hamı paylaşır</td></tr>
+      <tr><td>Monitorinq</td><td>Körpü "qara qutu"dur</td><td><span class="mono">/metrikalar</span> MQTT sayğaclarını da göstərir</td></tr>
+      <tr><td>İstismar</td><td>İki servisi ayrıca başlat/izlə</td><td>Bir <span class="mono">launchd</span> qeydi</td></tr>
+      <tr><td>Hədd keşi</td><td>İki nüsxə — sinxronsuz ola bilər</td><td>Bir keş, <span class="mono">/cihazlar/yenile</span> ilə idarə olunur</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02 — Texniki maneə</p>
+  <h2>Sap problemi: paho sinxrondur, FastAPI asinxron</h2>
+  <p>Birləşdirmə bir texniki maneəyə dirənir və bunu başa düşmək kritikdir.</p>
+
+  <div class="callout warn">
+    <span class="k">Problem</span>
+    <strong>paho-mqtt sinxron kitabxanadır</strong> — o, öz <em>ayrı sapında</em> (thread) işləyir. <span class="mono">on_message</span> callback-i məhz o sapdan çağırılır.<br><br>
+    <strong>FastAPI/asyncio isə tək saplı</strong> — bütün async kod bir "event loop"-da işləyir.<br><br>
+    <strong>Nəticə:</strong> <span class="mono">on_message</span> içindən birbaşa <code class="inl">await hovuz.connection()</code> yaza <strong>bilmərik</strong> — o, async funksiyadır və başqa sapdadır. Sadəcə <span class="mono">await</span> yazmaq <span class="mono">RuntimeError: no running event loop</span> verər.
+  </div>
+
+  <h3>Həll: növbə (queue) ilə körpü</h3>
+  <p>Klassik və etibarlı yanaşma: MQTT sapı mesajı <strong>növbəyə atır</strong>, async tapşırıq isə növbədən <strong>oxuyub bazaya yazır</strong>. İki dünya arasında təhlükəsiz keçid.</p>
+
+  <div class="arch">
+    <div class="lbl">Sap sərhədini keçmək</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">paho sapı</span><span class="s">on_message</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">asyncio.Queue</span><span class="s">təhlükəsiz körpü</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">async yazıcı</span><span class="s">event loop</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">Edge DB</span><span class="s">batch INSERT</span></div>
+    </div>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə bu, sadəcə "texniki hiylə" deyil — memarlıq qazancıdır</span>
+    Növbə bizə <strong>üç pulsuz hədiyyə</strong> verir:<br><br>
+    <strong>① Bufer.</strong> Baza bir anlıq yavaşlasa, mesajlar növbədə gözləyir — MQTT sapı bloklanmır, mesaj itmir.<br>
+    <strong>② Batch imkanı.</strong> Növbədən <em>bir-bir</em> yox, <em>dəstə ilə</em> oxuya bilərik — 100 mesajı bir <span class="mono">INSERT</span> ilə yazmaq (bölmə 04).<br>
+    <strong>③ Geri təzyiq (backpressure).</strong> Növbənin ölçü limiti var — dolarsa, sistem "boğulmaq" əvəzinə <em>xəbərdarlıq verir</em> və biz problemi görürük.<br><br>
+    Yəni sap problemini həll edərkən performans və etibarlılıq da qazanırıq.
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03 — MQTT modulu</p>
+  <h2>03_src/api/mqtt.py — tam kod</h2>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/mqtt.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""
+MQTT qatı — brokerdən mesaj alır, növbəyə qoyur.
+paho SİNXRON sapda işləyir; asyncio.Queue ilə async dünyaya körpü qururuq.
+"""</span>
+<span class="kw">import</span> asyncio
+<span class="kw">import</span> json
+<span class="kw">import</span> logging
+
+<span class="kw">import</span> paho.mqtt.client <span class="kw">as</span> mqtt
+<span class="kw">from</span> pydantic <span class="kw">import</span> ValidationError
+
+<span class="kw">from</span> .konfiq <span class="kw">import</span> MQTT_HOST, MQTT_PORT, TOPIC_BASE
+<span class="kw">from</span> .modeller <span class="kw">import</span> OlcmeIn
+
+log = logging.getLogger(<span class="st">"zarat.mqtt"</span>)
+
+CLIENT_ID = <span class="st">"zarat-api"</span>
+TOPIC_SUB = <span class="st">f"{TOPIC_BASE}/+/olcme"</span>
+NOVBE_LIMIT = <span class="nm">5000</span>   <span class="cmt"># maksimum gözləyən mesaj</span>
+
+<span class="cmt"># Növbə və event loop — lifespan-da doldurulacaq</span>
+novbe: asyncio.Queue | <span class="kw">None</span> = <span class="kw">None</span>
+loop: asyncio.AbstractEventLoop | <span class="kw">None</span> = <span class="kw">None</span>
+client: mqtt.Client | <span class="kw">None</span> = <span class="kw">None</span>
+
+<span class="cmt"># MQTT metrikaları</span>
+MQTT_METRIKA = {<span class="st">"gelen"</span>: <span class="nm">0</span>, <span class="st">"qebul"</span>: <span class="nm">0</span>, <span class="st">"redd"</span>: <span class="nm">0</span>,
+                <span class="st">"novbe_dolu"</span>: <span class="nm">0</span>, <span class="st">"qosulub"</span>: <span class="kw">False</span>}
+
+
+<span class="cmt"># ---------- Callback-lər (PAHO SAPINDA işləyir!) ----------</span>
+<span class="kw">def</span> <span class="fn">on_connect</span>(cl, userdata, flags, reason_code, properties):
+    <span class="kw">if</span> reason_code == <span class="nm">0</span>:
+        MQTT_METRIKA[<span class="st">"qosulub"</span>] = <span class="kw">True</span>
+        cl.subscribe(TOPIC_SUB, qos=<span class="nm">1</span>)   <span class="cmt"># abunə MÜTLƏQ burada!</span>
+        log.info(<span class="st">"MQTT qoşuldu, abunə: %s"</span>, TOPIC_SUB)
+    <span class="kw">else</span>:
+        MQTT_METRIKA[<span class="st">"qosulub"</span>] = <span class="kw">False</span>
+        log.error(<span class="st">"MQTT qoşulma xətası: %s"</span>, reason_code)
+
+
+<span class="kw">def</span> <span class="fn">on_disconnect</span>(cl, userdata, flags, reason_code, properties):
+    MQTT_METRIKA[<span class="st">"qosulub"</span>] = <span class="kw">False</span>
+    <span class="kw">if</span> reason_code != <span class="nm">0</span>:
+        log.warning(<span class="st">"MQTT kəsildi (%s) — yenidən qoşulur..."</span>, reason_code)
+
+
+<span class="kw">def</span> <span class="fn">on_message</span>(cl, userdata, msg):
+    <span class="st">"""
+    DİQQƏT: bu funksiya PAHO SAPINDA işləyir, event loop-da YOX.
+    Ona görə burada 'await' yazmaq OLMAZ.
+    Yeganə işimiz: validasiya + növbəyə qoymaq.
+    """</span>
+    MQTT_METRIKA[<span class="st">"gelen"</span>] += <span class="nm">1</span>
+
+    <span class="kw">try</span>:
+        xam = json.loads(msg.payload.decode(<span class="st">"utf-8"</span>))
+        <span class="cmt"># ★ EYNİ Pydantic modeli — HTTP ilə tam eyni qaydalar ★</span>
+        olcme = OlcmeIn.model_validate(xam)
+
+    <span class="kw">except</span> (json.JSONDecodeError, UnicodeDecodeError) <span class="kw">as</span> e:
+        MQTT_METRIKA[<span class="st">"redd"</span>] += <span class="nm">1</span>
+        log.warning(<span class="st">"Pozuq JSON [%s]: %s"</span>, msg.topic, e)
+        <span class="kw">return</span>
+
+    <span class="kw">except</span> ValidationError <span class="kw">as</span> e:
+        MQTT_METRIKA[<span class="st">"redd"</span>] += <span class="nm">1</span>
+        <span class="cmt"># Pydantic DƏQİQ deyir: hansı sahə, niyə</span>
+        <span class="kw">for</span> xeta <span class="kw">in</span> e.errors():
+            log.warning(<span class="st">"Validasiya xətası [%s] %s: %s"</span>,
+                        msg.topic, xeta[<span class="st">"loc"</span>], xeta[<span class="st">"msg"</span>])
+        <span class="kw">return</span>
+
+    <span class="cmt"># ---- Sap sərhədini keç: paho sapı → event loop ----</span>
+    <span class="kw">if</span> loop <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> novbe <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="kw">return</span>   <span class="cmt"># servis hələ tam qalxmayıb</span>
+
+    <span class="kw">try</span>:
+        <span class="cmt"># call_soon_threadsafe — BAŞQA SAPDAN event loop-a
+        # təhlükəsiz müraciət etməyin YEGANƏ düzgün yolu</span>
+        loop.call_soon_threadsafe(novbe.put_nowait, olcme)
+        MQTT_METRIKA[<span class="st">"qebul"</span>] += <span class="nm">1</span>
+
+    <span class="kw">except</span> asyncio.QueueFull:
+        MQTT_METRIKA[<span class="st">"novbe_dolu"</span>] += <span class="nm">1</span>
+        log.error(<span class="st">"NÖVBƏ DOLDU (%d) — mesaj atıldı! Baza yavaşdır?"</span>,
+                  NOVBE_LIMIT)
+
+
+<span class="cmt"># ---------- Başlatma / dayandırma ----------</span>
+<span class="kw">def</span> <span class="fn">basla</span>(event_loop: asyncio.AbstractEventLoop) -&gt; asyncio.Queue:
+    <span class="st">"""lifespan-dan çağırılır. Növbəni yaradır, brokerə qoşulur."""</span>
+    <span class="kw">global</span> novbe, loop, client
+
+    loop  = event_loop
+    novbe = asyncio.Queue(maxsize=NOVBE_LIMIT)
+
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,
+                         client_id=CLIENT_ID,
+                         clean_session=<span class="kw">False</span>)   <span class="cmt"># offline növbə!</span>
+    client.on_connect    = on_connect
+    client.on_disconnect = on_disconnect
+    client.on_message    = on_message
+    client.reconnect_delay_set(min_delay=<span class="nm">1</span>, max_delay=<span class="nm">30</span>)
+
+    <span class="cmt"># API-nin öz LWT-si: sönsə, bunu broker elan edəcək</span>
+    client.will_set(<span class="st">f"{TOPIC_BASE}/api/status"</span>,
+                    payload=<span class="st">"offline"</span>, qos=<span class="nm">1</span>, retain=<span class="kw">True</span>)
+
+    client.connect(MQTT_HOST, MQTT_PORT, keepalive=<span class="nm">60</span>)
+    client.loop_start()   <span class="cmt"># fon sapı</span>
+
+    client.publish(<span class="st">f"{TOPIC_BASE}/api/status"</span>,
+                   <span class="st">"online"</span>, qos=<span class="nm">1</span>, retain=<span class="kw">True</span>)
+
+    log.info(<span class="st">"MQTT başladı: %s:%s"</span>, MQTT_HOST, MQTT_PORT)
+    <span class="kw">return</span> novbe
+
+
+<span class="kw">def</span> <span class="fn">dayandir</span>():
+    <span class="st">"""lifespan sönəndə çağırılır."""</span>
+    <span class="kw">if</span> client <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="kw">return</span>
+    client.publish(<span class="st">f"{TOPIC_BASE}/api/status"</span>,
+                   <span class="st">"offline"</span>, qos=<span class="nm">1</span>, retain=<span class="kw">True</span>)
+    client.loop_stop()
+    client.disconnect()
+    log.info(<span class="st">"MQTT dayandı."</span>)</pre>
+  </div>
+
+  <h3>Ən kritik sətir</h3>
+  <div class="expl">
+    <div class="row">
+      <div class="c">loop.call_soon_threadsafe(<br>&nbsp;&nbsp;novbe.put_nowait, olcme)</div>
+      <div class="d"><strong>Bu, bütün modulun ürəyidir.</strong><br>
+        paho sapından asyncio event loop-una müraciət etməyin <strong>yeganə təhlükəsiz yolu</strong> budur. Birbaşa <span class="mono">novbe.put_nowait(olcme)</span> yazsanız — <span class="mono">asyncio.Queue</span> sap-təhlükəsiz olmadığı üçün <em>bəzən</em> işləyər, <em>bəzən</em> data korlanar. Ən pis növ xəta: təsadüfi və təkrarlanmayan.<br>
+        <span class="mono">call_soon_threadsafe</span> isə əməliyyatı event loop-un öz növbəsinə qoyur — loop onu <em>öz sapında</em> icra edir. Təhlükəsiz.</div>
+    </div>
+    <div class="row">
+      <div class="c">OlcmeIn.model_validate(xam)</div>
+      <div class="d"><strong>Bu, dərsin əsas qazancıdır.</strong> HTTP endpoint-i də, MQTT də <strong>eyni modeldən</strong> keçir. Zonasız vaxt, mətn qiymət, naməlum sahə — hər ikisində eyni cür rədd olunur.<br>
+        Validasiya qaydasını dəyişmək lazımdırsa, <span class="mono">modeller.py</span>-da <strong>bir yerdə</strong> dəyişirsiniz və hər iki qapıya tətbiq olunur.</div>
+    </div>
+    <div class="row">
+      <div class="c">maxsize=NOVBE_LIMIT (5000)</div>
+      <div class="d"><strong>Nə:</strong> növbənin limiti.<br>
+        <strong>Niyə limit lazımdır:</strong> limitsiz növbə — gizli bomba. Baza sönsə, mesajlar yığılar və <strong>yaddaş dolana qədər</strong> davam edər; sonra proses çökər. Limitlə isə: <span class="mono">novbe_dolu</span> sayğacı artır, log xəbərdarlıq verir və biz <em>problemi görürük</em>.<br>
+        <strong>5000 nə deməkdir:</strong> 5 cihaz × saniyədə 1 mesaj tempində ≈ <strong>16 dəqiqəlik</strong> bufer.</div>
+    </div>
+    <div class="row">
+      <div class="c">will_set(".../api/status")</div>
+      <div class="d">API-nin öz LWT-si. Servis çöksə, broker <span class="mono">"offline"</span> elan edir. Dashboard bunu görüb "telemetriya servisi işləmir" xəbərdarlığı göstərə bilər.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04 — Performans</p>
+  <h2>Yazıcı: batch INSERT</h2>
+  <p>Növbəyə mesaj düşdü — indi onu bazaya yazan async tapşırıq lazımdır. Amma <strong>bir-bir yazmaq</strong> israfdır.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Yanaşma</th><th>100 ölçmə üçün</th><th>Nəticə</th></tr></thead>
+    <tbody>
+      <tr><td>Bir-bir <span class="mono">INSERT</span> + <span class="mono">COMMIT</span></td><td>100 tranzaksiya, 100 disk yazması</td><td>Yavaş — hər commit disk sinxronizasiyası tələb edir</td></tr>
+      <tr><td><strong>Batch:</strong> 100 sətir, <strong>1</strong> tranzaksiya</td><td>1 tranzaksiya, 1 disk yazması</td><td><strong>10–20 dəfə sürətli</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/yazici.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""
+Yazıcı — növbədən mesajları dəstə ilə oxuyub bazaya yazır.
+FastAPI-nin fon tapşırığı kimi işləyir.
+"""</span>
+<span class="kw">import</span> asyncio
+<span class="kw">import</span> logging
+
+<span class="kw">import</span> psycopg
+
+<span class="kw">from</span> .baza <span class="kw">import</span> hovuz, HEDLER
+
+log = logging.getLogger(<span class="st">"zarat.yazici"</span>)
+
+BATCH_OLCU  = <span class="nm">100</span>    <span class="cmt"># maksimum dəstə ölçüsü</span>
+BATCH_VAXT  = <span class="nm">2.0</span>    <span class="cmt"># saniyə — dəstə dolmasa da bu qədər gözlə</span>
+
+YAZICI_METRIKA = {<span class="st">"yazilan"</span>: <span class="nm">0</span>, <span class="st">"anomal"</span>: <span class="nm">0</span>,
+                  <span class="st">"dublikat"</span>: <span class="nm">0</span>, <span class="st">"xeta"</span>: <span class="nm">0</span>, <span class="st">"batch"</span>: <span class="nm">0</span>}
+
+SQL_OLCME = <span class="st">"""
+    INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet, keyfiyyet)
+    VALUES (%s, %s, %s, %s)
+    ON CONFLICT (cihaz_kod, olcme_vaxti) DO NOTHING
+"""</span>
+SQL_XEBER = <span class="st">"""
+    INSERT INTO xeberdarliq (cihaz_kod, olcme_vaxti, qiymet, novu, mesaj)
+    VALUES (%s, %s, %s, %s, %s)
+"""</span>
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">deste_topla</span>(novbe: asyncio.Queue) -&gt; list:
+    <span class="st">"""
+    Növbədən dəstə toplayır.
+    Ya BATCH_OLCU mesaj yığılana, ya da BATCH_VAXT keçənə qədər.
+    """</span>
+    deste = []
+
+    <span class="cmt"># İlk mesajı gözlə (limitsiz — boş növbədə asılı qalırıq, bu normaldır)</span>
+    ilk = <span class="kw">await</span> novbe.get()
+    deste.append(ilk)
+
+    <span class="cmt"># Qalanlarını vaxt limiti daxilində yığ</span>
+    son_vaxt = asyncio.get_event_loop().time() + BATCH_VAXT
+    <span class="kw">while</span> len(deste) &lt; BATCH_OLCU:
+        qalan = son_vaxt - asyncio.get_event_loop().time()
+        <span class="kw">if</span> qalan &lt;= <span class="nm">0</span>:
+            <span class="kw">break</span>
+        <span class="kw">try</span>:
+            m = <span class="kw">await</span> asyncio.wait_for(novbe.get(), timeout=qalan)
+            deste.append(m)
+        <span class="kw">except</span> asyncio.TimeoutError:
+            <span class="kw">break</span>   <span class="cmt"># vaxt bitdi — nə yığılıbsa, onu yaz</span>
+
+    <span class="kw">return</span> deste
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">deste_yaz</span>(deste: list) -&gt; <span class="kw">None</span>:
+    <span class="st">"""Dəstəni BİR tranzaksiyada bazaya yazır."""</span>
+    olcme_setirleri = []
+    xeber_setirleri = []
+
+    <span class="kw">for</span> o <span class="kw">in</span> deste:
+        <span class="kw">if</span> o.cihaz_kod <span class="kw">not</span> <span class="kw">in</span> HEDLER:
+            log.warning(<span class="st">"Naməlum cihaz: %s — atıldı"</span>, o.cihaz_kod)
+            YAZICI_METRIKA[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+            <span class="kw">continue</span>
+
+        mn, mx, vahid = HEDLER[o.cihaz_kod]
+        keyfiyyet = <span class="nm">1</span> <span class="kw">if</span> mn &lt;= o.qiymet &lt;= mx <span class="kw">else</span> <span class="nm">0</span>
+
+        olcme_setirleri.append(
+            (o.cihaz_kod, o.olcme_vaxti, o.qiymet, keyfiyyet)
+        )
+
+        <span class="kw">if</span> o.qiymet &gt; mx:
+            xeber_setirleri.append((
+                o.cihaz_kod, o.olcme_vaxti, o.qiymet, <span class="st">"yuxari_hedd"</span>,
+                <span class="st">f"{o.cihaz_kod}: {o.qiymet} {vahid} > maks {mx}"</span>,
+            ))
+            YAZICI_METRIKA[<span class="st">"anomal"</span>] += <span class="nm">1</span>
+        <span class="kw">elif</span> o.qiymet &lt; mn:
+            xeber_setirleri.append((
+                o.cihaz_kod, o.olcme_vaxti, o.qiymet, <span class="st">"asagi_hedd"</span>,
+                <span class="st">f"{o.cihaz_kod}: {o.qiymet} {vahid} < min {mn}"</span>,
+            ))
+            YAZICI_METRIKA[<span class="st">"anomal"</span>] += <span class="nm">1</span>
+
+    <span class="kw">if</span> <span class="kw">not</span> olcme_setirleri:
+        <span class="kw">return</span>
+
+    <span class="kw">try</span>:
+        <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+            <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+                <span class="cmt"># executemany — bütün dəstə bir gedişdə</span>
+                <span class="kw">await</span> cur.executemany(SQL_OLCME, olcme_setirleri)
+                yazildi = cur.rowcount
+
+                <span class="kw">if</span> xeber_setirleri:
+                    <span class="kw">await</span> cur.executemany(SQL_XEBER, xeber_setirleri)
+            <span class="cmt"># blok bitir → avtomatik COMMIT (bir dəfə!)</span>
+
+        <span class="cmt"># ON CONFLICT səbəbindən yazılmayanlar = dublikat</span>
+        dublikat = len(olcme_setirleri) - max(yazildi, <span class="nm">0</span>)
+        <span class="kw">if</span> dublikat &gt; <span class="nm">0</span>:
+            YAZICI_METRIKA[<span class="st">"dublikat"</span>] += dublikat
+
+        YAZICI_METRIKA[<span class="st">"yazilan"</span>] += len(olcme_setirleri)
+        YAZICI_METRIKA[<span class="st">"batch"</span>] += <span class="nm">1</span>
+
+        log.info(<span class="st">"Dəstə yazıldı: %d ölçmə, %d alert, %d dublikat"</span>,
+                 len(olcme_setirleri), len(xeber_setirleri), dublikat)
+
+    <span class="kw">except</span> psycopg.Error <span class="kw">as</span> e:
+        <span class="cmt"># Tranzaksiya avtomatik ROLLBACK olundu — bütün dəstə itdi.
+        # Bu, şüurlu seçimdir: yarımçıq dəstə yazmaqdansa, heç yazma.</span>
+        YAZICI_METRIKA[<span class="st">"xeta"</span>] += len(olcme_setirleri)
+        log.error(<span class="st">"Baza xətası, dəstə (%d) itdi: %s"</span>,
+                  len(olcme_setirleri), e)
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">yazici_dovru</span>(novbe: asyncio.Queue):
+    <span class="st">"""
+    Sonsuz dövr — fon tapşırığı kimi işləyir.
+    ÖLMƏMƏLİDİR: hər xətanı tutur və davam edir.
+    """</span>
+    log.info(<span class="st">"Yazıcı başladı (batch=%d, vaxt=%.1fs)"</span>,
+             BATCH_OLCU, BATCH_VAXT)
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="kw">try</span>:
+            deste = <span class="kw">await</span> deste_topla(novbe)
+            <span class="kw">await</span> deste_yaz(deste)
+
+        <span class="kw">except</span> asyncio.CancelledError:
+            log.info(<span class="st">"Yazıcı dayandırılır..."</span>)
+            <span class="kw">raise</span>   <span class="cmt"># bu istisnanı UDMA — səliqəli sönmə üçün lazımdır</span>
+
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            <span class="cmt"># Gözlənilməz xəta — logla, 1 san. gözlə, DAVAM ET</span>
+            log.exception(<span class="st">"Yazıcıda gözlənilməz xəta: %s"</span>, e)
+            <span class="kw">await</span> asyncio.sleep(<span class="nm">1</span>)</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row">
+      <div class="c">deste_topla — iki şərt</div>
+      <div class="d"><strong>Nə:</strong> ya 100 mesaj yığılır, ya 2 saniyə keçir — hansı əvvəl olsa.<br>
+        <strong>Niyə iki şərt:</strong> yalnız ölçüyə baxsaq, sakit vaxtlarda (dəqiqədə 5 mesaj) dəstə <em>heç vaxt dolmaz</em> və data bazaya <strong>saatlarla düşməz</strong>. Vaxt limiti bunun qarşısını alır: sakit vaxtda hər 2 saniyədən bir nə varsa yazılır.<br>
+        <strong>Nəticə:</strong> yüksək tempdə <em>sürət</em>, aşağı tempdə <em>təzəlik</em>. Hər iki dünyanın yaxşısı.</div>
+    </div>
+    <div class="row">
+      <div class="c">await novbe.get() — ilk mesaj</div>
+      <div class="d">Növbə boşdursa, burada <strong>asılı qalırıq</strong> — və bu, düzgündür. CPU yeyən "boş dövr" yaranmır; event loop bu vaxt başqa işlərlə (HTTP sorğuları) məşğul olur.</div>
+    </div>
+    <div class="row">
+      <div class="c">executemany(...)</div>
+      <div class="d">psycopg v3-də bu, sətirləri <strong>bir şəbəkə gedişində</strong> göndərir. Bir-bir <span class="mono">execute()</span> çağırsaydıq, hər biri ayrı gediş-gəliş olardı.</div>
+    </div>
+    <div class="row">
+      <div class="c">except CancelledError: raise</div>
+      <div class="d"><strong>Kritik incəlik.</strong> Servis sönəndə asyncio bu tapşırığa <span class="mono">CancelledError</span> göndərir. Onu <em>udsanız</em> (<span class="mono">except Exception</span> içində), tapşırıq ölməz və servis <strong>sonsuza qədər asılı qalar</strong>. Ona görə onu ayrıca tutub <span class="mono">raise</span> edirik.</div>
+    </div>
+    <div class="row">
+      <div class="c">except Exception: sleep(1); davam</div>
+      <div class="d">Yazıcı <strong>7/24 işləməlidir</strong>. Gözlənilməz xəta (məsələn baza tamamilə sönüb) onu öldürməməlidir — logla, bir az gözlə, yenidən cəhd et.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05 — Idempotentlik</p>
+  <h2>Dublikatları öldürmək</h2>
+  <p>Dərs 04-A-da QoS 1 seçəndə demişdik: <em>"mesaj itmir, amma təkrarlana bilər — dublikat problemini bazada həll edəcəyik."</em> İndi o vədin vaxtıdır.</p>
+
+  <div class="callout why">
+    <span class="k">Dublikat haradan gəlir?</span>
+    QoS 1-də publisher mesajı göndərir və broker-dən <span class="mono">PUBACK</span> gözləyir. Əgər <strong>PUBACK yolda itsə</strong>, publisher mesajın çatmadığını düşünüb <strong>yenidən göndərir</strong> — halbuki broker onu artıq qəbul edib.<br><br>
+    Nəticə: eyni ölçmə bazaya <strong>iki dəfə</strong> düşür. Qrafiklərdə "çift nöqtə", orta hesablamalarda təhrif, ölçmə sayında şişmə.
+  </div>
+
+  <h3>Həll: təbii unikal açar + ON CONFLICT</h3>
+  <p>Bir cihaz eyni <em>eyni anda</em> iki fərqli dəyər ölçə bilməz. Yəni <code class="inl">(cihaz_kod, olcme_vaxti)</code> cütü <strong>təbii unikal açardır</strong>. Bunu bazaya elan edirik.</p>
+
+  <div class="codebox">
+    <div class="cap">02_db/edge/04_unikal.sql — YENİ FAYL</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- ============================================================
+-- Idempotentlik: eyni cihaz + eyni vaxt = eyni ölçmə
+-- Bu, QoS 1 dublikatlarını bazada həll edir.
+-- ============================================================</span>
+
+<span class="cmt">-- DİQQƏT: partisiyalı cədvəldə UNIQUE məhdudiyyət
+-- partisiya açarını (olcme_vaxti) MÜTLƏQ əhatə etməlidir.
+-- Bizdə o, onsuz da açarın içindədir — problem yoxdur.</span>
+
+ALTER TABLE olcme
+    ADD CONSTRAINT olcme_cihaz_vaxt_unikal
+    UNIQUE (cihaz_kod, olcme_vaxti);
+
+<span class="cmt">-- Yoxlayaq</span>
+\d olcme</pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Əvvəlcə mövcud dublikatları təmizləyin!</span>
+    <span class="mono">UNIQUE</span> əlavə etmək <strong>uğursuz olacaq</strong>, əgər cədvəldə artıq dublikat varsa. Əvvəlcə yoxlayın və təmizləyin:
+  </div>
+
+  <div class="codebox">
+    <div class="cap">Dublikatları tapıb təmizləmək</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- 1) Dublikat varmı?</span>
+SELECT cihaz_kod, olcme_vaxti, count(*)
+FROM olcme
+GROUP BY cihaz_kod, olcme_vaxti
+HAVING count(*) &gt; 1
+LIMIT 10;
+
+<span class="cmt">-- 2) Varsa — hər cütdən yalnız BİRİNCİSİNİ saxla</span>
+DELETE FROM olcme a
+USING olcme b
+WHERE a.cihaz_kod   = b.cihaz_kod
+  AND a.olcme_vaxti = b.olcme_vaxti
+  AND a.id &gt; b.id;          <span class="cmt">-- böyük id-li = sonra gələn = dublikat</span>
+
+<span class="cmt">-- 3) İndi UNIQUE əlavə et (yuxarıdakı ALTER TABLE)</span></pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">Yazıcıdakı sətir — indi mənası aydındır</div>
+<pre>INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet, keyfiyyet)
+VALUES (%s, %s, %s, %s)
+<span class="kw">ON CONFLICT</span> (cihaz_kod, olcme_vaxti) <span class="kw">DO NOTHING</span>
+<span class="cmt">--   ↑ eyni cüt varsa: xəta vermə, sadəcə YAZMA</span></pre>
+  </div>
+
+  <div class="callout">
+    <span class="k">Nəticə</span>
+    Eyni mesaj on dəfə gəlsə də, bazada <strong>bir sətir</strong> olacaq. Sistem <strong>idempotent</strong> oldu — eyni əməliyyatı təkrarlamaq nəticəni dəyişmir.<br><br>
+    Bu, QoS 2-nin bahalı dörd mərhələli əl sıxmasını <strong>lazımsız edir</strong> — məhz Dərs 04-A-da dediyimiz kimi. Ucuz həll, tam nəticə.
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06 — Birləşdirmə</p>
+  <h2>main.py-ın yenilənməsi</h2>
+  <p>İndi lifespan-a MQTT və yazıcı tapşırığını əlavə edirik.</p>
+
+  <div class="codebox">
+    <div class="cap">main.py — yenilənmiş lifespan və metrikalar</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="kw">import</span> asyncio
+<span class="kw">import</span> logging
+<span class="kw">from</span> contextlib <span class="kw">import</span> asynccontextmanager
+
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+
+<span class="kw">from</span> .konfiq <span class="kw">import</span> VERSIYA
+<span class="kw">from</span> .baza <span class="kw">import</span> hovuz, HEDLER, hedleri_yukle
+<span class="kw">from</span> . <span class="kw">import</span> mqtt <span class="kw">as</span> mqtt_modul
+<span class="kw">from</span> .yazici <span class="kw">import</span> yazici_dovru, YAZICI_METRIKA
+
+log = logging.getLogger(<span class="st">"zarat.api"</span>)
+
+
+@asynccontextmanager
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">lifespan</span>(app: FastAPI):
+    <span class="cmt"># ---------- BAŞLANĞIC ----------</span>
+    <span class="kw">await</span> hovuz.open()
+    <span class="kw">await</span> hovuz.wait()
+    say = <span class="kw">await</span> hedleri_yukle()
+    log.info(<span class="st">"Baza hazır — %d cihaz"</span>, say)
+
+    <span class="cmt"># MQTT-ni başlat və növbəni al</span>
+    loop  = asyncio.get_running_loop()
+    novbe = mqtt_modul.basla(loop)
+
+    <span class="cmt"># Yazıcını fon tapşırığı kimi işə sal</span>
+    yazici_task = asyncio.create_task(yazici_dovru(novbe))
+    log.info(<span class="st">"Servis hazır — versiya %s"</span>, VERSIYA)
+
+    <span class="kw">yield</span>   <span class="cmt"># ← SERVİS İŞLƏYİR</span>
+
+    <span class="cmt"># ---------- SÖNMƏ (səliqəli, sıra ilə) ----------</span>
+    log.info(<span class="st">"Sönmə başladı..."</span>)
+
+    <span class="cmt"># 1) Əvvəlcə MQTT-ni dayandır — yeni mesaj gəlməsin</span>
+    mqtt_modul.dayandir()
+
+    <span class="cmt"># 2) Növbədə qalanları yazmağa imkan ver (maks 5 san.)</span>
+    <span class="kw">try</span>:
+        <span class="kw">await</span> asyncio.wait_for(novbe.join(), timeout=<span class="nm">5.0</span>)
+    <span class="kw">except</span> asyncio.TimeoutError:
+        log.warning(<span class="st">"Növbədə %d mesaj qaldı"</span>, novbe.qsize())
+
+    <span class="cmt"># 3) İndi yazıcını dayandır</span>
+    yazici_task.cancel()
+    <span class="kw">try</span>:
+        <span class="kw">await</span> yazici_task
+    <span class="kw">except</span> asyncio.CancelledError:
+        <span class="kw">pass</span>
+
+    <span class="cmt"># 4) Sonda hovuzu bağla</span>
+    <span class="kw">await</span> hovuz.close()
+    log.info(<span class="st">"Servis söndü."</span>)
+
+
+app = FastAPI(
+    title=<span class="st">"Zarat Zavod Telemetriya API"</span>,
+    version=VERSIYA,
+    lifespan=lifespan,
+)
+
+
+<span class="cmt"># ---------- Metrikalar: indi MQTT-ni də göstərir ----------</span>
+@app.get(<span class="st">"/metrikalar"</span>, tags=[<span class="st">"Sistem"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">metrikalar</span>():
+    novbe = mqtt_modul.novbe
+    <span class="kw">return</span> {
+        <span class="st">"mqtt"</span>: {
+            **mqtt_modul.MQTT_METRIKA,
+            <span class="st">"novbe_uzunlugu"</span>: novbe.qsize() <span class="kw">if</span> novbe <span class="kw">else</span> <span class="nm">0</span>,
+        },
+        <span class="st">"yazici"</span>: YAZICI_METRIKA,
+        <span class="st">"cihaz_sayi"</span>: len(HEDLER),
+        <span class="st">"versiya"</span>: VERSIYA,
+    }</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Sönmə sırasına diqqət — dördü də vacibdir</span>
+    <strong>①</strong> MQTT əvvəl dayanır → yeni mesaj gəlmir (növbə artmır).<br>
+    <strong>②</strong> Növbədəki qalıq yazılır → <em>data itmir</em>.<br>
+    <strong>③</strong> Yazıcı dayanır → işi bitib.<br>
+    <strong>④</strong> Hovuz bağlanır → bağlantılar səliqəli qaytarılır.<br><br>
+    Sıra pozulsa: hovuzu əvvəl bağlasanız, yazıcı növbədəki mesajları yaza <strong>bilməz</strong> və onlar itər. Bu, "graceful shutdown"dır və istehsalat sistemlərində vacib detaldır.
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Kiçik düzəliş: novbe.join() işləməsi üçün</span>
+    <span class="mono">novbe.join()</span> yalnız o halda düzgün işləyir ki, yazıcı hər mesaj üçün <code class="inl">novbe.task_done()</code> çağırsın. Bunu <span class="mono">deste_yaz</span>-dan sonra əlavə edin:<br><br>
+    <code class="inl">for _ in deste: novbe.task_done()</code><br><br>
+    Əks halda <span class="mono">join()</span> həmişə 5 saniyə gözləyəcək (timeout).
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07 — Loglama</p>
+  <h2>print()-dən logging-ə keçid</h2>
+  <p>İndiyə qədər <code class="inl">print()</code> istifadə edirdik. Servis 7/24 işləyəndə bu, yararsızdır: terminal yoxdur, tarix yoxdur, səviyyə yoxdur, fayl yoxdur.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/loglama.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""Loglama konfiqurasiyası — həm ekrana, həm fayla."""</span>
+<span class="kw">import</span> logging
+<span class="kw">import</span> logging.handlers
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+KOK = Path(__file__).resolve().parents[<span class="nm">2</span>]
+LOG_QOVLUQ = KOK / <span class="st">"_LOG"</span>
+LOG_QOVLUQ.mkdir(exist_ok=<span class="kw">True</span>)
+
+
+<span class="kw">def</span> <span class="fn">qur</span>(seviyye=logging.INFO):
+    format = logging.Formatter(
+        <span class="st">"%(asctime)s [%(levelname)-7s] %(name)-14s | %(message)s"</span>,
+        datefmt=<span class="st">"%Y-%m-%d %H:%M:%S"</span>,
+    )
+
+    <span class="cmt"># 1) Ekrana</span>
+    ekran = logging.StreamHandler()
+    ekran.setFormatter(format)
+
+    <span class="cmt"># 2) Fayla — 10 MB-da bir fırlanır, 5 köhnə nüsxə saxlanır</span>
+    fayl = logging.handlers.RotatingFileHandler(
+        LOG_QOVLUQ / <span class="st">"api.log"</span>,
+        maxBytes=<span class="nm">10</span> * <span class="nm">1024</span> * <span class="nm">1024</span>,
+        backupCount=<span class="nm">5</span>,
+        encoding=<span class="st">"utf-8"</span>,
+    )
+    fayl.setFormatter(format)
+
+    kok = logging.getLogger()
+    kok.setLevel(seviyye)
+    kok.handlers.clear()
+    kok.addHandler(ekran)
+    kok.addHandler(fayl)
+
+    <span class="cmt"># Kitabxanaların səs-küyünü azalt</span>
+    logging.getLogger(<span class="st">"psycopg.pool"</span>).setLevel(logging.WARNING)</pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">main.py-ın ƏN ƏVVƏLİNƏ əlavə edin</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="kw">from</span> .loglama <span class="kw">import</span> qur <span class="kw">as</span> loglama_qur
+loglama_qur()   <span class="cmt"># ← digər importlardan ƏVVƏL çağırılmalıdır</span></pre>
+  </div>
+
+  <div class="expl">
+    <div class="row"><div class="c">RotatingFileHandler</div><div class="d"><strong>Niyə:</strong> log faylı limitsiz böyüyərsə, aylar sonra <strong>diski doldurar</strong> və server çökər. Bu, real hadisədir. 10 MB-da fırlanma + 5 nüsxə = maksimum 60 MB, əbədi.</div></div>
+    <div class="row"><div class="c">%(levelname)s</div><div class="d">INFO / WARNING / ERROR — problem axtaranda <code class="inl">grep ERROR _LOG/api.log</code> ilə dərhal tapırsınız. <span class="mono">print()</span>-də bu mümkün deyil.</div></div>
+    <div class="row"><div class="c">%(name)s</div><div class="d"><span class="mono">zarat.mqtt</span> / <span class="mono">zarat.yazici</span> / <span class="mono">zarat.api</span> — <strong>hansı moduldan</strong> gəldiyi görünür.</div></div>
+    <div class="row"><div class="c">log.exception(...)</div><div class="d">Xəta mesajı ilə birlikdə <strong>tam stack trace</strong> yazır. Gözlənilməz xətaları araşdırmaq üçün əvəzsizdir.</div></div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08 — Test</p>
+  <h2>Uçdan-uca: indi yalnız İKİ terminal</h2>
+  <p>Diqqət: körpü artıq lazım deyil. Üç proses əvəzinə <strong>iki</strong>.</p>
+
+  <div class="codebox">
+    <div class="cap">① Broker</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+mosquitto -c 01_config/mosquitto.conf -v</pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">② FastAPI (MQTT onun içindədir!)</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+uvicorn 03_src.api.main:app --reload --port 8000</pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">③ Simulyator</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+python 03_src/publisher/sensor_simulyator.py</pre>
+  </div>
+
+  <h3>Test 1 — MQTT axını FastAPI-yə düşürmü?</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>curl -s http://127.0.0.1:8000/metrikalar | python3 -m json.tool</pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">Gözlənilən</div>
+<pre>{
+    <span class="st">"mqtt"</span>: {
+        <span class="st">"gelen"</span>: 45,          <span class="cmt">// brokerdən gələn</span>
+        <span class="st">"qebul"</span>: 45,          <span class="cmt">// validasiyadan keçən</span>
+        <span class="st">"redd"</span>: 0,            <span class="cmt">// rədd edilən</span>
+        <span class="st">"novbe_dolu"</span>: 0,
+        <span class="st">"qosulub"</span>: true,
+        <span class="st">"novbe_uzunlugu"</span>: 2   <span class="cmt">// hazırda gözləyən</span>
+    },
+    <span class="st">"yazici"</span>: {
+        <span class="st">"yazilan"</span>: 43,
+        <span class="st">"anomal"</span>: 2,
+        <span class="st">"dublikat"</span>: 0,
+        <span class="st">"batch"</span>: 5           <span class="cmt">// 43 ölçmə cəmi 5 tranzaksiyada!</span>
+    }
+}</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">"batch": 5 — bu rəqəmə diqqət</span>
+    43 ölçmə <strong>5 tranzaksiyada</strong> yazıldı. Körpü ilə bu, <strong>43 tranzaksiya</strong> olardı. Səkkiz dəfə az disk əməliyyatı — və bu, hələ aşağı tempdədir. Yüksək tempdə fərq 20 dəfəyə çatır.
+  </div>
+
+  <h3>Test 2 — Validasiya MQTT-də də işləyirmi?</h3>
+  <p>Pozuq mesajı <strong>birbaşa brokerə</strong> göndərək və FastAPI-nin onu rədd etdiyini görək.</p>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># a) Zonasız vaxt — körpü QƏBUL edirdi, FastAPI RƏDD etməlidir</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  -m <span class="st">'{"cihaz_kod":"S001","qiymet":24,"olcme_vaxti":"2026-07-11T12:00:00"}'</span>
+
+<span class="cmt"># b) Fiziki mümkünsüz dəyər</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  -m <span class="st">'{"cihaz_kod":"S001","qiymet":999999999,"olcme_vaxti":"2026-07-11T12:00:00+04:00"}'</span>
+
+<span class="cmt"># c) Pozuq JSON</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> -m <span class="st">'bu json deyil'</span>
+
+<span class="cmt"># Nəticəni logda görün:</span>
+tail -20 _LOG/api.log
+
+<span class="cmt"># Metrikalarda "redd" sayğacı 3 artmalıdır</span>
+curl -s http://127.0.0.1:8000/metrikalar | python3 -m json.tool</pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">Logda gözlənilən</div>
+<pre>2026-07-11 12:00:01 [WARNING] zarat.mqtt    | Validasiya xətası
+    [zavod/siyezen/S001/olcme] ('olcme_vaxti',): Value error,
+    olcme_vaxti zaman zonası ilə olmalıdır...
+2026-07-11 12:00:05 [WARNING] zarat.mqtt    | Validasiya xətası
+    [zavod/siyezen/S001/olcme] ('qiymet',): Input should be
+    less than or equal to 100000
+2026-07-11 12:00:09 [WARNING] zarat.mqtt    | Pozuq JSON [...]</pre>
+  </div>
+
+  <h3>Test 3 — Idempotentlik</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># EYNİ mesajı 5 dəfə göndər</span>
+<span class="kw">for</span> i <span class="kw">in</span> 1 2 3 4 5; <span class="kw">do</span>
+  mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+    -m <span class="st">'{"cihaz_kod":"S001","qiymet":25.5,"olcme_vaxti":"2026-07-11T14:30:00+04:00"}'</span>
+<span class="kw">done</span>
+
+<span class="cmt"># Bazada NEÇƏ sətir var? Cavab: BİR!</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT count(*) FROM olcme
+WHERE cihaz_kod='S001' AND olcme_vaxti='2026-07-11T14:30:00+04:00';"</span>
+
+<span class="cmt"># Metrikalarda: "dublikat": 4</span></pre>
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09 — Nəticə</p>
+  <h2>Körpü vs FastAPI — nə qazandıq</h2>
+  <table class="tbl">
+    <thead><tr><th>Aspekt</th><th>mqtt_kopru.py</th><th>FastAPI servisi</th></tr></thead>
+    <tbody>
+      <tr><td>Validasiya</td><td>4 sahə, əl ilə</td><td><strong>Pydantic</strong> — tip, diapazon, format, zona, gələcək/köhnə</td></tr>
+      <tr><td>Zonasız vaxt</td><td>Səssizcə <strong>qəbul</strong> ✗</td><td><strong>Rədd</strong> + dəqiq log ✓</td></tr>
+      <tr><td>Baza yazma</td><td>Bir-bir INSERT</td><td><strong>Batch</strong> (100-lük dəstə)</td></tr>
+      <tr><td>Dublikat</td><td>Bazaya düşür ✗</td><td><span class="mono">ON CONFLICT</span> ilə həll ✓</td></tr>
+      <tr><td>Baza bağlantısı</td><td>1 tək</td><td>Hovuz (2–10)</td></tr>
+      <tr><td>Monitorinq</td><td>Yalnız terminal</td><td><span class="mono">/health</span>, <span class="mono">/metrikalar</span></td></tr>
+      <tr><td>Loglar</td><td><span class="mono">print()</span></td><td>Fayl + rotasiya + səviyyə</td></tr>
+      <tr><td>HTTP qapısı</td><td>Yoxdur</td><td>Var + Swagger sənəd</td></tr>
+      <tr><td>Prosess sayı</td><td>2 (körpü + API)</td><td><strong>1</strong></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10 — İstismar</p>
+  <h2>7/24 servis: launchd</h2>
+  <p><span class="mono">--reload</span> yalnız inkişaf üçündür. İstehsalatda servis kompüterlə birlikdə qalxmalı və çökəndə avtomatik bərpa olunmalıdır.</p>
+
+  <div class="codebox">
+    <div class="cap">05_servisler/api_start.sh</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat &gt; 05_servisler/api_start.sh &lt;&lt; <span class="st">'EOF'</span>
+#!/bin/bash
+<span class="cmt"># Zarat Faza 2 — FastAPI servisini başladır</span>
+<span class="kw">export</span> LC_ALL=<span class="st">"en_US.UTF-8"</span>
+<span class="kw">cd</span> <span class="st">"$HOME/Desktop/Zarat_Faza2_Zavod"</span>
+<span class="kw">source</span> 00_env/bin/activate
+
+<span class="cmt"># --reload YOX! İstehsalatda 2 işçi proses.</span>
+exec uvicorn 03_src.api.main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers 1
+<span class="st">EOF</span>
+
+chmod +x 05_servisler/api_start.sh</pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Niyə <span class="mono">--workers 1</span>?</span>
+    Adətən çox işçi proses yaxşıdır (paralel sorğu). <strong>Amma bizdə yox</strong> — çünki hər işçi <em>öz MQTT client-ini</em> yaradardı və eyni mesaj <strong>hər işçidə təkrarlanardı</strong>.<br><br>
+    Idempotentlik sayəsində baza korlanmazdı, amma iş <em>lüzumsuz</em> təkrarlanardı. Ona görə: MQTT dinləyən servis <strong>tək işçi</strong> olmalıdır.<br><br>
+    <em>Gələcək həll:</em> MQTT-ni ayrı servisə çıxarıб HTTP API-ni çox işçili etmək — amma bu, yalnız yük artanda lazım olacaq.
+  </div>
+
+  <div class="codebox">
+    <div class="cap">launchd qeydi — kompüterlə birlikdə qalxır</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cat &gt; ~/Library/LaunchAgents/az.zarat.api.plist &lt;&lt; <span class="st">'EOF'</span>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+    &lt;key&gt;Label&lt;/key&gt;
+    &lt;string&gt;az.zarat.api&lt;/string&gt;
+
+    &lt;key&gt;ProgramArguments&lt;/key&gt;
+    &lt;array&gt;
+        &lt;string&gt;/Users/royatalibova/Desktop/Zarat_Faza2_Zavod/05_servisler/api_start.sh&lt;/string&gt;
+    &lt;/array&gt;
+
+    &lt;key&gt;RunAtLoad&lt;/key&gt;
+    &lt;true/&gt;
+
+    &lt;key&gt;KeepAlive&lt;/key&gt;
+    &lt;true/&gt;
+
+    &lt;key&gt;StandardOutPath&lt;/key&gt;
+    &lt;string&gt;/Users/royatalibova/Desktop/Zarat_Faza2_Zavod/_LOG/api_stdout.log&lt;/string&gt;
+    &lt;key&gt;StandardErrorPath&lt;/key&gt;
+    &lt;string&gt;/Users/royatalibova/Desktop/Zarat_Faza2_Zavod/_LOG/api_stderr.log&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+<span class="st">EOF</span>
+
+<span class="cmt"># Yüklə və başlat</span>
+launchctl load ~/Library/LaunchAgents/az.zarat.api.plist
+
+<span class="cmt"># Yoxla</span>
+launchctl list | grep zarat
+curl -s http://127.0.0.1:8000/health
+
+<span class="cmt"># Dayandırmaq lazım olsa:</span>
+<span class="cmt"># launchctl unload ~/Library/LaunchAgents/az.zarat.api.plist</span></pre>
+  </div>
+
+  <div class="expl">
+    <div class="row"><div class="c">RunAtLoad = true</div><div class="d">Kompüter açılanda avtomatik başlayır.</div></div>
+    <div class="row"><div class="c">KeepAlive = true</div><div class="d"><strong>Servis çöksə, launchd onu avtomatik yenidən qaldırır.</strong> İstehsalatda ən vacib parametr budur — gecə saat 3-də çökən servis səhərə qədər ölü qalmır.</div></div>
+    <div class="row"><div class="c">StandardErrorPath</div><div class="d">Servis start-da çöksə (məsələn import xətası), səbəbi burada yazılır. İlk baxılası yer.</div></div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11 — Təmizlik</p>
+  <h2>Köhnə körpünü arxivləmək</h2>
+  <p><code class="inl">mqtt_kopru.py</code> artıq lazım deyil — funksiyası tamamilə FastAPI-yə köçdü. Amma onu <strong>silmirik</strong>: arxivə göndəririk.</p>
+
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+mkdir -p 06_arxiv
+
+<span class="cmt"># Körpünü arxivə köçür (SİLMİRİK — köçürürük)</span>
+git mv 03_src/kopru/mqtt_kopru.py 06_arxiv/mqtt_kopru_DERS04.py
+
+cat &gt; 06_arxiv/OXU.md &lt;&lt; <span class="st">'EOF'</span>
+# Arxiv
+
+## mqtt_kopru_DERS04.py
+Dərs 04-B-də yazılmış ilk MQTT → PostgreSQL körpüsü.
+Dərs 05-B-də funksiyası FastAPI-yə köçürüldü (03_src/api/).
+
+Saxlanma səbəbi: tədris məqsədi — sadə həll ilə
+istehsalat həllini müqayisə etmək üçün.
+
+İSTİFADƏ ETMƏYİN — FastAPI ilə eyni anda işlədilsə,
+dublikat yazma və qarışıqlıq yaranar.
+EOF
+
+git add -A
+git commit -m <span class="st">"Dərs 05-B: körpü FastAPI-yə köçdü, köhnəsi arxivə"</span></pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Vacib xəbərdarlıq</span>
+    Köhnə körpünü FastAPI ilə <strong>eyni anda işlətməyin</strong>. Hər ikisi eyni topic-ə abunə olub eyni mesajı bazaya yazmağa çalışar. Idempotentlik sayəsində baza korlanmaz, amma:<br>
+    • lüzumsuz yük;<br>
+    • metrikalar yanıldıcı olar;<br>
+    • <span class="mono">xeberdarliq</span> cədvəlində <strong>ikiqat alert</strong> yaranar (orada <span class="mono">ON CONFLICT</span> yoxdur!).
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Yoxlama siyahısı və Dərs 6</h2>
+  <ul class="check">
+    <li>Yalnız <strong>iki</strong> proses işləyir: broker + FastAPI (körpü yoxdur).</li>
+    <li><code class="inl">/metrikalar</code> MQTT sayğaclarını göstərir və <span class="mono">"qosulub": true</span>.</li>
+    <li>Simulyatordan gələn data bazaya düşür.</li>
+    <li><span class="mono">"batch"</span> sayğacı ölçmə sayından <strong>xeyli azdır</strong> (dəstə işləyir).</li>
+    <li>Zonasız vaxt MQTT-dən gələndə də <strong>rədd olunur</strong>.</li>
+    <li>Eyni mesaj 5 dəfə göndəriləndə bazada <strong>bir sətir</strong> yaranır.</li>
+    <li><code class="inl">_LOG/api.log</code> faylı yaranır və səviyyələr görünür.</li>
+    <li>Ctrl+C ilə sönmə səliqəlidir — növbədəki mesajlar yazılır.</li>
+  </ul>
+
+  <div class="callout">
+    <span class="k">Dərs 6 — Anomaliya və Xəbərdarlıq</span>
+    İndiki alert məntiqi hələ sadədir: <strong>hər</strong> hədd aşımı bir xəbərdarlıq yaradır. Dərs 06-da bunu ağıllı edəcəyik:<br><br>
+    <strong>①</strong> <strong>Debouncing</strong> — aktiv alert varsa yenisini yaratma, mövcudu yenilə (<span class="mono">hell_olundu</span> sütunu bunun üçündür);<br>
+    <strong>②</strong> <strong>Hysteresis</strong> — 35-də aç, 33-də bağla (titrəyən dəyər alert seli yaratmasın);<br>
+    <strong>③</strong> <strong>Ardıcıllıq</strong> — bir anlıq sıçrayış yox, ardıcıl 3 ölçmə;<br>
+    <strong>④</strong> <strong>Səviyyələr</strong> — xəbərdarlıq / kritik;<br>
+    <strong>⑤</strong> <strong><span class="mono">cihaz_susur</span></strong> — LWT status topic-lərini dinləyib susan cihazı tutmaq;<br>
+    <strong>⑥</strong> <strong>Bildiriş</strong> — kritik alert operatora e-poçt/Telegram ilə.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 05-B — MQTT + FastAPI: Vahid Servis, Batch Yazma və İstismar</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 05-A — FastAPI: Validasiya Qatı və HTTP Servisi</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524; --amber-deep:#b9781a;
+    --blue:#5aa9e6; --green:#5bd08a; --paper:#f6f4ef; --paper-2:#efece4;
+    --ink:#1a222c; --danger:#e5695f; --violet:#a78bfa;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1200px 400px at 78% -10%,rgba(245,165,36,.15),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:66px 32px 54px;border-bottom:3px solid var(--amber);}
+  .wrap{max-width:980px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--amber);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(29px,4.8vw,48px);line-height:1.08;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:770px;margin:0;line-height:1.7;}
+  .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(245,165,36,.12);
+    border:1px solid rgba(245,165,36,.35);color:#f7cd85;padding:6px 13px;border-radius:2px;}
+
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:980px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;} .toc a{color:var(--amber-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:980px;margin:0 auto;padding:0 32px;}
+  section{padding:46px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--amber-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.3vw,32px);line-height:1.15;margin:0 0 20px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;margin:32px 0 10px;}
+  h4{font-family:"Oswald",Arial,sans-serif;font-weight:500;font-size:17px;margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:17px 22px;border-radius:0 4px 4px 0;margin:22px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:var(--amber-deep);} .callout.why .k{color:#6d4fc4;} .callout.err .k{color:#c0453a;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--amber);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+
+  .codebox{position:relative;margin:20px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.7;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .fn{color:var(--blue);} .nm{color:#c3a6f0;}
+  .copybtn{position:absolute;top:32px;right:10px;background:rgba(245,165,36,.14);color:#f7cd85;
+    border:1px solid rgba(245,165,36,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(245,165,36,.28);}
+
+  .expl{margin:18px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;}
+  .expl .row{display:flex;border-bottom:1px solid #e8e3d8;}
+  .expl .row:last-child{border-bottom:none;}
+  .expl .row:nth-child(even){background:var(--paper-2);}
+  .expl .c{flex:0 0 40%;padding:11px 14px;font-family:ui-monospace,Menlo,monospace;
+    font-size:12.5px;color:#0b5f57;background:rgba(13,148,136,.05);
+    border-right:1px solid #e8e3d8;word-break:break-word;}
+  .expl .d{flex:1;padding:11px 14px;font-size:14.5px;line-height:1.55;}
+
+  .arch{background:var(--graphite);border-radius:10px;padding:30px 24px;margin:26px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--amber);margin-bottom:16px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:13px 14px;
+    text-align:center;min-width:118px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;color:#fff;text-transform:uppercase;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:11px;color:#8fa6ba;display:block;margin-top:3px;}
+  .bx.hl{border-color:var(--amber);box-shadow:0 0 0 1px rgba(245,165,36,.3);}
+  .ar{color:var(--amber);font-size:20px;}
+
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{padding:12px 16px 12px 44px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--green);}
+  .check li::before{content:"✓";position:absolute;left:15px;top:10px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;}
+  .next{list-style:none;padding:0;margin:20px 0;}
+  .next li{padding:13px 16px 13px 44px;position:relative;background:#eef5fb;
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--blue);}
+  .next li::before{content:"→";position:absolute;left:16px;top:12px;color:var(--blue);
+    font-weight:bold;font-size:17px;font-family:Arial,sans-serif;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--amber);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+  @media (max-width:700px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .expl .row{flex-direction:column;} .expl .c{flex:1;border-right:none;border-bottom:1px solid #e8e3d8;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Dərs 05 — Hissə A</p>
+    <h1>FastAPI: Validasiya Qatı və HTTP Servisi</h1>
+    <p class="lede">Dərs 04-də körpü işlədi — amma o, "sadəlövh"dür: gələn hər şeyə inanır və yalnız çökəndə xəbər tutur. İndi onun yerinə <strong>əsl servis</strong> qururuq: Pydantic ilə ciddi validasiya, bağlantı hovuzu, sağlamlıq yoxlaması və avtomatik sənədləşmə. Bu hissədə FastAPI-nin özünü öyrənirik; Hissə B-də MQTT-ni onun içinə köçürəcəyik.</p>
+    <div class="meta">
+      <span class="chip">FastAPI</span>
+      <span class="chip">Pydantic validasiya</span>
+      <span class="chip">Async bağlantı hovuzu</span>
+      <span class="chip">HTTP endpoint-lər</span>
+      <span class="chip">Swagger sənədləşmə</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Körpünün üç zəifliyi</a></li>
+    <li><a href="#s2">FastAPI nədir və niyə o?</a></li>
+    <li><a href="#s3">Qurulum və layihə strukturu</a></li>
+    <li><a href="#s4">Pydantic: validasiya qatı</a></li>
+    <li><a href="#s5">Bağlantı hovuzu (pool)</a></li>
+    <li><a href="#s6">Lifespan: servisin həyat dövrü</a></li>
+    <li><a href="#s7">Endpoint-lər — tam kod</a></li>
+    <li><a href="#s8">Servisi işə salmaq</a></li>
+    <li><a href="#s9">Swagger və avtomatik sənədləşmə</a></li>
+    <li><a href="#s10">Test: curl ilə uçdan-uca</a></li>
+    <li><a href="#s11">Tipik xətalar</a></li>
+    <li><a href="#s12">Yoxlama və Hissə B-yə keçid</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01 — Motivasiya</p>
+  <h2>Körpünün üç zəifliyi</h2>
+  <p>Dərs 04-B-də yazdığımız <code class="inl">mqtt_kopru.py</code> işləyir. Amma onu real zavodda 7/24 işlətmək olmaz. Üç ciddi problemi var — və FastAPI hər üçünü həll edir.</p>
+
+  <h3>Zəiflik 1 — Validasiya "əl ilə" və natamamdır</h3>
+  <div class="codebox">
+    <div class="cap">Körpüdəki yoxlama — nə qədər zəifdir?</div>
+<pre><span class="kw">try</span>:
+    kod  = data[<span class="st">"cihaz_kod"</span>]
+    qiy  = float(data[<span class="st">"qiymet"</span>])
+    vaxt = datetime.fromisoformat(data[<span class="st">"olcme_vaxti"</span>])
+<span class="kw">except</span> (KeyError, ValueError):
+    ...</pre>
+  </div>
+  <p>Bu kod bu mesajları <strong>səssizcə qəbul edir</strong>:</p>
+  <table class="tbl">
+    <thead><tr><th>Gələn mesaj</th><th>Körpü nə edir</th><th>Nə olmalıydı</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">{"qiymet": 999999999}</td><td>Bazaya yazır ✗</td><td>Rədd etmək — fiziki mümkün deyil</td></tr>
+      <tr><td class="mono">{"qiymet": "iyirmi dörd"}</td><td>float() xətası — mesaj atılır, <strong>səbəb loglanmır</strong></td><td>Dəqiq xəta: "qiymet ədəd olmalıdır"</td></tr>
+      <tr><td class="mono">{"olcme_vaxti": "2026-07-11T09:15:00"}</td><td>Qəbul edir — <strong>zonasız!</strong> ✗</td><td>Rədd etmək — zona məcburidir</td></tr>
+      <tr><td class="mono">{"olcme_vaxti": "2027-01-01T00:00:00Z"}</td><td>Bazaya yazır — <strong>gələcəkdən</strong> ✗</td><td>Rədd etmək — sensor gələcəyi ölçə bilməz</td></tr>
+      <tr><td class="mono">{"cihaz_kod": "S001'; DROP TABLE..."}</td><td>Uzunluq yoxlanılmır</td><td>Uzunluq və format məhdudiyyəti</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Zəiflik 2 — Hər mesajda yeni baza sorğusu, bir bağlantı</h3>
+  <p>Körpü <strong>bir</strong> baza bağlantısı ilə işləyir. O bağlantı ölsə (baza restart olsa), körpü onu bərpa etməyə çalışır — amma bu müddətdə gələn mesajlar itir. Həmçinin tək bağlantı yüksək tempdə "dar boğaz"a çevrilir.</p>
+
+  <h3>Zəiflik 3 — "Qara qutu"dur</h3>
+  <p>Körpü işləyirmi? Neçə mesaj qəbul edib? Baza əlçatandırmı? Bilmək üçün <strong>terminala baxmaqdan başqa yol yoxdur</strong>. Real serverdə terminal olmur — servis fonda işləyir. Ona <strong>sual vermək</strong> imkanı lazımdır.</p>
+
+  <div class="callout why">
+    <span class="k">FastAPI nə gətirir</span>
+    <strong>①</strong> Validasiya <em>deklarativ</em> olur — nəyin düzgün olduğunu bir dəfə təsvir edirsiniz, yoxlamanı Pydantic edir və dəqiq xəta mesajı qaytarır.<br>
+    <strong>②</strong> Bağlantı <em>hovuzu</em> — 10 hazır bağlantı, biri ölsə digəri işləyir.<br>
+    <strong>③</strong> Servis <em>sual verilə bilən</em> olur — <span class="mono">/health</span>, <span class="mono">/metrikalar</span> endpoint-ləri ilə hər an vəziyyəti öyrənmək olar.<br>
+    <strong>④ Bonus:</strong> avtomatik interaktiv sənədləşmə (Swagger) — gateway inteqratoruna "budur API-miz" deyib link verirsiniz.
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02 — Alət</p>
+  <h2>FastAPI: nədir və niyə məhz o?</h2>
+  <p><strong>FastAPI</strong> — Python üçün müasir veb-servis çərçivəsidir. İki şeyin birləşməsidir: <strong>Starlette</strong> (sürətli async veb qatı) + <strong>Pydantic</strong> (tip əsaslı validasiya). Bu birləşmə onu IoT/data servisləri üçün ideal edir.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Xüsusiyyət</th><th>Nə deməkdir</th><th>Bizim üçün faydası</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Tip əsaslı</strong></td><td>Python tip işarələri (<span class="mono">float</span>, <span class="mono">datetime</span>) validasiyaya çevrilir</td><td>Validasiya kodunu <em>yazmırsınız</em> — təsvir edirsiniz</td></tr>
+      <tr><td><strong>Async</strong></td><td>Bir proses eyni anda yüzlərlə sorğunu idarə edir</td><td>Yüksək tempdə sensor axını rahat həzm olunur</td></tr>
+      <tr><td><strong>Avtomatik sənəd</strong></td><td>Koddan Swagger UI yaranır</td><td>Gateway inteqratoru API-ni brauzerdə görüb sınayır</td></tr>
+      <tr><td><strong>Standart əsaslı</strong></td><td>OpenAPI, JSON Schema</td><td>Gələcəkdə R Shiny, mobil app, hər şey qoşula bilir</td></tr>
+    </tbody>
+  </table>
+
+  <div class="arch">
+    <div class="lbl">Yeni memarlıq — FastAPI mərkəzdə</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">Gateway / Simulyator</span><span class="s">MQTT</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">Mosquitto</span><span class="s">:1883</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">FastAPI</span><span class="s">:8000 — validasiya</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">zavod_edge_db</span><span class="s">:5434</span></div>
+    </div>
+    <div class="lbl" style="margin-top:22px;">FastAPI həm də HTTP qapısıdır</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">R Shiny</span><span class="s">dashboard</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">FastAPI</span><span class="s">/olcme, /health</span></div>
+      <span class="ar">◄</span>
+      <div class="bx"><span class="t">Əl ilə giriş</span><span class="s">curl / brauzer</span></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="k">Vacib aydınlıq</span>
+    FastAPI körpünü <strong>əvəz etmir</strong> — onu <em>udur</em>. Yəni MQTT dinləmə məntiqi FastAPI-nin içində, fon tapşırığı kimi işləyəcək (Hissə B). Nəticədə <strong>bir</strong> proses həm MQTT-ni dinləyir, həm HTTP sorğularına cavab verir. İki ayrı servis saxlamaq lazım gəlmir.
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03 — Qurulum</p>
+  <h2>Paketlər və layihə strukturu</h2>
+
+  <div class="codebox">
+    <div class="cap">Quraşdırma</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+
+pip install fastapi uvicorn <span class="st">"psycopg[binary,pool]"</span> python-dotenv
+
+<span class="cmt"># requirements.txt-i yenilə</span>
+pip freeze &gt; requirements.txt</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row"><div class="c">fastapi</div><div class="d">Çərçivənin özü (Pydantic-i özü ilə gətirir).</div></div>
+    <div class="row"><div class="c">uvicorn</div><div class="d"><strong>ASGI server</strong> — FastAPI tətbiqini işlədən "mühərrik". FastAPI özü server deyil, sadəcə tətbiqdir; onu işlədən uvicorn-dur.</div></div>
+    <div class="row"><div class="c">psycopg[binary,<strong>pool</strong>]</div><div class="d"><span class="mono">pool</span> əlavəsi <strong>bağlantı hovuzunu</strong> gətirir (<span class="mono">psycopg_pool</span>). Bölmə 05-də istifadə edəcəyik.</div></div>
+  </div>
+
+  <h3>Modul strukturu — niyə bir faylda yox?</h3>
+  <div class="codebox">
+    <div class="cap">03_src/api/ — dörd fayl</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>mkdir -p 03_src/api
+touch 03_src/api/__init__.py
+
+03_src/api/
+├── __init__.py       <span class="cmt"># Python paketi olduğunu bildirir</span>
+├── konfiq.py         <span class="cmt"># .env oxuma, sabitlər — TƏK MƏNBƏ</span>
+├── modeller.py       <span class="cmt"># Pydantic sxemləri — VALİDASİYA</span>
+├── baza.py           <span class="cmt"># bağlantı hovuzu, SQL sorğuları</span>
+└── main.py           <span class="cmt"># FastAPI tətbiqi, endpoint-lər</span></pre>
+  </div>
+  <div class="callout why">
+    <span class="k">Niyə bölürük?</span>
+    Körpü tək fayl idi (~120 sətir) — buna dözmək olardı. Amma FastAPI böyüyəcək: Hissə B-də MQTT, Dərs 6-da alert məntiqi, Dərs 7-də sync əlavə olunacaq. Tək fayl 600 sətrə çatanda <strong>naviqasiya mümkünsüz olur</strong>.<br><br>
+    Bölmə prinsipi: <strong>hər fayl bir məsuliyyət daşıyır</strong>. Validasiyanı dəyişmək lazımdırsa — <span class="mono">modeller.py</span>-a baxırsınız, digərlərinə toxunmursunuz. Bu, "separation of concerns"dir və böyük layihələrdə ən vacib vərdişdir.
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04 — Validasiya</p>
+  <h2>Pydantic: sistemin qapıçısı</h2>
+  <p>Bu, Dərs 05-in <strong>ürəyidir</strong>. Pydantic modeli — "düzgün ölçmə nədir?" sualının rəsmi, maşın-oxunaqlı cavabıdır.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/modeller.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""Pydantic modelləri — sistemə girən/çıxan datanın rəsmi tərifi."""</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timezone, timedelta
+<span class="kw">from</span> typing <span class="kw">import</span> Optional, Literal
+
+<span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, Field, field_validator, ConfigDict
+
+
+<span class="cmt"># ============ GİRİŞ: ölçmə ============</span>
+<span class="kw">class</span> <span class="fn">OlcmeIn</span>(BaseModel):
+    <span class="st">"""Sensordan gələn bir ölçmə. Hər sahə ciddi yoxlanılır."""</span>
+
+    model_config = ConfigDict(
+        extra=<span class="st">"forbid"</span>,          <span class="cmt"># naməlum sahə varsa → RƏDD ET</span>
+        str_strip_whitespace=<span class="kw">True</span>, <span class="cmt"># boşluqları avtomatik təmizlə</span>
+    )
+
+    cihaz_kod: str = Field(
+        ...,                        <span class="cmt"># ... = MƏCBURİ</span>
+        min_length=<span class="nm">2</span>, max_length=<span class="nm">20</span>,
+        pattern=<span class="st">r"^[A-Z0-9_-]+$"</span>,  <span class="cmt"># yalnız böyük hərf, rəqəm, _ və -</span>
+        description=<span class="st">"Cihaz kodu, məs. S001"</span>,
+        examples=[<span class="st">"S001"</span>],
+    )
+
+    qiymet: float = Field(
+        ...,
+        ge=-<span class="nm">10_000</span>, le=<span class="nm">100_000</span>,     <span class="cmt"># fiziki mümkün diapazon</span>
+        description=<span class="st">"Ölçülən dəyər"</span>,
+        examples=[<span class="nm">24.317</span>],
+    )
+
+    olcme_vaxti: datetime = Field(
+        ...,
+        description=<span class="st">"ISO 8601, zaman zonası MƏCBURİ"</span>,
+        examples=[<span class="st">"2026-07-11T09:15:00+00:00"</span>],
+    )
+
+    vahid: Optional[str] = Field(
+        <span class="kw">None</span>, max_length=<span class="nm">15</span>,
+        description=<span class="st">"Opsional — yalnız məlumat üçün"</span>,
+    )
+
+    <span class="cmt"># ---- Xüsusi yoxlama 1: zaman zonası MƏCBURİDİR ----</span>
+    @field_validator(<span class="st">"olcme_vaxti"</span>)
+    @classmethod
+    <span class="kw">def</span> <span class="fn">zona_mecburidir</span>(cls, v: datetime) -&gt; datetime:
+        <span class="kw">if</span> v.tzinfo <span class="kw">is</span> <span class="kw">None</span>:
+            <span class="kw">raise</span> ValueError(
+                <span class="st">"olcme_vaxti zaman zonası ilə olmalıdır "</span>
+                <span class="st">"(məs. 2026-07-11T09:15:00+04:00 və ya ...Z)"</span>
+            )
+        <span class="kw">return</span> v
+
+    <span class="cmt"># ---- Xüsusi yoxlama 2: gələcəkdən gələ bilməz ----</span>
+    @field_validator(<span class="st">"olcme_vaxti"</span>)
+    @classmethod
+    <span class="kw">def</span> <span class="fn">gelecek_deyil</span>(cls, v: datetime) -&gt; datetime:
+        indi = datetime.now(timezone.utc)
+        <span class="kw">if</span> v &gt; indi + timedelta(minutes=<span class="nm">5</span>):   <span class="cmt"># 5 dəq. saat fərqinə dözüm</span>
+            <span class="kw">raise</span> ValueError(
+                <span class="st">f"olcme_vaxti gələcəkdədir: {v.isoformat()}. "</span>
+                <span class="st">"Cihazın saatı düzgündürmü?"</span>
+            )
+        <span class="kw">return</span> v
+
+    <span class="cmt"># ---- Xüsusi yoxlama 3: çox köhnə data şübhəlidir ----</span>
+    @field_validator(<span class="st">"olcme_vaxti"</span>)
+    @classmethod
+    <span class="kw">def</span> <span class="fn">cox_kohne_deyil</span>(cls, v: datetime) -&gt; datetime:
+        indi = datetime.now(timezone.utc)
+        <span class="kw">if</span> v &lt; indi - timedelta(days=<span class="nm">7</span>):
+            <span class="kw">raise</span> ValueError(
+                <span class="st">f"olcme_vaxti 7 gündən köhnədir: {v.isoformat()}"</span>
+            )
+        <span class="kw">return</span> v
+
+
+<span class="cmt"># ============ ÇIXIŞ: cavab modelləri ============</span>
+<span class="kw">class</span> <span class="fn">OlcmeOut</span>(BaseModel):
+    <span class="st">"""Bazadan qaytarılan ölçmə."""</span>
+    cihaz_kod: str
+    olcme_vaxti: datetime
+    qiymet: float
+    keyfiyyet: int
+    sync_status: int
+
+
+<span class="kw">class</span> <span class="fn">CihazOut</span>(BaseModel):
+    kod: str
+    ad: str
+    tip: str
+    vahid: str
+    min_hedd: float
+    max_hedd: float
+    status: str
+
+
+<span class="kw">class</span> <span class="fn">QebulCavabi</span>(BaseModel):
+    <span class="st">"""POST /olcme cavabı."""</span>
+    status: Literal[<span class="st">"qebul"</span>, <span class="st">"anomal"</span>]
+    cihaz_kod: str
+    qiymet: float
+    keyfiyyet: int
+    xeberdarliq: Optional[str] = <span class="kw">None</span>
+
+
+<span class="kw">class</span> <span class="fn">SaglamliqCavabi</span>(BaseModel):
+    status: str
+    baza: str
+    cihaz_sayi: int
+    versiya: str</pre>
+  </div>
+
+  <h3>Hər qərarın izahı</h3>
+  <div class="expl">
+    <div class="row">
+      <div class="c">extra="forbid"</div>
+      <div class="d"><strong>Nə:</strong> modeldə olmayan sahə gəlsə, mesajı <strong>rədd edir</strong>.<br>
+        <strong>Niyə bu qədər sərt:</strong> gateway inteqratoru səhvən <span class="mono">"value"</span> yazsa (<span class="mono">"qiymet"</span> əvəzinə), susqun rejimdə mesaj <em>boş dəyərlə</em> keçər və heç kim səhvi görməz. <span class="mono">forbid</span> ilə isə dərhal dəqiq xəta qayıdır: <em>"naməlum sahə: value"</em>. Səhvi <strong>ilk gündə</strong> tapmaq, aylar sonra "niyə datalar səhvdir?" deyə axtarmaqdan yaxşıdır.</div>
+    </div>
+    <div class="row">
+      <div class="c">pattern=r"^[A-Z0-9_-]+$"</div>
+      <div class="d"><strong>Nə:</strong> cihaz kodu yalnız böyük hərf, rəqəm, <span class="mono">_</span>, <span class="mono">-</span> ola bilər.<br>
+        <strong>Niyə:</strong> ① Bizim standart <span class="mono">S001</span> formatını qoruyur. ② SQL injection cəhdlərini (<span class="mono">'; DROP TABLE</span>) qapıda kəsir — baxmayaraq ki, parametrləşdirilmiş sorğu onsuz da qoruyur, <strong>iki qat müdafiə</strong> yaxşı vərdişdir.</div>
+    </div>
+    <div class="row">
+      <div class="c">ge=-10_000, le=100_000</div>
+      <div class="d"><strong>Nə:</strong> qiymətin mütləq fiziki hüdudu.<br>
+        <strong>Niyə bu qədər geniş:</strong> bu, <em>sensor həddi deyil</em> — o, bazadadır (<span class="mono">min_hedd/max_hedd</span>) və dinamik dəyişə bilər. Bu isə <strong>sağlamlıq süzgəcidir</strong>: kabel qopanda sensor bəzən <span class="mono">1e38</span> kimi zibil ədəd verir. Belə dəyər bazaya düşsə, bütün qrafiklər korlanır (bir nöqtə bütün oxu sıxışdırır).</div>
+    </div>
+    <div class="row">
+      <div class="c">zona_mecburidir</div>
+      <div class="d"><strong>Nə:</strong> zonasız vaxtı rədd edir.<br>
+        <strong>Niyə:</strong> Dərs 04-B-də danışdıq — <span class="mono">TIMESTAMPTZ</span> sütununa zonasız vaxt yazsanız, PostgreSQL onu <em>server zonası</em> ilə şərh edir. Zavod və mərkəz fərqli zonada olsa, ölçmələr səhv saata düşür və səbəbi <strong>aylar sonra</strong> tapılır. Qapıda kəsmək yeganə düzgün yoldur.</div>
+    </div>
+    <div class="row">
+      <div class="c">gelecek_deyil (+5 dəq. dözüm)</div>
+      <div class="d"><strong>Nə:</strong> gələcəkdən gələn ölçməni rədd edir.<br>
+        <strong>Niyə 5 dəqiqə dözüm:</strong> gateway-in saatı NTP ilə tam sinxron olmaya bilər — bir neçə saniyə/dəqiqə fərq normaldır. Amma <em>saatlar</em> fərq varsa, cihazın saatı səhvdir və bu, <strong>real problemdir</strong>: ölçmələr yanlış vaxta düşür, trend təhlili pozulur.</div>
+    </div>
+    <div class="row">
+      <div class="c">cox_kohne_deyil (7 gün)</div>
+      <div class="d"><strong>Nə:</strong> həddindən artıq köhnə ölçməni rədd edir.<br>
+        <strong>Niyə:</strong> gateway uzun müddət offline qalıb sonra "yaddaşındakı" köhnə mesajları töksə, onlar tarixçəni korlaya bilər. 7 gün — məqbul bufer.<br>
+        <strong>⚠ Diqqət:</strong> bu limiti şüurlu seçin. Zavod bir ay şəbəkəsiz qalacaqsa, bu yoxlama datanızı yeyər.</div>
+    </div>
+    <div class="row">
+      <div class="c">examples=[...]</div>
+      <div class="d"><strong>Nə:</strong> Swagger sənədində nümunə dəyər göstərir.<br>
+        <strong>Niyə vacib:</strong> gateway inteqratoru brauzerdə API-ni açanda <em>hazır nümunə</em> görür və "Try it out" ilə dərhal sınayır. Sənədləşməni ayrıca yazmaq lazım gəlmir.</div>
+    </div>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Pydantic-in əsl gücü</span>
+    Diqqət edin — biz <strong>bir sətir də <span class="mono">if</span> yazmadıq</strong> (üç xüsusi yoxlama istisna). Uzunluq, tip, diapazon, format — hamısı <em>təsvirdir</em>, kod deyil.<br><br>
+    Nəticə: gələn pozuq mesaj üçün FastAPI avtomatik <strong>422</strong> statusu və <em>dəqiq, sahə-sahə</em> xəta cavabı qaytarır:<br>
+    <span class="mono">{"loc": ["body", "qiymet"], "msg": "Input should be less than or equal to 100000"}</span><br><br>
+    Körpüdəki <span class="mono">try/except</span> isə sadəcə "pozuq mesaj" deyib atırdı — <strong>nə pozuqdur, bilinmirdi</strong>.
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05 — Baza</p>
+  <h2>Bağlantı hovuzu: niyə tək bağlantı yaramır</h2>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/konfiq.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""Konfiqurasiya — .env-dən oxunan yeganə mənbə."""</span>
+<span class="kw">import</span> os
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+
+KOK = Path(__file__).resolve().parents[<span class="nm">2</span>]
+load_dotenv(KOK / <span class="st">"01_config"</span> / <span class="st">".env"</span>)
+
+<span class="cmt"># --- Edge baza ---</span>
+EDGE_DSN = (
+    <span class="st">f"host={os.getenv('EDGE_DB_HOST', 'localhost')} "</span>
+    <span class="st">f"port={os.getenv('EDGE_DB_PORT', '5434')} "</span>
+    <span class="st">f"dbname={os.getenv('EDGE_DB_NAME', 'zavod_edge_db')} "</span>
+    <span class="st">f"user={os.getenv('EDGE_DB_USER', 'royatalibova')}"</span>
+)
+
+<span class="cmt"># --- MQTT (Hissə B-də lazım olacaq) ---</span>
+MQTT_HOST  = os.getenv(<span class="st">"MQTT_HOST"</span>, <span class="st">"localhost"</span>)
+MQTT_PORT  = int(os.getenv(<span class="st">"MQTT_PORT"</span>, <span class="st">"1883"</span>))
+TOPIC_BASE = os.getenv(<span class="st">"MQTT_TOPIC_BASE"</span>, <span class="st">"zavod/siyezen"</span>)
+
+<span class="cmt"># --- API ---</span>
+VERSIYA = <span class="st">"1.0.0"</span>
+API_PORT = int(os.getenv(<span class="st">"API_PORT"</span>, <span class="st">"8000"</span>))</pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/baza.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""Baza qatı — bağlantı hovuzu və SQL əməliyyatları."""</span>
+<span class="kw">from</span> psycopg_pool <span class="kw">import</span> AsyncConnectionPool
+<span class="kw">from</span> .konfiq <span class="kw">import</span> EDGE_DSN
+
+<span class="cmt"># Hovuz: 2 minimum, 10 maksimum bağlantı
+# open=False → tətbiq başlayanda açacağıq (lifespan-da)</span>
+hovuz = AsyncConnectionPool(
+    conninfo=EDGE_DSN,
+    min_size=<span class="nm">2</span>,
+    max_size=<span class="nm">10</span>,
+    open=<span class="kw">False</span>,
+    timeout=<span class="nm">10</span>,        <span class="cmt"># bağlantı gözləmə limiti (san.)</span>
+    max_lifetime=<span class="nm">3600</span>, <span class="cmt"># bağlantı 1 saatdan sonra yenilənir</span>
+)
+
+<span class="cmt"># Hədd keşi — {cihaz_kod: (min, max, vahid)}</span>
+HEDLER: dict[str, tuple[float, float, str]] = {}
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">hedleri_yukle</span>() -&gt; int:
+    <span class="st">"""Cihaz hədlərini yaddaşa yükləyir. Başlanğıcda bir dəfə çağırılır."""</span>
+    sql = <span class="st">"""
+        SELECT c.kod, t.min_hedd, t.max_hedd, t.vahid
+        FROM cihaz c
+        JOIN sensor_tipi t ON c.sensor_tipi_kod = t.kod
+        WHERE c.status = 'aktiv'
+    """</span>
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(sql)
+            HEDLER.clear()
+            <span class="kw">async</span> <span class="kw">for</span> kod, mn, mx, vahid <span class="kw">in</span> cur:
+                HEDLER[kod] = (float(mn), float(mx), vahid)
+    <span class="kw">return</span> len(HEDLER)
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">olcme_yaz</span>(kod: str, vaxt, qiymet: float) -&gt; dict:
+    <span class="st">"""
+    Ölçməni yazır; hədd aşılıbsa xəbərdarlıq da yaradır.
+    Hər ikisi BİR tranzaksiyada — ya hamısı, ya heç biri.
+    """</span>
+    mn, mx, vahid = HEDLER[kod]
+    keyfiyyet = <span class="nm">1</span> <span class="kw">if</span> mn &lt;= qiymet &lt;= mx <span class="kw">else</span> <span class="nm">0</span>
+    xeber_mesaji = <span class="kw">None</span>
+
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(
+                <span class="st">"""INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet, keyfiyyet)
+                   VALUES (%s, %s, %s, %s)"""</span>,
+                (kod, vaxt, qiymet, keyfiyyet),
+            )
+
+            <span class="kw">if</span> qiymet &gt; mx:
+                xeber_mesaji = <span class="st">f"{kod}: {qiymet} {vahid} > maks {mx}"</span>
+                <span class="kw">await</span> cur.execute(
+                    <span class="st">"""INSERT INTO xeberdarliq
+                       (cihaz_kod, olcme_vaxti, qiymet, novu, mesaj)
+                       VALUES (%s, %s, %s, 'yuxari_hedd', %s)"""</span>,
+                    (kod, vaxt, qiymet, xeber_mesaji),
+                )
+            <span class="kw">elif</span> qiymet &lt; mn:
+                xeber_mesaji = <span class="st">f"{kod}: {qiymet} {vahid} < min {mn}"</span>
+                <span class="kw">await</span> cur.execute(
+                    <span class="st">"""INSERT INTO xeberdarliq
+                       (cihaz_kod, olcme_vaxti, qiymet, novu, mesaj)
+                       VALUES (%s, %s, %s, 'asagi_hedd', %s)"""</span>,
+                    (kod, vaxt, qiymet, xeber_mesaji),
+                )
+        <span class="cmt"># "async with conn" bloku bitəndə → avtomatik COMMIT
+        # xəta olsa → avtomatik ROLLBACK</span>
+
+    <span class="kw">return</span> {<span class="st">"keyfiyyet"</span>: keyfiyyet, <span class="st">"xeberdarliq"</span>: xeber_mesaji}
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">son_olcmeler</span>(limit: int = <span class="nm">20</span>, cihaz: str | <span class="kw">None</span> = <span class="kw">None</span>) -&gt; list:
+    sql = <span class="st">"""
+        SELECT cihaz_kod, olcme_vaxti, qiymet, keyfiyyet, sync_status
+        FROM olcme
+        WHERE (%s IS NULL OR cihaz_kod = %s)
+        ORDER BY olcme_vaxti DESC
+        LIMIT %s
+    """</span>
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(sql, (cihaz, cihaz, limit))
+            setirler = <span class="kw">await</span> cur.fetchall()
+
+    <span class="kw">return</span> [
+        {<span class="st">"cihaz_kod"</span>: r[<span class="nm">0</span>], <span class="st">"olcme_vaxti"</span>: r[<span class="nm">1</span>], <span class="st">"qiymet"</span>: float(r[<span class="nm">2</span>]),
+         <span class="st">"keyfiyyet"</span>: r[<span class="nm">3</span>], <span class="st">"sync_status"</span>: r[<span class="nm">4</span>]}
+        <span class="kw">for</span> r <span class="kw">in</span> setirler
+    ]
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">cihazlar</span>() -&gt; list:
+    sql = <span class="st">"""
+        SELECT c.kod, c.ad, t.ad, t.vahid, t.min_hedd, t.max_hedd, c.status
+        FROM cihaz c JOIN sensor_tipi t ON c.sensor_tipi_kod = t.kod
+        ORDER BY c.kod
+    """</span>
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(sql)
+            setirler = <span class="kw">await</span> cur.fetchall()
+    <span class="kw">return</span> [
+        {<span class="st">"kod"</span>: r[<span class="nm">0</span>], <span class="st">"ad"</span>: r[<span class="nm">1</span>], <span class="st">"tip"</span>: r[<span class="nm">2</span>], <span class="st">"vahid"</span>: r[<span class="nm">3</span>],
+         <span class="st">"min_hedd"</span>: float(r[<span class="nm">4</span>]), <span class="st">"max_hedd"</span>: float(r[<span class="nm">5</span>]), <span class="st">"status"</span>: r[<span class="nm">6</span>]}
+        <span class="kw">for</span> r <span class="kw">in</span> setirler
+    ]</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row">
+      <div class="c">AsyncConnectionPool(min_size=2, max_size=10)</div>
+      <div class="d"><strong>Nə:</strong> əvvəlcədən açılmış bağlantılar dəsti.<br>
+        <strong>Niyə hovuz:</strong> yeni PostgreSQL bağlantısı açmaq <strong>bahalıdır</strong> (~10-50 ms: TCP, autentifikasiya, sessiya qurulması). Saniyədə 50 mesaj gəlsə, bu, saniyənin yarısını yeyər. Hovuz isə hazır bağlantını <em>anında</em> verir.<br>
+        <strong>Niyə min 2:</strong> heç bir sorğu olmasa da iki bağlantı hazır dayanır — ilk sorğu gecikmir.<br>
+        <strong>Niyə maks 10:</strong> PostgreSQL-in default limiti 100-dür; digər servislərə (Shiny, psql) yer qoyuruq.</div>
+    </div>
+    <div class="row">
+      <div class="c">max_lifetime=3600</div>
+      <div class="d"><strong>Nə:</strong> bağlantı 1 saatdan sonra bağlanıб yenisi açılır.<br>
+        <strong>Niyə:</strong> uzun yaşayan bağlantılar "qocalır" — şəbəkə avadanlığı (firewall, NAT) onları səssizcə kəsə bilər və proqram bunu yalnız sorğu atanda öyrənir. Dövri yeniləmə bu problemi kökündən həll edir.</div>
+    </div>
+    <div class="row">
+      <div class="c">async with hovuz.connection()</div>
+      <div class="d"><strong>Nə:</strong> hovuzdan bağlantı götürür, blok bitəndə <strong>avtomatik qaytarır</strong> (bağlamır!).<br>
+        <strong>Bonus:</strong> blok uğurla bitsə → avtomatik <span class="mono">COMMIT</span>; istisna atılsa → avtomatik <span class="mono">ROLLBACK</span>. Körpüdə bunu <em>əl ilə</em> edirdik (<span class="mono">conn.commit()</span>, <span class="mono">rollback()</span>) — burada unutmaq mümkün deyil.</div>
+    </div>
+    <div class="row">
+      <div class="c">HEDLER (keş)</div>
+      <div class="d">Körpüdəki eyni ideya: hədləri hər mesajda bazadan soruşmuruq. Fərq: burada <span class="mono">/cihazlar/yenile</span> endpoint-i ilə keşi <strong>servisi restart etmədən</strong> yeniləyə bilərik (aşağıda).</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06 — Lifespan</p>
+  <h2>Servisin həyat dövrü</h2>
+  <p>Servis başlayanda hovuz açılmalı və hədlər yüklənməlidir; sönəndə hovuz səliqəli bağlanmalıdır. FastAPI bunun üçün <strong>lifespan</strong> mexanizmi verir.</p>
+
+  <div class="codebox">
+    <div class="cap">main.py — lifespan hissəsi</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="kw">from</span> contextlib <span class="kw">import</span> asynccontextmanager
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+
+<span class="kw">from</span> .baza <span class="kw">import</span> hovuz, hedleri_yukle
+<span class="kw">from</span> .konfiq <span class="kw">import</span> VERSIYA
+
+
+@asynccontextmanager
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">lifespan</span>(app: FastAPI):
+    <span class="cmt"># ===== BAŞLANĞIC =====</span>
+    print(<span class="st">"[API] Baza hovuzu açılır..."</span>)
+    <span class="kw">await</span> hovuz.open()
+    <span class="kw">await</span> hovuz.wait()          <span class="cmt"># bağlantılar hazır olana qədər gözlə</span>
+
+    say = <span class="kw">await</span> hedleri_yukle()
+    print(<span class="st">f"[API] {say} cihazın həddi yükləndi."</span>)
+    print(<span class="st">f"[API] Hazırdır — versiya {VERSIYA}"</span>)
+
+    <span class="kw">yield</span>   <span class="cmt"># ← BURADA SERVİS İŞLƏYİR</span>
+
+    <span class="cmt"># ===== SÖNMƏ =====</span>
+    print(<span class="st">"[API] Hovuz bağlanır..."</span>)
+    <span class="kw">await</span> hovuz.close()
+    print(<span class="st">"[API] Bitdi."</span>)</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə <span class="mono">yield</span>?</span>
+    <code class="inl">yield</code>-dən <strong>əvvəlki</strong> kod servis başlayanda bir dəfə işləyir. <code class="inl">yield</code>-dən <strong>sonrakı</strong> kod servis sönəndə işləyir. Aradakı bütün müddət — servisin iş dövrüdür.<br><br>
+    <strong>Niyə vacibdir:</strong> hovuzu <em>modul səviyyəsində</em> açsaydıq, bu, import zamanı baş verərdi — test yazanda, sənəd generasiya edəndə də baza bağlantısı tələb olunardı. Lifespan bunu <strong>servisin faktiki işə düşməsinə</strong> bağlayır.<br><br>
+    <strong>Hissə B-də:</strong> MQTT client-i də məhz burada başladacağıq — servis qalxanda qoşulacaq, sönəndə səliqəli ayrılacaq.
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07 — Endpoint</p>
+  <h2>main.py — tam kod</h2>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/main.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""Zarat Faza 2 — Zavod telemetriya API-si."""</span>
+<span class="kw">from</span> contextlib <span class="kw">import</span> asynccontextmanager
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timezone
+
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, HTTPException, Query, status
+<span class="kw">import</span> psycopg
+
+<span class="kw">from</span> .konfiq <span class="kw">import</span> VERSIYA
+<span class="kw">from</span> .baza <span class="kw">import</span> (hovuz, HEDLER, hedleri_yukle,
+                    olcme_yaz, son_olcmeler, cihazlar)
+<span class="kw">from</span> .modeller <span class="kw">import</span> (OlcmeIn, OlcmeOut, CihazOut,
+                        QebulCavabi, SaglamliqCavabi)
+
+<span class="cmt"># Sadə metrika sayğacları</span>
+METRIKA = {<span class="st">"qebul"</span>: <span class="nm">0</span>, <span class="st">"anomal"</span>: <span class="nm">0</span>, <span class="st">"xeta"</span>: <span class="nm">0</span>,
+           <span class="st">"basladi"</span>: datetime.now(timezone.utc)}
+
+
+@asynccontextmanager
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">lifespan</span>(app: FastAPI):
+    <span class="kw">await</span> hovuz.open()
+    <span class="kw">await</span> hovuz.wait()
+    say = <span class="kw">await</span> hedleri_yukle()
+    print(<span class="st">f"[API] Hazır — {say} cihaz, versiya {VERSIYA}"</span>)
+    <span class="kw">yield</span>
+    <span class="kw">await</span> hovuz.close()
+    print(<span class="st">"[API] Söndü."</span>)
+
+
+app = FastAPI(
+    title=<span class="st">"Zarat Zavod Telemetriya API"</span>,
+    description=<span class="st">"Siyəzən yem zavodu — sensor məlumatlarının qəbulu və sorğusu"</span>,
+    version=VERSIYA,
+    lifespan=lifespan,
+)
+
+
+<span class="cmt"># ============ 1. SAĞLAMLIQ ============</span>
+@app.get(<span class="st">"/health"</span>, response_model=SaglamliqCavabi, tags=[<span class="st">"Sistem"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">saglamliq</span>():
+    <span class="st">"""Servis və baza işləyirmi? Monitorinq üçün."""</span>
+    <span class="kw">try</span>:
+        <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+            <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+                <span class="kw">await</span> cur.execute(<span class="st">"SELECT 1"</span>)
+        baza_status = <span class="st">"ok"</span>
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=<span class="st">f"Baza əlçatmazdır: {e}"</span>,
+        )
+
+    <span class="kw">return</span> SaglamliqCavabi(
+        status=<span class="st">"ok"</span>, baza=baza_status,
+        cihaz_sayi=len(HEDLER), versiya=VERSIYA,
+    )
+
+
+<span class="cmt"># ============ 2. METRİKALAR ============</span>
+@app.get(<span class="st">"/metrikalar"</span>, tags=[<span class="st">"Sistem"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">metrikalar</span>():
+    <span class="st">"""Servisin iş statistikası."""</span>
+    isleme_muddeti = (datetime.now(timezone.utc) - METRIKA[<span class="st">"basladi"</span>])
+    <span class="kw">return</span> {
+        <span class="st">"qebul_olunan"</span>:   METRIKA[<span class="st">"qebul"</span>],
+        <span class="st">"anomal"</span>:         METRIKA[<span class="st">"anomal"</span>],
+        <span class="st">"xeta"</span>:           METRIKA[<span class="st">"xeta"</span>],
+        <span class="st">"isleme_saniye"</span>:  int(isleme_muddeti.total_seconds()),
+        <span class="st">"hovuz_olcusu"</span>:   hovuz.get_stats(),
+    }
+
+
+<span class="cmt"># ============ 3. ÖLÇMƏ QƏBULU — ƏSAS ENDPOINT ============</span>
+@app.post(<span class="st">"/olcme"</span>, response_model=QebulCavabi,
+          status_code=status.HTTP_201_CREATED, tags=[<span class="st">"Ölçmə"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">olcme_qebul</span>(olcme: OlcmeIn):
+    <span class="st">"""
+    Bir ölçməni qəbul edir, validasiyadan keçirir və bazaya yazır.
+    Hədd aşılıbsa avtomatik xəbərdarlıq yaradır.
+
+    Pydantic artıq formatı yoxlayıb — bura yalnız DÜZGÜN data çatır.
+    """</span>
+    <span class="cmt"># Cihaz bazada tanınırmı? (Pydantic bunu bilə bilməz)</span>
+    <span class="kw">if</span> olcme.cihaz_kod <span class="kw">not</span> <span class="kw">in</span> HEDLER:
+        METRIKA[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=<span class="st">f"Naməlum cihaz: {olcme.cihaz_kod}. "</span>
+                   <span class="st">f"Tanınanlar: {sorted(HEDLER.keys())}"</span>,
+        )
+
+    <span class="kw">try</span>:
+        netice = <span class="kw">await</span> olcme_yaz(
+            olcme.cihaz_kod, olcme.olcme_vaxti, olcme.qiymet
+        )
+    <span class="kw">except</span> psycopg.Error <span class="kw">as</span> e:
+        METRIKA[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=<span class="st">f"Baza xətası: {e}"</span>,
+        )
+
+    METRIKA[<span class="st">"qebul"</span>] += <span class="nm">1</span>
+    <span class="kw">if</span> netice[<span class="st">"keyfiyyet"</span>] == <span class="nm">0</span>:
+        METRIKA[<span class="st">"anomal"</span>] += <span class="nm">1</span>
+
+    <span class="kw">return</span> QebulCavabi(
+        status=<span class="st">"anomal"</span> <span class="kw">if</span> netice[<span class="st">"keyfiyyet"</span>] == <span class="nm">0</span> <span class="kw">else</span> <span class="st">"qebul"</span>,
+        cihaz_kod=olcme.cihaz_kod,
+        qiymet=olcme.qiymet,
+        keyfiyyet=netice[<span class="st">"keyfiyyet"</span>],
+        xeberdarliq=netice[<span class="st">"xeberdarliq"</span>],
+    )
+
+
+<span class="cmt"># ============ 4. SON ÖLÇMƏLƏR ============</span>
+@app.get(<span class="st">"/olcme/son"</span>, response_model=list[OlcmeOut], tags=[<span class="st">"Ölçmə"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">olcme_son</span>(
+    limit: int = Query(<span class="nm">20</span>, ge=<span class="nm">1</span>, le=<span class="nm">500</span>, description=<span class="st">"Neçə sətir"</span>),
+    cihaz: str | <span class="kw">None</span> = Query(<span class="kw">None</span>, description=<span class="st">"Cihaz kodu ilə süz"</span>),
+):
+    <span class="st">"""Son ölçmələri qaytarır. Dashboard bunu çağıracaq."""</span>
+    <span class="kw">return</span> <span class="kw">await</span> son_olcmeler(limit=limit, cihaz=cihaz)
+
+
+<span class="cmt"># ============ 5. CİHAZ SİYAHISI ============</span>
+@app.get(<span class="st">"/cihazlar"</span>, response_model=list[CihazOut], tags=[<span class="st">"Cihaz"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">cihaz_siyahisi</span>():
+    <span class="st">"""Bütün cihazlar və onların hədləri."""</span>
+    <span class="kw">return</span> <span class="kw">await</span> cihazlar()
+
+
+<span class="cmt"># ============ 6. KEŞİ YENİLƏ ============</span>
+@app.post(<span class="st">"/cihazlar/yenile"</span>, tags=[<span class="st">"Cihaz"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">hedleri_yenile</span>():
+    <span class="st">"""
+    Yeni cihaz əlavə etdikdən sonra keşi yeniləyir.
+    Servisi RESTART ETMƏDƏN — bu, körpüdə mümkün deyildi.
+    """</span>
+    say = <span class="kw">await</span> hedleri_yukle()
+    <span class="kw">return</span> {<span class="st">"status"</span>: <span class="st">"yeniləndi"</span>, <span class="st">"cihaz_sayi"</span>: say,
+            <span class="st">"cihazlar"</span>: sorted(HEDLER.keys())}</pre>
+  </div>
+
+  <h3>Endpoint xülasəsi</h3>
+  <table class="tbl">
+    <thead><tr><th>Metod</th><th>Yol</th><th>Nə edir</th><th>Kim çağırır</th></tr></thead>
+    <tbody>
+      <tr><td class="code">GET</td><td class="mono">/health</td><td>Servis + baza sağlamdırmı</td><td>Monitorinq, launchd</td></tr>
+      <tr><td class="code">GET</td><td class="mono">/metrikalar</td><td>Qəbul/anomal/xəta sayı</td><td>Operator, dashboard</td></tr>
+      <tr><td class="code">POST</td><td class="mono">/olcme</td><td><strong>Ölçmə qəbulu</strong> — əsas endpoint</td><td>Gateway (HTTP ilə), test</td></tr>
+      <tr><td class="code">GET</td><td class="mono">/olcme/son</td><td>Son N ölçmə</td><td>R Shiny dashboard</td></tr>
+      <tr><td class="code">GET</td><td class="mono">/cihazlar</td><td>Cihaz siyahısı və hədlər</td><td>Dashboard, inteqrator</td></tr>
+      <tr><td class="code">POST</td><td class="mono">/cihazlar/yenile</td><td>Keşi yenilə (restart yox)</td><td>Admin</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Niyə HTTP <em>həm də</em> lazımdır — MQTT varkən?</span>
+    <strong>①</strong> Gateway-lərin bəziləri MQTT bilmir, yalnız HTTP POST edə bilir — hər ikisini dəstəkləmək çevikliyi verir.<br>
+    <strong>②</strong> Dashboard bazaya <em>birbaşa</em> qoşulmamalıdır — API vasitəsilə oxumalıdır (təhlükəsizlik + gələcəkdə keş/limit əlavə etmək imkanı).<br>
+    <strong>③</strong> <span class="mono">/health</span> olmadan servisi avtomatik monitorinq etmək mümkün deyil.<br>
+    <strong>④</strong> Test və diaqnostika: <span class="mono">curl</span> ilə bir ölçmə göndərib bütün zənciri yoxlaya bilirsiniz.
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08 — İşə salma</p>
+  <h2>Uvicorn ilə servisi qaldırmaq</h2>
+
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+
+<span class="cmt"># Edge baza işləyirmi? (əvvəlcə bunu yoxla!)</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT 1"</span>
+
+<span class="cmt"># Servisi başlat</span>
+uvicorn 03_src.api.main:app --reload --port 8000</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row"><div class="c">03_src.api.main:app</div><div class="d">Modul yolu (nöqtə ilə!) + <span class="mono">:</span> + FastAPI obyektinin adı. <strong>Slash yox, nöqtə</strong> — bu, ən çox səhv edilən yerdir.</div></div>
+    <div class="row"><div class="c">--reload</div><div class="d">Kod dəyişəndə serveri <strong>avtomatik yenidən başladır</strong>. İnkişafda əvəzsizdir. <strong>⚠ İstehsalatda istifadə etməyin</strong> — yavaşdır və yaddaş sızıntısı yarada bilər.</div></div>
+    <div class="row"><div class="c">--port 8000</div><div class="d">HTTP portu. 5434 (baza) və 1883 (MQTT) ilə toqquşmur.</div></div>
+  </div>
+
+  <div class="callout err">
+    <span class="k">Tipik xəta: ModuleNotFoundError / attempted relative import</span>
+    <span class="mono">from .baza import ...</span> nisbi importdur — yalnız <strong>paket</strong> daxilində işləyir.<br><br>
+    <strong>Şərtlər:</strong> ① <code class="inl">03_src/api/__init__.py</code> faylı mövcud olmalıdır (boş ola bilər); ② uvicorn <strong>layihə kökündən</strong> işə salınmalıdır (<span class="mono">~/Desktop/Zarat_Faza2_Zavod</span>), <span class="mono">03_src/api/</span> içindən yox.<br><br>
+    <strong>Əlavə:</strong> <span class="mono">03_src</span> rəqəmlə başladığı üçün Python paketi kimi problemli ola bilər. Xəta çıxsa, layihə kökündə <code class="inl">touch 03_src/__init__.py</code> də əlavə edin.
+  </div>
+
+  <div class="codebox">
+    <div class="cap">Uğurlu start</div>
+<pre>INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process
+[API] Hazır — 5 cihaz, versiya 1.0.0
+INFO:     Application startup complete.</pre>
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09 — Sənəd</p>
+  <h2>Swagger: pulsuz gələn hədiyyə</h2>
+  <p>Brauzerdə açın:</p>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>open http://127.0.0.1:8000/docs        <span class="cmt"># Swagger UI — interaktiv</span>
+open http://127.0.0.1:8000/redoc       <span class="cmt"># ReDoc — oxunaqlı sənəd</span>
+open http://127.0.0.1:8000/openapi.json <span class="cmt"># maşın-oxunaqlı sxem</span></pre>
+  </div>
+
+  <p>Swagger səhifəsində siz <strong>heç nə yazmadan</strong> bunları görürsünüz:</p>
+  <ul class="check">
+    <li>Bütün endpoint-lər, qruplaşdırılmış (Sistem / Ölçmə / Cihaz — <span class="mono">tags</span> sayəsində).</li>
+    <li>Hər sahənin tipi, məcburiliyi, diapazonu, nümunəsi (<span class="mono">Field(...)</span> təsvirlərindən).</li>
+    <li><strong>"Try it out"</strong> düyməsi — brauzerdən birbaşa sorğu göndərmək.</li>
+    <li>Xəta cavablarının formatı.</li>
+  </ul>
+
+  <div class="callout why">
+    <span class="k">Praktik dəyəri — Dərs 04-T ilə əlaqə</span>
+    Xatırlayın: məsuliyyət zəncirinin 2-ci həlqəsində <strong>Texniki Tapşırıq</strong> var idi və orada gateway inteqratoruna "JSON formatı müqaviləsi" verilməli idi.<br><br>
+    İndi o sənədi <strong>əl ilə yazmaq lazım deyil</strong>. İnteqratora sadəcə deyirsiniz: <em>"http://sizin-server:8000/docs açın — API budur, orada sınaya da bilərsiniz."</em> Sənəd koddan avtomatik yaranır və <strong>heç vaxt köhnəlmir</strong> — çünki kod dəyişəndə sənəd də dəyişir.
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10 — Test</p>
+  <h2>curl ilə uçdan-uca sınaq</h2>
+  <p>İkinci terminal açın (servis birincidə işləyir).</p>
+
+  <h3>Test 1 — Sağlamlıq</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>curl -s http://127.0.0.1:8000/health | python3 -m json.tool</pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">Gözlənilən</div>
+<pre>{
+    <span class="st">"status"</span>: <span class="st">"ok"</span>,
+    <span class="st">"baza"</span>: <span class="st">"ok"</span>,
+    <span class="st">"cihaz_sayi"</span>: 5,
+    <span class="st">"versiya"</span>: <span class="st">"1.0.0"</span>
+}</pre>
+  </div>
+
+  <h3>Test 2 — Düzgün ölçmə (normal dəyər)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>curl -s -X POST http://127.0.0.1:8000/olcme \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{
+    "cihaz_kod": "S001",
+    "qiymet": 24.5,
+    "olcme_vaxti": "2026-07-11T12:00:00+04:00"
+  }'</span> | python3 -m json.tool</pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">Cavab — 201 Created</div>
+<pre>{
+    <span class="st">"status"</span>: <span class="st">"qebul"</span>,
+    <span class="st">"cihaz_kod"</span>: <span class="st">"S001"</span>,
+    <span class="st">"qiymet"</span>: 24.5,
+    <span class="st">"keyfiyyet"</span>: 1,
+    <span class="st">"xeberdarliq"</span>: null
+}</pre>
+  </div>
+
+  <h3>Test 3 — Anomal dəyər (hədd aşımı)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>curl -s -X POST http://127.0.0.1:8000/olcme \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{
+    "cihaz_kod": "S001",
+    "qiymet": 42.7,
+    "olcme_vaxti": "2026-07-11T12:01:00+04:00"
+  }'</span> | python3 -m json.tool
+
+<span class="cmt"># Cavab: "status": "anomal", "keyfiyyet": 0,
+#        "xeberdarliq": "S001: 42.7 °C > maks 35.0"
+# → xeberdarliq cədvəlində də sətir yarandı!</span></pre>
+  </div>
+
+  <h3>Test 4 — Validasiya işləyirmi? (BEŞ pozuq mesaj)</h3>
+  <div class="codebox">
+    <div class="cap">Hər biri fərqli səbəbdən RƏDD edilməlidir</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># a) Zaman zonası yoxdur</span>
+curl -s -X POST http://127.0.0.1:8000/olcme -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"cihaz_kod":"S001","qiymet":24,"olcme_vaxti":"2026-07-11T12:00:00"}'</span>
+
+<span class="cmt"># b) Qiymət mətn</span>
+curl -s -X POST http://127.0.0.1:8000/olcme -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"cihaz_kod":"S001","qiymet":"iyirmi","olcme_vaxti":"2026-07-11T12:00:00+04:00"}'</span>
+
+<span class="cmt"># c) Fiziki mümkünsüz dəyər</span>
+curl -s -X POST http://127.0.0.1:8000/olcme -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"cihaz_kod":"S001","qiymet":999999999,"olcme_vaxti":"2026-07-11T12:00:00+04:00"}'</span>
+
+<span class="cmt"># d) Naməlum sahə (extra="forbid" tutur)</span>
+curl -s -X POST http://127.0.0.1:8000/olcme -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"cihaz_kod":"S001","value":24,"olcme_vaxti":"2026-07-11T12:00:00+04:00"}'</span>
+
+<span class="cmt"># e) Naməlum cihaz (404)</span>
+curl -s -X POST http://127.0.0.1:8000/olcme -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"cihaz_kod":"S999","qiymet":24,"olcme_vaxti":"2026-07-11T12:00:00+04:00"}'</span></pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">(a) cavabı — 422 Unprocessable Entity</div>
+<pre>{
+  <span class="st">"detail"</span>: [{
+    <span class="st">"type"</span>: <span class="st">"value_error"</span>,
+    <span class="st">"loc"</span>: [<span class="st">"body"</span>, <span class="st">"olcme_vaxti"</span>],
+    <span class="st">"msg"</span>: <span class="st">"Value error, olcme_vaxti zaman zonası ilə olmalıdır..."</span>
+  }]
+}</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Fərqi hiss edin</span>
+    Körpü belə mesajları ya <strong>səssizcə qəbul edirdi</strong> (zonasız vaxt!), ya da "pozuq mesaj" deyib atırdı — <em>səbəbi bilinmədən</em>.<br><br>
+    FastAPI isə <strong>hansı sahənin</strong> (<span class="mono">loc</span>), <strong>niyə</strong> (<span class="mono">msg</span>) yanlış olduğunu dəqiq deyir. Gateway inteqratoru bu cavabı görəndə problemi 30 saniyəyə düzəldir — halbuki körpü ilə günlərlə axtarardı.
+  </div>
+
+  <h3>Test 5 — Bazada təsdiq</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT cihaz_kod, olcme_vaxti, qiymet, keyfiyyet
+FROM olcme ORDER BY id DESC LIMIT 5;
+
+SELECT cihaz_kod, novu, qiymet, mesaj
+FROM xeberdarliq ORDER BY id DESC LIMIT 3;
+"</span>
+
+<span class="cmt"># Metrikalara da baxın</span>
+curl -s http://127.0.0.1:8000/metrikalar | python3 -m json.tool</pre>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11 — Diaqnostika</p>
+  <h2>Tipik xətalar</h2>
+  <table class="tbl">
+    <thead><tr><th>Xəta</th><th>Səbəb</th><th>Həll</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">ImportError: attempted relative import with no known parent package</td><td>uvicorn səhv qovluqdan işə salınıb</td><td>Layihə kökündən: <code class="inl">uvicorn 03_src.api.main:app</code></td></tr>
+      <tr><td class="mono">ModuleNotFoundError: 03_src</td><td><span class="mono">__init__.py</span> yoxdur</td><td><code class="inl">touch 03_src/__init__.py 03_src/api/__init__.py</code></td></tr>
+      <tr><td class="mono">connection refused (5434)</td><td>Edge baza işləmir</td><td><code class="inl">./05_servisler/edge_start.sh</code></td></tr>
+      <tr><td class="mono">PoolTimeout</td><td>Hovuz dolub — bütün bağlantılar məşğuldur</td><td><span class="mono">max_size</span>-i artırın, yaxud sorğuların niyə uzun çəkdiyini araşdırın</td></tr>
+      <tr><td class="mono">422</td><td><strong>Bu xəta deyil — validasiya işləyir!</strong></td><td>Cavabdakı <span class="mono">loc</span> və <span class="mono">msg</span>-i oxuyun, göndərilən JSON-u düzəldin</td></tr>
+      <tr><td class="mono">Address already in use :8000</td><td>Köhnə uvicorn hələ işləyir</td><td><code class="inl">lsof -i :8000</code> → <code class="inl">kill &lt;PID&gt;</code></td></tr>
+      <tr><td>Yeni cihaz əlavə etdim, <strong>404 verir</strong></td><td>Keş köhnədir</td><td><code class="inl">curl -X POST http://127.0.0.1:8000/cihazlar/yenile</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Yoxlama siyahısı və Hissə B</h2>
+  <ul class="check">
+    <li><code class="inl">uvicorn 03_src.api.main:app --reload</code> xətasız işə düşür.</li>
+    <li><code class="inl">/health</code> → <span class="mono">"cihaz_sayi": 5</span> qaytarır.</li>
+    <li><code class="inl">/docs</code> brauzerdə açılır və endpoint-lər görünür.</li>
+    <li>Düzgün ölçmə <strong>201</strong> ilə qəbul olunur və bazaya düşür.</li>
+    <li>Anomal dəyər <span class="mono">keyfiyyet=0</span> alır və <code class="inl">xeberdarliq</code> yaradır.</li>
+    <li>Beş pozuq mesajın <strong>hamısı</strong> rədd edilir (422 və ya 404).</li>
+    <li>Zonasız vaxt <strong>rədd olunur</strong> — körpüdə qəbul olunurdu!</li>
+    <li><code class="inl">/cihazlar/yenile</code> keşi restart olmadan yeniləyir.</li>
+  </ul>
+
+  <div class="callout">
+    <span class="k">Hissə B-də nə edəcəyik</span>
+    Hazırda FastAPI <strong>yalnız HTTP</strong> qəbul edir — MQTT axını hələ köhnə körpüdən keçir. İki ayrı proses işləyir, bu isə lazımsızdır.<br><br>
+    Hissə B-də:<br>
+    <strong>①</strong> MQTT client-i FastAPI-nin <span class="mono">lifespan</span>-ına köçürürük — bir proses həm dinləyir, həm cavab verir;<br>
+    <strong>②</strong> MQTT mesajını <em>eyni Pydantic modelindən</em> keçiririk — validasiya hər iki qapıda eyni olur;<br>
+    <strong>③</strong> <strong>Batch INSERT</strong> — mesajları dəstə ilə yazıб performansı 10-20 dəfə artırırıq;<br>
+    <strong>④</strong> <strong>Idempotentlik</strong> — QoS 1 dublikatlarını <span class="mono">ON CONFLICT</span> ilə həll edirik;<br>
+    <strong>⑤</strong> Servisi <span class="mono">launchd</span> ilə 7/24 işlək hala gətiririk;<br>
+    <strong>⑥</strong> Köhnə <span class="mono">mqtt_kopru.py</span>-ı arxivə göndəririk.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 05-A — FastAPI: Validasiya Qatı və HTTP Servisi</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>
