@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 06-A — Anomaliya: Alert Vəziyyət Maşını və Baza Modeli</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524;
+    --blue:#5aa9e6; --green:#5bd08a; --violet:#a78bfa; --violet-deep:#6d4fc4;
+    --paper:#f6f4ef; --paper-2:#efece4;
+    --ink:#1a222c; --danger:#e5695f;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1200px 400px at 78% -10%,rgba(167,139,250,.16),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:66px 32px 54px;border-bottom:3px solid var(--violet);}
+  .wrap{max-width:980px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--violet);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(29px,4.8vw,48px);line-height:1.08;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:770px;margin:0;line-height:1.7;}
+  .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(167,139,250,.12);
+    border:1px solid rgba(167,139,250,.35);color:#cdbcf7;padding:6px 13px;border-radius:2px;}
+
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:980px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;} .toc a{color:var(--violet-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:980px;margin:0 auto;padding:0 32px;}
+  section{padding:46px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--violet-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.3vw,32px);line-height:1.15;margin:0 0 20px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;margin:32px 0 10px;}
+  h4{font-family:"Oswald",Arial,sans-serif;font-weight:500;font-size:17px;margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:17px 22px;border-radius:0 4px 4px 0;margin:22px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:#b9781a;} .callout.why .k{color:var(--violet-deep);} .callout.err .k{color:#c0453a;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--violet);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+
+  .codebox{position:relative;margin:20px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.7;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .fn{color:var(--blue);} .nm{color:#c3a6f0;}
+  .copybtn{position:absolute;top:32px;right:10px;background:rgba(167,139,250,.14);color:#cdbcf7;
+    border:1px solid rgba(167,139,250,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(167,139,250,.28);}
+
+  .expl{margin:18px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;}
+  .expl .row{display:flex;border-bottom:1px solid #e8e3d8;}
+  .expl .row:last-child{border-bottom:none;}
+  .expl .row:nth-child(even){background:var(--paper-2);}
+  .expl .c{flex:0 0 40%;padding:11px 14px;font-family:ui-monospace,Menlo,monospace;
+    font-size:12.5px;color:#0b5f57;background:rgba(13,148,136,.05);
+    border-right:1px solid #e8e3d8;word-break:break-word;}
+  .expl .d{flex:1;padding:11px 14px;font-size:14.5px;line-height:1.55;}
+
+  .arch{background:var(--graphite);border-radius:10px;padding:30px 24px;margin:26px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--violet);margin-bottom:16px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:13px 14px;
+    text-align:center;min-width:118px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;color:#fff;text-transform:uppercase;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:11px;color:#8fa6ba;display:block;margin-top:3px;}
+  .bx.hl{border-color:var(--violet);box-shadow:0 0 0 1px rgba(167,139,250,.3);}
+  .bx.bad{border-color:var(--danger);}
+  .ar{color:var(--violet);font-size:20px;}
+
+  .graf{background:var(--graphite);border-radius:10px;padding:24px;margin:24px 0;}
+  .graf svg{width:100%;height:auto;display:block;}
+
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{padding:12px 16px 12px 44px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--green);}
+  .check li::before{content:"✓";position:absolute;left:15px;top:10px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;}
+  .next{list-style:none;padding:0;margin:20px 0;}
+  .next li{padding:13px 16px 13px 44px;position:relative;background:#eef5fb;
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--blue);}
+  .next li::before{content:"→";position:absolute;left:16px;top:12px;color:var(--blue);
+    font-weight:bold;font-size:17px;font-family:Arial,sans-serif;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--violet);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+  @media (max-width:700px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .expl .row{flex-direction:column;} .expl .c{flex:1;border-right:none;border-bottom:1px solid #e8e3d8;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Dərs 06 — Hissə A</p>
+    <h1>Anomaliya: Alert Vəziyyət Maşını və Baza Modeli</h1>
+    <p class="lede">Bazanızda <strong>390 xəbərdarlıq</strong> var — və onlar cəmi <strong>beş problemi</strong> təsvir edir. S004 üçün 122 sətir, hamısı eyni hadisə haqqında. Bu, "alert seli"dir və onu susdurmadan sistem operatora yararsızdır. Bu hissədə səbəbi anlayır, alert modelini <em>hadisədən vəziyyətə</em> çeviririk və bazanı yenidən qururuq. Hissə B-də kodu yazacağıq.</p>
+    <div class="meta">
+      <span class="chip">Alert seli</span>
+      <span class="chip">Vəziyyət maşını</span>
+      <span class="chip">Debouncing</span>
+      <span class="chip">Hysteresis</span>
+      <span class="chip">Sxem miqrasiyası</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">390 alert: diaqnoz</a></li>
+    <li><a href="#s2">Kök səbəb: hadisə vs vəziyyət</a></li>
+    <li><a href="#s3">Alertin həyat dövrü</a></li>
+    <li><a href="#s4">Debouncing: bir problem, bir alert</a></li>
+    <li><a href="#s5">Hysteresis: titrəməni dayandırmaq</a></li>
+    <li><a href="#s6">Ardıcıllıq: təsadüfi sıçrayışa aldanmamaq</a></li>
+    <li><a href="#s7">Səviyyələr: hər alert bərabər deyil</a></li>
+    <li><a href="#s8">Yeni sxem: cədvəllər</a></li>
+    <li><a href="#s9">Qismən unikal indeks — bazada məcburiyyət</a></li>
+    <li><a href="#s10">Miqrasiya: 390 alerti təmizləmək</a></li>
+    <li><a href="#s11">Konfiqurasiya: hədləri hara yazaq</a></li>
+    <li><a href="#s12">Yoxlama və Hissə B</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01 — Diaqnoz</p>
+  <h2>390 alert: rəqəmləri oxuyaq</h2>
+  <p>Dərs 05-in sonunda bazadan bu mənzərə çıxdı:</p>
+
+  <div class="codebox">
+    <div class="cap">Faktiki nəticə</div>
+<pre> cihaz_kod |    novu     | alert_sayi |          ilk           |          son
+-----------+-------------+------------+------------------------+------------------------
+ S004      | yuxari_hedd |        122 | 2026-07-11 16:48:21    | 2026-07-12 09:35:42
+ S005      | yuxari_hedd |         90 | 2026-07-11 16:49:56    | 2026-07-11 16:57:21
+ S003      | yuxari_hedd |         76 | 2026-07-11 16:53:21    | 2026-07-12 09:35:42
+ S002      | yuxari_hedd |         76 | 2026-07-11 16:52:16    | 2026-07-12 09:35:42
+ S001      | yuxari_hedd |         26 | 2026-07-11 12:01:00    | 2026-07-11 16:57:21</pre>
+  </div>
+
+  <p><strong>S004-ə diqqət:</strong> ilk alert dünən 16:48, sonuncusu bu gün 09:35. Aradakı <strong>17 saat</strong> ərzində — <strong>122 xəbərdarlıq</strong>. Amma bu, 122 problem deyil. Bu, <strong>bir problemdir</strong>: vibrasiya həddi aşıb və elə orada qalıb.</p>
+
+  <h3>Miqyası hesablayaq</h3>
+  <table class="tbl">
+    <thead><tr><th>Ssenari</th><th>Cihaz</th><th>Ölçmə tempi</th><th>Bir gündə alert</th></tr></thead>
+    <tbody>
+      <tr><td><strong>İndiki sınaq</strong></td><td>5</td><td>5 san.</td><td>~390 (bir neçə saatda)</td></tr>
+      <tr><td><strong>Real zavod</strong></td><td>50</td><td>5 san.</td><td>Bir cihaz ilişsə: <strong>17 280/gün</strong></td></tr>
+      <tr><td>Beş cihaz ilişsə</td><td>50</td><td>5 san.</td><td><strong>86 400/gün</strong></td></tr>
+      <tr><td>Bir ayda</td><td>50</td><td>5 san.</td><td><strong>~2,6 milyon sətir</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout err">
+    <span class="k">İki ölümcül nəticə</span>
+    <strong>① Operator kor olur.</strong> Ekranda minlərlə eyni sətir. Yeni, <em>həqiqətən vacib</em> alert bu selin içində itir. Aviasiyada buna "alarm fatigue" deyirlər və real qəzalara səbəb olub: operator artıq siqnallara baxmır, çünki onlar həmişə yanır.<br><br>
+    <strong>② Baza şişir.</strong> Ayda milyonlarla sətir — heç bir informativ dəyər daşımadan. Sorğular yavaşlayır, disk dolur.<br><br>
+    Yəni bu, "kosmetik problem" deyil. <strong>Sistem bu halda operatora yararsızdır.</strong>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02 — Kök səbəb</p>
+  <h2>Alert <em>hadisə</em> deyil — <em>vəziyyətdir</em></h2>
+  <p>Bütün problemin kökü bir konseptual səhvdədir. Hazırkı kodumuz belə düşünür:</p>
+
+  <div class="codebox">
+    <div class="cap">İndiki məntiq — yazici.py</div>
+<pre><span class="kw">if</span> o.qiymet &gt; mx:
+    xeber_setirleri.append((...))   <span class="cmt"># HƏR ölçmədə yeni alert</span></pre>
+  </div>
+
+  <p>Bu, alerti <strong>hadisə</strong> (event) kimi görür: "hədd aşıldı → qeyd et". Amma reallıq başqadır.</p>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>Hadisə modeli (səhv)</th><th>Vəziyyət modeli (düzgün)</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Sual</strong></td>
+        <td>"Hədd aşıldımı?"</td>
+        <td>"<strong>Problem davam edirmi?</strong>"</td>
+      </tr>
+      <tr>
+        <td><strong>Hər ölçmədə</strong></td>
+        <td>Yeni sətir yaradır</td>
+        <td>Mövcud vəziyyəti <strong>yeniləyir</strong></td>
+      </tr>
+      <tr>
+        <td><strong>17 saatlıq problem</strong></td>
+        <td>122 sətir</td>
+        <td><strong>1 sətir</strong> — 17 saat açıq qalıб</td>
+      </tr>
+      <tr>
+        <td><strong>Operator görür</strong></td>
+        <td>122 eyni sətir</td>
+        <td>1 aktiv alert + "nə vaxtdan bəri", "neçə ölçmə", "pik dəyər"</td>
+      </tr>
+      <tr>
+        <td><strong>Problem bitəndə</strong></td>
+        <td>Sadəcə yeni alert gəlmir (bilinmir ki, bitib)</td>
+        <td>Alert <strong>bağlanır</strong>, bağlanma vaxtı yazılır</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Analogiya</span>
+    Xəstəxanada pasiyentin qızdırması var. Həkim <strong>hər ölçmədə yeni xəstəlik yazmır</strong> — o, <em>bir diaqnoz</em> qoyur və vəziyyəti izləyir: "39,2 → 38,7 → 37,4 → normal". Sonda diaqnozu <strong>bağlayır</strong>.<br><br>
+    Bizim indiki sistemimiz isə hər termometr ölçməsində yeni xəstəlik kartı açır. 122 kart, bir xəstə, bir problem.
+  </div>
+
+  <h3>Bir alert nə saxlamalıdır</h3>
+  <div class="arch">
+    <div class="lbl">Vəziyyət modeli — bir alert, tam hekayə</div>
+    <div class="rowf">
+      <div class="bx hl"><span class="t">Açıldı</span><span class="s">16:48:21</span></div>
+      <span class="ar">→</span>
+      <div class="bx"><span class="t">Tətik sayı</span><span class="s">122 ölçmə</span></div>
+      <span class="ar">→</span>
+      <div class="bx bad"><span class="t">Pik dəyər</span><span class="s">9.4 mm/s</span></div>
+      <span class="ar">→</span>
+      <div class="bx"><span class="t">Son dəyər</span><span class="s">8.1 mm/s</span></div>
+      <span class="ar">→</span>
+      <div class="bx"><span class="t">Hələ açıq</span><span class="s">17 saatdır</span></div>
+    </div>
+  </div>
+  <p><strong>Bir</strong> sətir — amma <strong>122 sətirdən daha çox məlumat</strong> daşıyır. Çünki 122 sətir "pik dəyər nə idi?" sualına cavab vermir; onu tapmaq üçün hamısını skan etmək lazımdır.</p>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03 — Model</p>
+  <h2>Alertin həyat dövrü</h2>
+  <p>Vəziyyət modelində alert <strong>doğulur, yaşayır və ölür</strong>. Bunu dəqiq təsvir edək.</p>
+
+  <div class="graf">
+    <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ox" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <path d="M0,0 L10,4 L0,8 Z" fill="#a78bfa"/>
+        </marker>
+      </defs>
+      <!-- states -->
+      <rect x="30" y="100" width="150" height="58" rx="8" fill="#17222f" stroke="#5bd08a" stroke-width="2"/>
+      <text x="105" y="126" text-anchor="middle" fill="#fff" font-family="Oswald,sans-serif" font-size="15">NORMAL</text>
+      <text x="105" y="145" text-anchor="middle" fill="#8fa6ba" font-family="monospace" font-size="11">alert yoxdur</text>
+
+      <rect x="290" y="100" width="170" height="58" rx="8" fill="#17222f" stroke="#f5a524" stroke-width="2"/>
+      <text x="375" y="126" text-anchor="middle" fill="#fff" font-family="Oswald,sans-serif" font-size="15">GÖZLƏMƏ</text>
+      <text x="375" y="145" text-anchor="middle" fill="#8fa6ba" font-family="monospace" font-size="11">1-2 ardıcıl aşım</text>
+
+      <rect x="570" y="100" width="170" height="58" rx="8" fill="#17222f" stroke="#e5695f" stroke-width="2"/>
+      <text x="655" y="126" text-anchor="middle" fill="#fff" font-family="Oswald,sans-serif" font-size="15">AKTİV ALERT</text>
+      <text x="655" y="145" text-anchor="middle" fill="#8fa6ba" font-family="monospace" font-size="11">hell_olundu = false</text>
+
+      <rect x="570" y="10" width="170" height="52" rx="8" fill="#17222f" stroke="#5aa9e6" stroke-width="2"/>
+      <text x="655" y="33" text-anchor="middle" fill="#fff" font-family="Oswald,sans-serif" font-size="14">BAĞLANMIŞ</text>
+      <text x="655" y="50" text-anchor="middle" fill="#8fa6ba" font-family="monospace" font-size="11">tarixçədə qalır</text>
+
+      <!-- arrows -->
+      <line x1="180" y1="129" x2="285" y2="129" stroke="#a78bfa" stroke-width="2" marker-end="url(#ox)"/>
+      <text x="232" y="120" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">hədd aşıldı</text>
+
+      <line x1="460" y1="129" x2="565" y2="129" stroke="#a78bfa" stroke-width="2" marker-end="url(#ox)"/>
+      <text x="512" y="120" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">3-cü ardıcıl</text>
+
+      <line x1="655" y1="100" x2="655" y2="67" stroke="#5aa9e6" stroke-width="2" marker-end="url(#ox)"/>
+      <text x="760" y="88" text-anchor="middle" fill="#5aa9e6" font-family="monospace" font-size="10">bərpa həddinə düşdü</text>
+
+      <path d="M570,73 Q 300,50 105,98" stroke="#5bd08a" stroke-width="2" fill="none" marker-end="url(#ox)"/>
+      <text x="330" y="46" text-anchor="middle" fill="#5bd08a" font-family="monospace" font-size="10">problem bitdi</text>
+
+      <path d="M375,158 Q 240,210 105,160" stroke="#5bd08a" stroke-width="2" fill="none" marker-end="url(#ox)"/>
+      <text x="240" y="205" text-anchor="middle" fill="#5bd08a" font-family="monospace" font-size="10">normal dəyər — sayğac sıfırlandı</text>
+
+      <path d="M740,129 Q 800,129 800,100 Q 800,75 745,80" stroke="#e5695f" stroke-width="2" fill="none"/>
+      <text x="845" y="120" text-anchor="middle" fill="#e5695f" font-family="monospace" font-size="10">davam edir:</text>
+      <text x="845" y="134" text-anchor="middle" fill="#e5695f" font-family="monospace" font-size="10">YENİLƏ</text>
+      <text x="845" y="148" text-anchor="middle" fill="#e5695f" font-family="monospace" font-size="10">(yeni sətir YOX)</text>
+    </svg>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Vəziyyət</th><th>Şərt</th><th>Sistem nə edir</th></tr></thead>
+    <tbody>
+      <tr><td><strong>NORMAL</strong></td><td>Dəyər hədlər arasında</td><td>Heç nə. Ardıcıllıq sayğacı sıfırlanır.</td></tr>
+      <tr><td><strong>GÖZLƏMƏ</strong></td><td>1-2 ardıcıl aşım</td><td>Sayğacı artırır, <strong>hələ alert yaratmır</strong></td></tr>
+      <tr><td><strong>AKTİV</strong></td><td>3-cü ardıcıl aşım</td><td><strong>Bir</strong> alert yaradır (<span class="mono">hell_olundu = false</span>)</td></tr>
+      <tr><td><strong>AKTİV (davam)</strong></td><td>Aşım davam edir</td><td>Mövcud alerti <strong>yeniləyir</strong>: tətik sayı ↑, pik dəyər, son dəyər</td></tr>
+      <tr><td><strong>BAĞLANMIŞ</strong></td><td>Dəyər <em>bərpa həddinə</em> düşdü</td><td>Alerti bağlayır: <span class="mono">hell_olundu = true</span>, bağlanma vaxtı</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="k">Diqqət: "bərpa həddi" ≠ "hədd"</span>
+    Alert 35 °C-də <strong>açılır</strong>, amma 35-də <strong>bağlanmır</strong> — <strong>33</strong>-ə düşəndə bağlanır. Bu, <em>hysteresis</em>dir və növbəti bölmələrdə izah edəcəyik. Bunsuz sistem yenidən titrəyəcək.
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04 — Debouncing</p>
+  <h2>Bir problem, bir alert</h2>
+  <p><strong>Debouncing</strong> — "səkməni söndürmək". Termin elektronikadan gəlir: düymə basılanda kontakt bir neçə dəfə "səkir" və sistem onu 5 basış kimi görür. Həlli: ilk siqnaldan sonra qısa müddət yeni siqnalları saymamaq.</p>
+
+  <p>Bizdə eyni məntiq: <strong>aktiv alert varsa, yenisini yaratma.</strong></p>
+
+  <div class="codebox">
+    <div class="cap">Məntiq — psevdokod</div>
+<pre><span class="kw">if</span> hədd_aşıldı:
+    aktiv = aktiv_alert_tap(cihaz_kod, növ)   <span class="cmt"># hell_olundu = false olan</span>
+
+    <span class="kw">if</span> aktiv:
+        <span class="cmt"># VAR → yenilə, YENİ SƏTİR YARATMA</span>
+        aktiv.tetik_sayi += 1
+        aktiv.son_qiymet = qiymət
+        aktiv.pik_qiymet = max(aktiv.pik_qiymet, qiymət)
+    <span class="kw">else</span>:
+        <span class="cmt"># YOXDUR → bir alert yarat</span>
+        yeni_alert(cihaz_kod, növ, qiymət)</pre>
+  </div>
+
+  <h3>Nəticə: 122 → 1</h3>
+  <table class="tbl">
+    <thead><tr><th></th><th>İndi (debouncing yox)</th><th>Sonra (debouncing var)</th></tr></thead>
+    <tbody>
+      <tr><td>S004 — 17 saat aşım</td><td>122 sətir</td><td><strong>1 sətir</strong>, <span class="mono">tetik_sayi = 122</span></td></tr>
+      <tr><td>Operator ekranı</td><td>122 eyni sətir</td><td>1 aktiv alert</td></tr>
+      <tr><td>Məlumat</td><td>"122 dəfə aşıldı"</td><td>"16:48-dən bəri açıq, 122 ölçmə, pik 9.4, son 8.1"</td></tr>
+      <tr><td>Baza (ayda, 50 cihaz)</td><td>~2,6 mln sətir</td><td>Onlarla sətir</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Amma "yeniləmək" nə deməkdir — data itmirmi?</span>
+    <strong>Xeyr.</strong> Diqqət edin: <em>ölçmələr</em> onsuz da <span class="mono">olcme</span> cədvəlində qalır — hər biri, tam tarixçə ilə. Anomal dəyərlər <span class="mono">keyfiyyet = 0</span> bayrağı ilə orada durur.<br><br>
+    <span class="mono">xeberdarliq</span> cədvəli isə <strong>tarixçə deyil</strong> — o, <em>operatora göstəriləsi problemlərin siyahısıdır</em>. Onun vəzifəsi datanı saxlamaq deyil, <strong>diqqəti yönləndirməkdir</strong>.<br><br>
+    Bu ayrılıq vacibdir: <span class="mono">olcme</span> = fakt, <span class="mono">xeberdarliq</span> = <strong>şərh</strong>.
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05 — Hysteresis</p>
+  <h2>Titrəməni dayandırmaq</h2>
+  <p>Debouncing bir problemi həll etdi. İkincisi qalır — və o, daha incədir.</p>
+
+  <div class="callout err">
+    <span class="k">Problem: sərhəddə titrəyən dəyər</span>
+    Temperatur həddi <strong>35 °C</strong>-dir. Real dəyər sərhəddə "titrəyir":<br><br>
+    <span class="mono">34.9 → 35.1 → 34.8 → 35.2 → 34.9 → 35.3 ...</span><br><br>
+    Nə baş verir: alert <strong>açılır → bağlanır → açılır → bağlanır</strong>. Debouncing burada kömək etmir, çünki hər dəfə <em>yeni</em> problemdir (əvvəlkisi bağlanıб).<br><br>
+    Nəticə: yenidən alert seli — sadəcə fərqli mexanizmlə.
+  </div>
+
+  <h3>Həll: iki fərqli hədd</h3>
+  <p><strong>Hysteresis</strong> — açılma və bağlanma hədləri <em>fərqli</em> olur.</p>
+
+  <div class="graf">
+    <svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg">
+      <!-- axes -->
+      <line x1="60" y1="250" x2="820" y2="250" stroke="#3a4b5d" stroke-width="1.5"/>
+      <line x1="60" y1="30" x2="60" y2="250" stroke="#3a4b5d" stroke-width="1.5"/>
+      <text x="30" y="255" fill="#8fa6ba" font-family="monospace" font-size="11">30</text>
+
+      <!-- threshold lines -->
+      <line x1="60" y1="80" x2="820" y2="80" stroke="#e5695f" stroke-width="1.5" stroke-dasharray="6,4"/>
+      <text x="828" y="76" fill="#e5695f" font-family="monospace" font-size="11">35 — AÇILMA</text>
+
+      <line x1="60" y1="150" x2="820" y2="150" stroke="#5bd08a" stroke-width="1.5" stroke-dasharray="6,4"/>
+      <text x="828" y="146" fill="#5bd08a" font-family="monospace" font-size="11">33 — BAĞLANMA</text>
+
+      <!-- hysteresis band -->
+      <rect x="60" y="80" width="760" height="70" fill="#f5a524" opacity="0.07"/>
+      <text x="440" y="120" text-anchor="middle" fill="#f5a524" font-family="Oswald,sans-serif" font-size="13" letter-spacing="1">HYSTERESIS ZOLAĞI — vəziyyət DƏYİŞMİR</text>
+
+      <!-- data line -->
+      <polyline points="80,180 130,140 180,100 230,70 280,55 330,72 380,95 430,115 480,135 530,160 580,175 630,145 680,100 730,65 780,50"
+        fill="none" stroke="#5aa9e6" stroke-width="2.5"/>
+      <!-- points -->
+      <circle cx="230" cy="70" r="5" fill="#e5695f"/>
+      <text x="230" y="45" text-anchor="middle" fill="#e5695f" font-family="monospace" font-size="10">AÇILDI</text>
+
+      <circle cx="530" cy="160" r="5" fill="#5bd08a"/>
+      <text x="530" y="185" text-anchor="middle" fill="#5bd08a" font-family="monospace" font-size="10">BAĞLANDI</text>
+
+      <circle cx="380" cy="95" r="4" fill="#f5a524"/>
+      <circle cx="430" cy="115" r="4" fill="#f5a524"/>
+      <text x="405" y="230" text-anchor="middle" fill="#f5a524" font-family="monospace" font-size="10">zolaqda — alert AÇIQ qalır</text>
+      <line x1="405" y1="220" x2="405" y2="125" stroke="#f5a524" stroke-width="1" stroke-dasharray="2,3"/>
+
+      <circle cx="730" cy="65" r="5" fill="#e5695f"/>
+      <text x="730" y="40" text-anchor="middle" fill="#e5695f" font-family="monospace" font-size="10">YENİDƏN AÇILDI</text>
+    </svg>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Dəyər</th><th>Hədd (35)</th><th>Bərpa (33)</th><th>Nəticə</th></tr></thead>
+    <tbody>
+      <tr><td>36.2</td><td>aşıb</td><td>—</td><td><strong>Alert AÇILIR</strong></td></tr>
+      <tr><td>34.5</td><td>aşmır</td><td>33-dən yuxarı</td><td>Hysteresis zolağında — alert <strong>açıq qalır</strong></td></tr>
+      <tr><td>33.8</td><td>aşmır</td><td>33-dən yuxarı</td><td>Hələ zolaqda — <strong>açıq</strong></td></tr>
+      <tr><td>32.6</td><td>aşmır</td><td>33-dən <strong>aşağı</strong></td><td><strong>Alert BAĞLANIR</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Niyə bu işləyir</span>
+    Titrəyən dəyər (34.9 ↔ 35.2) <strong>hysteresis zolağının içindədir</strong> — 33-ün altına düşmür. Deməli alert bağlanmır və yenidən açılmır. <strong>Bir</strong> alert, sabit.<br><br>
+    Alert yalnız o zaman bağlanır ki, dəyər <em>həqiqətən</em> normal zonaya qayıtsın (33-ün altına). Bu, "problem həqiqətən bitdi" siqnalıdır — sərhəddə oynamaq yox.<br><br>
+    <strong>Termostatlar məhz belə işləyir:</strong> 20 °C-də qızdırıcını yandırır, 22 °C-də söndürür. 21-də sonsuz yanıб-sönmür.
+  </div>
+
+  <h4>Zolağın enini necə seçək</h4>
+  <table class="tbl">
+    <thead><tr><th>Zolaq</th><th>Nəticə</th><th>Nə vaxt uyğundur</th></tr></thead>
+    <tbody>
+      <tr><td>Çox dar (35 → 34.9)</td><td>Titrəmə davam edir</td><td>Heç vaxt</td></tr>
+      <tr><td><strong>Diapazonun 5 %-i</strong></td><td>Balanslı</td><td><strong>Default seçimimiz</strong></td></tr>
+      <tr><td>Çox geniş (35 → 20)</td><td>Alert problem bitəndən sonra da uzun müddət açıq qalır</td><td>Yalnız çox səs-küylü sensorlar üçün</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06 — Ardıcıllıq</p>
+  <h2>Təsadüfi sıçrayışa aldanmamaq</h2>
+  <p>Üçüncü problem: <strong>bir anlıq sıçrayış</strong>.</p>
+
+  <p>Real sensorda dəyər bəzən bir ölçmə üçün "atılır" — elektrik maneəsi, kabel titrəməsi, ADC səhvi. Bu, <strong>real problem deyil</strong>, ölçmə səs-küyüdür. Amma indiki kodumuz bundan alert yaradır.</p>
+
+  <div class="codebox">
+    <div class="cap">Nümunə — S001 temperatur (hədd 35)</div>
+<pre>12:00:00  →  24.1  ✓ normal
+12:00:05  →  24.3  ✓ normal
+12:00:10  →  41.7  ⚡ SIÇRAYIŞ — maneə? real problem?
+12:00:15  →  24.2  ✓ normal
+12:00:20  →  24.4  ✓ normal
+
+<span class="cmt"># İndiki kod: ALERT yaradır (yalan həyəcan)
+# Ardıcıllıq şərti ilə: sayğac 1-ə çatıб sıfırlanır — alert YOX</span></pre>
+  </div>
+
+  <h3>Həll: ardıcıl N ölçmə şərti</h3>
+  <div class="codebox">
+    <div class="cap">Məntiq</div>
+<pre>ARDICIL_HEDD = <span class="nm">3</span>   <span class="cmt"># 3 ardıcıl aşım → alert</span>
+
+<span class="kw">if</span> hədd_aşıldı:
+    sayğac[cihaz] += <span class="nm">1</span>
+    <span class="kw">if</span> sayğac[cihaz] &gt;= ARDICIL_HEDD:
+        alert_aç_və_ya_yenilə()
+<span class="kw">else</span>:
+    sayğac[cihaz] = <span class="nm">0</span>       <span class="cmt"># normal dəyər → SIFIRLA</span></pre>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Ardıcıllıq</th><th>Nəticə</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1</strong> (indiki)</td><td>Hər sıçrayış alert</td><td>Yalan həyəcan seli</td></tr>
+      <tr><td><strong>3</strong> (tövsiyə)</td><td>15 saniyəlik təsdiq (5 san. tempində)</td><td>Balanslı</td></tr>
+      <tr><td><strong>10</strong></td><td>50 saniyə gecikmə</td><td>Real problem <strong>gec</strong> aşkarlanır</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">Bu, kompromisdir — şüurlu seçin</span>
+    Ardıcıllıq şərti <strong>gecikmə</strong> yaradır: 3 ölçmə × 5 saniyə = <strong>15 saniyə</strong>. Yəni real problem 15 saniyə gec aşkarlanacaq.<br><br>
+    Temperatur üçün bu, əhəmiyyətsizdir — silo 15 saniyəyə partlamaz.<br>
+    <strong>Amma vibrasiya üçün</strong> (yatağın dağılması) 15 saniyə çox ola bilər.<br><br>
+    <strong>Ona görə ardıcıllıq həddi cihaz tipinə görə fərqli olmalıdır</strong> — və biz onu bazada, <span class="mono">sensor_tipi</span> cədvəlində saxlayacağıq. Kodda sabit yazmaq səhv olardı.
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07 — Səviyyələr</p>
+  <h2>Hər alert bərabər deyil</h2>
+  <p>Hazırda bütün alertlər eynidir. Amma 35,2 °C ilə 48 °C <strong>eyni şey deyil</strong>.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Səviyyə</th><th>Şərt</th><th>Reaksiya</th><th>Bildiriş</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="mono">xeberdarliq</span></td>
+        <td>Hədd aşılıb</td>
+        <td>Dashboard-da sarı</td>
+        <td>Yoxdur — operator növbəti baxışda görər</td>
+      </tr>
+      <tr>
+        <td><span class="mono">kritik</span></td>
+        <td>Həddi <strong>20 %</strong> aşıb</td>
+        <td>Dashboard-da qırmızı, səs</td>
+        <td><strong>Dərhal</strong> — e-poçt / Telegram</td>
+      </tr>
+      <tr>
+        <td><span class="mono">cihaz_susur</span></td>
+        <td>Cihaz N dəqiqədir mesaj göndərmir</td>
+        <td>Dashboard-da boz</td>
+        <td>5 dəqiqədən sonra</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Səviyyə <em>dəyişə</em> bilər — və bu, vacibdir</span>
+    Alert <span class="mono">xeberdarliq</span> kimi açılıб, sonra dəyər artsa, <strong>kritikə yüksəlməlidir</strong>. Vəziyyət modelində bu, təbii işləyir: mövcud alerti yeniləyərkən səviyyəni də yeniləyirik.<br><br>
+    Hadisə modelində bu mümkün deyildi — hər sətir "donmuş" idi.<br><br>
+    <strong>Praktik nəticə:</strong> temperatur yavaş-yavaş 36 → 38 → 42-yə qalxsa, operator bir alertin <em>ağırlaşdığını</em> görür — 3 ayrı alert yox.
+  </div>
+
+  <h4>Kritik həddi necə hesablayaq</h4>
+  <div class="codebox">
+<pre><span class="cmt"># Nisbi (faiz) yanaşma — universaldır</span>
+kritik_hedd = max_hedd * <span class="nm">1.20</span>     <span class="cmt"># 35 → 42</span>
+
+<span class="cmt"># Temperatur:  35 °C  → kritik 42 °C
+# Vibrasiya:    7 mm/s → kritik 8.4 mm/s
+# Çəki:       500 kg   → kritik 600 kg</span></pre>
+  </div>
+  <p>Bu, sadə və universaldır. Amma bəzi sensorlar üçün mütləq hədd lazım ola bilər — ona görə onu da bazada saxlayacağıq (bölmə 11).</p>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08 — Sxem</p>
+  <h2>Yeni <span class="mono">xeberdarliq</span> cədvəli</h2>
+  <p>Dörd mexanizm (debouncing, hysteresis, ardıcıllıq, səviyyələr) bazada yeni sütunlar tələb edir.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Sütun</th><th>Tip</th><th>Nə üçün</th></tr></thead>
+    <tbody>
+      <tr><td class="code">hell_olundu</td><td>BOOLEAN</td><td><strong>Var idi</strong> — Dərs 02-də məhz bunun üçün qoyulmuşdu. İndi işə düşür: <span class="mono">false</span> = aktiv alert</td></tr>
+      <tr><td class="code">seviyye</td><td>VARCHAR</td><td><span class="mono">xeberdarliq</span> / <span class="mono">kritik</span></td></tr>
+      <tr><td class="code">acilma_vaxti</td><td>TIMESTAMPTZ</td><td>Problem <strong>nə vaxt</strong> başladı</td></tr>
+      <tr><td class="code">baglanma_vaxti</td><td>TIMESTAMPTZ</td><td>Nə vaxt bitdi (NULL = hələ davam edir)</td></tr>
+      <tr><td class="code">tetik_sayi</td><td>INTEGER</td><td>Neçə ölçmə bu alerti təsdiqləyib</td></tr>
+      <tr><td class="code">ilk_qiymet</td><td>NUMERIC</td><td>Alert açılanda dəyər nə idi</td></tr>
+      <tr><td class="code">son_qiymet</td><td>NUMERIC</td><td>Ən son dəyər</td></tr>
+      <tr><td class="code">pik_qiymet</td><td>NUMERIC</td><td><strong>Ən pis</strong> dəyər — operatorun ilk soruşacağı sual</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k"><span class="mono">pik_qiymet</span> niyə ayrıca sütundur?</span>
+    Onu <span class="mono">olcme</span> cədvəlindən hesablamaq da olardı:<br>
+    <span class="mono">SELECT max(qiymet) FROM olcme WHERE cihaz_kod=... AND olcme_vaxti BETWEEN ...</span><br><br>
+    Amma bu, <strong>hər dashboard yeniləməsində</strong> milyonlarla sətri skan etmək deməkdir. Pik dəyəri alert yenilənərkən <em>bir dəfə</em> hesablayıб saxlamaq — <strong>denormalizasiyadır</strong> və burada haqlıdır: yazma bir dəfə, oxuma minlərlə dəfə.
+  </div>
+
+  <h3>Miqrasiya SQL-i</h3>
+  <div class="codebox">
+    <div class="cap">02_db/edge/05_alert_sxem.sql</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- ============================================================
+-- Dərs 06: Alert vəziyyət maşını üçün sxem
+-- xeberdarliq: hadisə jurnalı → VƏZİYYƏT cədvəli
+-- ============================================================</span>
+
+<span class="cmt">-- ---------- 1. Yeni sütunlar ----------</span>
+ALTER TABLE xeberdarliq
+    ADD COLUMN IF NOT EXISTS seviyye        VARCHAR(15)  NOT NULL DEFAULT 'xeberdarliq',
+    ADD COLUMN IF NOT EXISTS acilma_vaxti   TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS baglanma_vaxti TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS tetik_sayi     INTEGER      NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS ilk_qiymet     NUMERIC(12,4),
+    ADD COLUMN IF NOT EXISTS son_qiymet     NUMERIC(12,4),
+    ADD COLUMN IF NOT EXISTS pik_qiymet     NUMERIC(12,4);
+
+<span class="cmt">-- ---------- 2. Səviyyə yalnız iki dəyər ala bilər ----------</span>
+ALTER TABLE xeberdarliq
+    DROP CONSTRAINT IF EXISTS xeberdarliq_seviyye_chk;
+
+ALTER TABLE xeberdarliq
+    ADD CONSTRAINT xeberdarliq_seviyye_chk
+    CHECK (seviyye IN ('xeberdarliq', 'kritik'));
+
+<span class="cmt">-- ---------- 3. Bağlanma vaxtı yalnız həll olunmuş alertdə ----------</span>
+ALTER TABLE xeberdarliq
+    DROP CONSTRAINT IF EXISTS xeberdarliq_baglanma_chk;
+
+ALTER TABLE xeberdarliq
+    ADD CONSTRAINT xeberdarliq_baglanma_chk
+    CHECK (
+        (hell_olundu = TRUE  AND baglanma_vaxti IS NOT NULL) OR
+        (hell_olundu = FALSE AND baglanma_vaxti IS NULL)
+    );</pre>
+  </div>
+
+  <div class="callout">
+    <span class="k">3-cü məhdudiyyət niyə vacibdir</span>
+    O, bazanın <strong>yalan danışmasına imkan vermir</strong>: "həll olunub, amma nə vaxt bağlandığı bilinmir" və ya "hələ açıqdır, amma bağlanma vaxtı var" — hər ikisi məntiqsizdir və baza onları <strong>rədd edir</strong>.<br><br>
+    Bu, "constraint-driven design"dır: səhv vəziyyəti <em>kodda yoxlamaq</em> əvəzinə, <strong>bazada mümkünsüz etmək</strong>. Kod səhv etsə də, baza icazə verməz.
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09 — Qismən indeks</p>
+  <h2>Debouncing-i bazada məcburi etmək</h2>
+  <p>Debouncing-i kodda yazacağıq. Amma kod səhv edə bilər. <strong>Bazada məcbur edək.</strong></p>
+
+  <div class="codebox">
+    <div class="cap">02_db/edge/05_alert_sxem.sql — davamı</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- ---------- 4. QİSMƏN UNİKAL İNDEKS — dərsin ürəyi ----------
+-- Bir cihaz + bir alert növü üçün YALNIZ BİR aktiv alert ola bilər.
+-- WHERE şərti onu "qismən" edir: yalnız AKTİV alertlərə tətbiq olunur.
+-- Bağlanmış alertlər istənilən sayda ola bilər (tarixçə).</span>
+
+CREATE UNIQUE INDEX IF NOT EXISTS xeberdarliq_aktiv_unikal
+    ON xeberdarliq (cihaz_kod, novu)
+    WHERE hell_olundu = FALSE;
+
+<span class="cmt">-- ---------- 5. Sürətli sorğu üçün indekslər ----------</span>
+CREATE INDEX IF NOT EXISTS idx_xeber_aktiv
+    ON xeberdarliq (acilma_vaxti DESC)
+    WHERE hell_olundu = FALSE;
+
+CREATE INDEX IF NOT EXISTS idx_xeber_cihaz
+    ON xeberdarliq (cihaz_kod, acilma_vaxti DESC);</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Qismən unikal indeks — niyə bu qədər zərifdir</span>
+    Adi <span class="mono">UNIQUE (cihaz_kod, novu)</span> yaramazdı: onda S004 üçün <strong>tarixdə ümumiyyətlə bir dənə</strong> alert ola bilərdi. Halbuki bizə lazımdır: <em>eyni anda</em> bir aktiv, amma tarixçədə istənilən qədər bağlanmış.<br><br>
+    <code class="inl">WHERE hell_olundu = FALSE</code> məhz bunu edir: indeks <strong>yalnız aktiv sətirləri</strong> əhatə edir.<br><br>
+    <strong>Nəticə:</strong> kod səhvən ikinci aktiv alert yaratmağa çalışsa, PostgreSQL onu <strong>rədd edir</strong>. Debouncing artıq "koddakı yaxşı niyyət" deyil — <strong>bazanın qanunudur</strong>.<br><br>
+    Bu, Dərs 05-dəki <span class="mono">UNIQUE (cihaz_kod, olcme_vaxti)</span> ilə eyni fəlsəfədir: <em>düzgün davranışı bazada məcburi et</em>.
+  </div>
+
+  <h4>Bonus: <span class="mono">ON CONFLICT</span> ilə birlikdə işləyir</h4>
+  <div class="codebox">
+<pre><span class="cmt">-- Kodda belə yazacağıq (Hissə B):</span>
+INSERT INTO xeberdarliq (cihaz_kod, novu, ...)
+VALUES (...)
+ON CONFLICT (cihaz_kod, novu) WHERE hell_olundu = FALSE
+DO UPDATE SET
+    tetik_sayi = xeberdarliq.tetik_sayi + 1,
+    son_qiymet = EXCLUDED.son_qiymet,
+    pik_qiymet = GREATEST(xeberdarliq.pik_qiymet, EXCLUDED.pik_qiymet);
+
+<span class="cmt">-- Bir SQL: yoxdursa YARAT, varsa YENİLƏ.
+-- "Upsert" adlanır və atomikdir — yarış şəraiti (race condition) yoxdur.</span></pre>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10 — Miqrasiya</p>
+  <h2>390 alerti təmizləmək</h2>
+  <p>Yeni sxem hazırdır. İndi mövcud 390 sətri <strong>yeni modelə çevirmək</strong> lazımdır — və burada bir maneə var.</p>
+
+  <div class="callout warn">
+    <span class="k">Maneə: qismən unikal indeks mövcud data ilə toqquşacaq</span>
+    Hazırda S004 üçün <strong>122 aktiv</strong> alert var (hamısında <span class="mono">hell_olundu = false</span>). Yeni indeks yalnız <strong>birinə</strong> icazə verir.<br><br>
+    Deməli: <strong>əvvəlcə datanı təmizləyirik, sonra indeksi yaradırıq.</strong> Sıra vacibdir.
+  </div>
+
+  <h3>Addım 1 — Vəziyyəti öyrənək (check before changing)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT
+  count(*)                                        AS umumi,
+  count(*) FILTER (WHERE hell_olundu = false)     AS aktiv,
+  count(DISTINCT (cihaz_kod, novu))               AS unikal_problem
+FROM xeberdarliq;
+"</span></pre>
+  </div>
+  <p>Gözlənilən: ~390 ümumi, ~390 aktiv, <strong>5 unikal problem</strong>. Yəni 390 sətir cəmi 5 problemi təsvir edir — nisbət <strong>78:1</strong>.</p>
+
+  <h3>Addım 2 — Yedək (məcburi!)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+mkdir -p _YEDEK
+
+pg_dump -p 5434 -d zavod_edge_db -t xeberdarliq \
+  &gt; _YEDEK/xeberdarliq_ders06_oncesi_$(date +%Y%m%d_%H%M).sql
+
+ls -lh _YEDEK/</pre>
+  </div>
+  <div class="callout err">
+    <span class="k">Bu addımı ATLAMAYIN</span>
+    Növbəti sorğu <strong>385 sətri siləcək</strong>. Yedək olmadan geri qaytarmaq mümkün deyil. İyul ayının 7-dəki hadisəni xatırlayın — bir baza itmişdi. Yedək ucuzdur, itki bahalıdır.
+  </div>
+
+  <h3>Addım 3 — Konsolidasiya: 390 → 5</h3>
+  <p>Hər <span class="mono">(cihaz_kod, novu)</span> qrupu üçün <strong>bir</strong> alert saxlayırıq — amma qalanlarındakı məlumatı ona <em>köçürürük</em>. Data itmir, <strong>birləşir</strong>.</p>
+
+  <div class="codebox">
+    <div class="cap">02_db/edge/06_alert_miqrasiya.sql</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- ============================================================
+-- 390 hadisə → 5 vəziyyət
+-- Hər (cihaz_kod, novu) üçün ən KÖHNƏ sətri saxlayır,
+-- qalanlarının məlumatını ona toplayır.
+-- ============================================================</span>
+
+BEGIN;
+
+<span class="cmt">-- 1) Hər qrup üçün aqreqat hesabla və ən köhnə sətrə yaz</span>
+WITH aqreqat AS (
+    SELECT
+        cihaz_kod,
+        novu,
+        min(id)              AS saxlanacaq_id,
+        count(*)             AS tetik_sayi,
+        min(olcme_vaxti)     AS acilma_vaxti,
+        max(qiymet)          AS pik_qiymet,
+        min(yaradilma)       AS ilk_yaradilma
+    FROM xeberdarliq
+    GROUP BY cihaz_kod, novu
+),
+son_qiymetler AS (
+    <span class="cmt">-- Hər qrupun ƏN SON qiymətini tap</span>
+    SELECT DISTINCT ON (cihaz_kod, novu)
+        cihaz_kod, novu, qiymet AS son_qiymet
+    FROM xeberdarliq
+    ORDER BY cihaz_kod, novu, olcme_vaxti DESC
+)
+UPDATE xeberdarliq x
+SET
+    tetik_sayi   = a.tetik_sayi,
+    acilma_vaxti = a.acilma_vaxti,
+    ilk_qiymet   = x.qiymet,
+    pik_qiymet   = a.pik_qiymet,
+    son_qiymet   = s.son_qiymet,
+    seviyye      = 'xeberdarliq'
+FROM aqreqat a
+JOIN son_qiymetler s
+  ON s.cihaz_kod = a.cihaz_kod AND s.novu = a.novu
+WHERE x.id = a.saxlanacaq_id;
+
+<span class="cmt">-- 2) Qalan dublikatları sil</span>
+DELETE FROM xeberdarliq
+WHERE id NOT IN (
+    SELECT min(id) FROM xeberdarliq GROUP BY cihaz_kod, novu
+);
+
+<span class="cmt">-- 3) Nəticəni gör</span>
+SELECT cihaz_kod, novu, seviyye, tetik_sayi,
+       acilma_vaxti, ilk_qiymet, pik_qiymet, son_qiymet, hell_olundu
+FROM xeberdarliq
+ORDER BY tetik_sayi DESC;
+
+COMMIT;</pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">Gözlənilən nəticə — 5 sətir</div>
+<pre> cihaz_kod |    novu     |   seviyye   | tetik_sayi |    acilma_vaxti     | pik_qiymet | hell_olundu
+-----------+-------------+-------------+------------+---------------------+------------+-------------
+ S004      | yuxari_hedd | xeberdarliq |        122 | 2026-07-11 16:48:21 |     9.4210 | f
+ S005      | yuxari_hedd | xeberdarliq |         90 | 2026-07-11 16:49:56 |    41.3300 | f
+ S003      | yuxari_hedd | xeberdarliq |         76 | 2026-07-11 16:53:21 |   598.7700 | f
+ S002      | yuxari_hedd | xeberdarliq |         76 | 2026-07-11 16:52:16 |    82.4100 | f
+ S001      | yuxari_hedd | xeberdarliq |         26 | 2026-07-11 12:01:00 |    42.7000 | f
+(5 rows)</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Nəyi qazandıq</span>
+    <strong>390 → 5.</strong> Amma diqqət edin — <em>məlumat itmədi, əksinə artdı</em>:<br><br>
+    • <span class="mono">tetik_sayi = 122</span> → problemin nə qədər davamlı olduğunu göstərir<br>
+    • <span class="mono">acilma_vaxti</span> → nə vaxtdan bəri<br>
+    • <span class="mono">pik_qiymet = 9.42</span> → <strong>ən pis an</strong> — 122 sətirdə bu, gizli idi<br><br>
+    Beş sətir, 390-dan <strong>daha çox informasiya</strong> daşıyır. Bax, düzgün model bu deməkdir.
+  </div>
+
+  <h3>Addım 4 — İndi indeksi yaradaq</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5434 -d zavod_edge_db -f 02_db/edge/05_alert_sxem.sql
+
+<span class="cmt"># Təsdiq</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"\d xeberdarliq"</span></pre>
+  </div>
+  <p>Artıq dublikat olmadığı üçün <span class="mono">CREATE UNIQUE INDEX</span> uğurla keçəcək.</p>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11 — Konfiqurasiya</p>
+  <h2>Hədləri hara yazaq?</h2>
+  <p>Dörd mexanizmin hər birinin parametri var: ardıcıllıq həddi, hysteresis zolağı, kritik faiz. Onları <strong>kodda sabit yazmaq olmaz</strong> — hər sensor tipi üçün fərqli olmalıdır.</p>
+
+  <div class="callout warn">
+    <span class="k">Niyə kodda yox?</span>
+    Vibrasiya üçün ardıcıllıq həddi <strong>2</strong> olmalıdır (yataq tez dağılır), temperatur üçün <strong>5</strong> (silo yavaş qızır). Kodda sabit yazsanız, hər dəyişiklik üçün <strong>servisi yenidən yazıб deploy etmək</strong> lazım gələcək.<br><br>
+    Bazada saxlasanız — operator <span class="mono">UPDATE</span> edir və <span class="mono">/cihazlar/yenile</span> çağırır. <strong>Servis restart olmadan.</strong>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">02_db/edge/05_alert_sxem.sql — davamı</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- ---------- 6. sensor_tipi-yə alert parametrləri ----------</span>
+
+ALTER TABLE sensor_tipi
+    ADD COLUMN IF NOT EXISTS ardicil_hedd   SMALLINT      NOT NULL DEFAULT 3,
+    ADD COLUMN IF NOT EXISTS hysteresis_faiz NUMERIC(5,2) NOT NULL DEFAULT 5.0,
+    ADD COLUMN IF NOT EXISTS kritik_faiz    NUMERIC(5,2)  NOT NULL DEFAULT 20.0;
+
+COMMENT ON COLUMN sensor_tipi.ardicil_hedd IS
+    'Neçə ardıcıl aşımdan sonra alert yaransın';
+COMMENT ON COLUMN sensor_tipi.hysteresis_faiz IS
+    'Bərpa həddi: diapazonun neçə faizi geri çəkilsin';
+COMMENT ON COLUMN sensor_tipi.kritik_faiz IS
+    'Həddi neçə faiz aşanda "kritik" sayılsın';
+
+<span class="cmt">-- ---------- 7. Tiplərə uyğun dəyərlər ----------</span>
+
+<span class="cmt">-- Vibrasiya: TEZ reaksiya (yataq dağıla bilər)</span>
+UPDATE sensor_tipi SET ardicil_hedd = 2, kritik_faiz = 15.0
+WHERE kod = 'VIBRASIYA';
+
+<span class="cmt">-- Temperatur: yavaş dəyişir, səbirli olaq</span>
+UPDATE sensor_tipi SET ardicil_hedd = 5, hysteresis_faiz = 6.0
+WHERE kod = 'TEMP';
+
+<span class="cmt">-- Çəki: səs-küylü sensor, geniş hysteresis</span>
+UPDATE sensor_tipi SET ardicil_hedd = 3, hysteresis_faiz = 8.0
+WHERE kod = 'CEKI';
+
+<span class="cmt">-- Enerji: qəfil sıçrayışlar normaldır (mühərrik işə düşür)</span>
+UPDATE sensor_tipi SET ardicil_hedd = 4
+WHERE kod = 'ENERJI';
+
+<span class="cmt">-- Yoxla</span>
+SELECT kod, ad, min_hedd, max_hedd, vahid,
+       ardicil_hedd, hysteresis_faiz, kritik_faiz
+FROM sensor_tipi ORDER BY kod;</pre>
+  </div>
+
+  <h3>Hesablama düsturları</h3>
+  <div class="codebox">
+<pre><span class="cmt"># Kodda (Hissə B) belə hesablanacaq:</span>
+
+diapazon    = max_hedd - min_hedd
+
+<span class="cmt"># Bərpa həddi (hysteresis)</span>
+berpa_yuxari = max_hedd - diapazon * (hysteresis_faiz / 100)
+berpa_asagi  = min_hedd + diapazon * (hysteresis_faiz / 100)
+
+<span class="cmt"># Kritik hədd</span>
+kritik_yuxari = max_hedd * (1 + kritik_faiz / 100)
+kritik_asagi  = min_hedd * (1 - kritik_faiz / 100)
+
+<span class="cmt"># TEMP nümunəsi: min=-5, max=35, hysteresis=6%, kritik=20%
+#   diapazon      = 40
+#   berpa_yuxari  = 35 - 40*0.06  = 32.6   ← alert 32.6-da bağlanır
+#   kritik_yuxari = 35 * 1.20     = 42.0   ← 42-dən yuxarı = KRİTİK</span></pre>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Yoxlama və Hissə B</h2>
+
+  <h3>Bu hissədə nə etdik</h3>
+  <ul class="check">
+    <li>Alert selinin kök səbəbini tapdıq: <strong>hadisə modeli</strong> əvəzinə <strong>vəziyyət modeli</strong> lazımdır.</li>
+    <li>Dörd mexanizmi öyrəndik: debouncing, hysteresis, ardıcıllıq, səviyyələr.</li>
+    <li><span class="mono">xeberdarliq</span> cədvəlinə 7 yeni sütun əlavə etdik.</li>
+    <li><strong>Qismən unikal indeks</strong> ilə debouncing-i bazada məcburi etdik.</li>
+    <li>390 alerti <strong>5-ə</strong> konsolidasiya etdik — məlumat itirmədən, əksinə zənginləşdirərək.</li>
+    <li>Alert parametrlərini <span class="mono">sensor_tipi</span> cədvəlinə köçürdük — kodda sabit deyil.</li>
+  </ul>
+
+  <h3>Yoxlama siyahısı</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># 1) Yeni sütunlar var?</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"\d xeberdarliq"</span>
+
+<span class="cmt"># 2) Qismən unikal indeks var?</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT indexname FROM pg_indexes
+WHERE tablename = 'xeberdarliq';"</span>
+
+<span class="cmt"># 3) Neçə alert qaldı? (5 olmalıdır)</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT count(*) FROM xeberdarliq;"</span>
+
+<span class="cmt"># 4) Alert parametrləri yükləndi?</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT kod, ardicil_hedd, hysteresis_faiz, kritik_faiz
+FROM sensor_tipi ORDER BY kod;"</span>
+
+<span class="cmt"># 5) İndeks həqiqətən işləyir? (ikinci aktiv alert RƏDD olunmalıdır)</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+INSERT INTO xeberdarliq (cihaz_kod, olcme_vaxti, qiymet, novu, mesaj)
+VALUES ('S004', now(), 99, 'yuxari_hedd', 'test dublikat');"</span>
+<span class="cmt"># → ERROR: duplicate key value violates unique constraint
+#   BU XƏTA GÖZLƏNİLƏNDİR — indeks işləyir!</span></pre>
+  </div>
+
+  <div class="callout">
+    <span class="k">Hissə B-də nə edəcəyik</span>
+    Baza hazırdır — indi <strong>kod</strong>:<br><br>
+    <strong>①</strong> <span class="mono">03_src/api/alert.py</span> — vəziyyət maşınının Python realizasiyası: ardıcıllıq sayğacları, hysteresis yoxlaması, upsert;<br>
+    <strong>②</strong> <span class="mono">yazici.py</span>-nin yenidən qurulması — sadə <span class="mono">if qiymet > mx</span> yerinə alert mühərriki;<br>
+    <strong>③</strong> <strong><span class="mono">cihaz_susur</span></strong> — LWT status topic-lərini dinləmək və susan cihazı tutmaq (Dərs 04-A-dakı vəd);<br>
+    <strong>④</strong> <strong>Bildiriş</strong> — kritik alert operatora (e-poçt / Telegram);<br>
+    <strong>⑤</strong> Yeni endpoint-lər: <span class="mono">/xeberdarliq/aktiv</span>, <span class="mono">/xeberdarliq/{id}/hell-et</span>;<br>
+    <strong>⑥</strong> Testlər: alert selinin <strong>həqiqətən</strong> susduğunu sübut etmək.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 06-A — Anomaliya: Alert Vəziyyət Maşını və Baza Modeli</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>

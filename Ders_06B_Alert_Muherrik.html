@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 06-B — Alert Mühərriki: Kod, Susan Cihaz və Bildiriş</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524;
+    --blue:#5aa9e6; --green:#5bd08a; --violet:#a78bfa;
+    --danger:#e5695f; --danger-deep:#c0453a;
+    --paper:#f6f4ef; --paper-2:#efece4; --ink:#1a222c;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1200px 400px at 78% -10%,rgba(229,105,95,.16),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:66px 32px 54px;border-bottom:3px solid var(--danger);}
+  .wrap{max-width:980px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--danger);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(29px,4.8vw,48px);line-height:1.08;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:770px;margin:0;line-height:1.7;}
+  .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(229,105,95,.12);
+    border:1px solid rgba(229,105,95,.35);color:#f2b0aa;padding:6px 13px;border-radius:2px;}
+
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:980px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;} .toc a{color:var(--danger-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:980px;margin:0 auto;padding:0 32px;}
+  section{padding:46px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--danger-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.3vw,32px);line-height:1.15;margin:0 0 20px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;margin:32px 0 10px;}
+  h4{font-family:"Oswald",Arial,sans-serif;font-weight:500;font-size:17px;margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:17px 22px;border-radius:0 4px 4px 0;margin:22px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:#b9781a;} .callout.why .k{color:#6d4fc4;} .callout.err .k{color:var(--danger-deep);}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--danger);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+
+  .codebox{position:relative;margin:20px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.7;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .fn{color:var(--blue);} .nm{color:#c3a6f0;}
+  .copybtn{position:absolute;top:32px;right:10px;background:rgba(229,105,95,.14);color:#f2b0aa;
+    border:1px solid rgba(229,105,95,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(229,105,95,.28);}
+
+  .expl{margin:18px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;}
+  .expl .row{display:flex;border-bottom:1px solid #e8e3d8;}
+  .expl .row:last-child{border-bottom:none;}
+  .expl .row:nth-child(even){background:var(--paper-2);}
+  .expl .c{flex:0 0 40%;padding:11px 14px;font-family:ui-monospace,Menlo,monospace;
+    font-size:12.5px;color:#0b5f57;background:rgba(13,148,136,.05);
+    border-right:1px solid #e8e3d8;word-break:break-word;}
+  .expl .d{flex:1;padding:11px 14px;font-size:14.5px;line-height:1.55;}
+
+  .arch{background:var(--graphite);border-radius:10px;padding:30px 24px;margin:26px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--danger);margin-bottom:16px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:13px 14px;
+    text-align:center;min-width:118px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;color:#fff;text-transform:uppercase;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:11px;color:#8fa6ba;display:block;margin-top:3px;}
+  .bx.hl{border-color:var(--danger);box-shadow:0 0 0 1px rgba(229,105,95,.3);}
+  .ar{color:var(--danger);font-size:20px;}
+
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{padding:12px 16px 12px 44px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--green);}
+  .check li::before{content:"✓";position:absolute;left:15px;top:10px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;}
+  .next{list-style:none;padding:0;margin:20px 0;}
+  .next li{padding:13px 16px 13px 44px;position:relative;background:#eef5fb;
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--blue);}
+  .next li::before{content:"→";position:absolute;left:16px;top:12px;color:var(--blue);
+    font-weight:bold;font-size:17px;font-family:Arial,sans-serif;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--danger);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+  @media (max-width:700px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .expl .row{flex-direction:column;} .expl .c{flex:1;border-right:none;border-bottom:1px solid #e8e3d8;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Dərs 06 — Hissə B</p>
+    <h1>Alert Mühərriki: Kod, Susan Cihaz və Bildiriş</h1>
+    <p class="lede">Hissə A-da baza modelini qurduq — indi <strong>kod</strong>. Vəziyyət maşınını Python-da yazır, <code>yazici.py</code>-nin sadəlövh <code>if qiymet &gt; mx</code> sətrini alert mühərriki ilə əvəz edir, <strong>susan cihazı</strong> LWT ilə tuturuq (Dərs 04-A-dakı vəd) və kritik alertləri operatora çatdırırıq. Sonda alert selinin həqiqətən susduğunu <em>sübut edirik</em>.</p>
+    <div class="meta">
+      <span class="chip">Alert mühərriki</span>
+      <span class="chip">Upsert</span>
+      <span class="chip">cihaz_susur · LWT</span>
+      <span class="chip">Bildiriş</span>
+      <span class="chip">Endpoint-lər</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Memarlıq: alert qatı hara düşür</a></li>
+    <li><a href="#s2">Hədd keşinin genişləndirilməsi</a></li>
+    <li><a href="#s3">alert.py — vəziyyət maşını</a></li>
+    <li><a href="#s4">Upsert: bir SQL, iki əməliyyat</a></li>
+    <li><a href="#s5">Alertin bağlanması</a></li>
+    <li><a href="#s6">yazici.py-nin yenidən qurulması</a></li>
+    <li><a href="#s7">cihaz_susur: LWT-nin vədi</a></li>
+    <li><a href="#s8">Bildiriş: kritik alert operatora</a></li>
+    <li><a href="#s9">Yeni endpoint-lər</a></li>
+    <li><a href="#s10">Test: alert seli susdumu?</a></li>
+    <li><a href="#s11">Tipik xətalar</a></li>
+    <li><a href="#s12">Yekun və Dərs 07</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01 — Memarlıq</p>
+  <h2>Alert qatı hara düşür</h2>
+  <p>Hazırda alert məntiqi <code class="inl">yazici.py</code>-nin içində, iki <code class="inl">if</code> sətrindədir. Onu <strong>ayrıca modula</strong> çıxarırıq.</p>
+
+  <div class="arch">
+    <div class="lbl">Yeni axın — alert mühərriki ayrıca qatdır</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">mqtt.py</span><span class="s">validasiya</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">Növbə</span><span class="s">asyncio.Queue</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">yazici.py</span><span class="s">batch INSERT</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">alert.py</span><span class="s">vəziyyət maşını</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">xeberdarliq</span><span class="s">upsert</span></div>
+    </div>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə ayrıca modul?</span>
+    <strong>①</strong> Alert məntiqi mürəkkəbləşir (ardıcıllıq, hysteresis, səviyyə, susma) — <code class="inl">yazici.py</code> onunla birlikdə 300 sətrə çatardı və oxunmaz olardı.<br><br>
+    <strong>②</strong> Alert məntiqi <em>ölçmə yazmaqdan asılı deyil</em>. Gələcəkdə onu <span class="mono">cihaz_susur</span> yoxlaması da çağıracaq (bölmə 07) — orada heç bir ölçmə yoxdur.<br><br>
+    <strong>③</strong> Test etmək asanlaşır: alert məntiqini bazasız, təmiz funksiya kimi yoxlaya bilərsiniz.
+  </div>
+
+  <h3>Yeni fayl strukturu</h3>
+  <div class="codebox">
+<pre>03_src/api/
+├── __init__.py
+├── konfiq.py
+├── modeller.py
+├── baza.py
+├── mqtt.py
+├── yazici.py
+├── loglama.py
+├── <span class="kw">alert.py</span>        <span class="cmt">← YENİ: vəziyyət maşını</span>
+├── <span class="kw">bildiris.py</span>     <span class="cmt">← YENİ: e-poçt / Telegram</span>
+├── <span class="kw">nezaretci.py</span>    <span class="cmt">← YENİ: susan cihazı tutur</span>
+└── main.py</pre>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02 — Keş</p>
+  <h2>Hədd keşinin genişləndirilməsi</h2>
+  <p>Hazırda <code class="inl">HEDLER</code> keşi hər cihaz üçün üç dəyər saxlayır: <span class="mono">(min, max, vahid)</span>. İndi alert parametrləri də lazımdır.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/baza.py — hedleri_yukle() əvəzlənir</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Köhnə: HEDLER = {"S001": (min, max, vahid)}
+# Yeni:  HEDLER = {"S001": {tam parametr dəsti}}</span>
+
+HEDLER: dict[str, dict] = {}
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">hedleri_yukle</span>() -&gt; int:
+    <span class="st">"""
+    Cihaz hədlərini VƏ alert parametrlərini yükləyir.
+    Bərpa/kritik hədləri BURADA hesablanır — hər ölçmədə yox.
+    """</span>
+    sql = <span class="st">"""
+        SELECT c.kod, t.kod AS tip, t.vahid,
+               t.min_hedd, t.max_hedd,
+               t.ardicil_hedd, t.hysteresis_faiz, t.kritik_faiz
+        FROM cihaz c
+        JOIN sensor_tipi t ON c.sensor_tipi_kod = t.kod
+        WHERE c.status = 'aktiv'
+    """</span>
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(sql)
+            setirler = <span class="kw">await</span> cur.fetchall()
+
+    HEDLER.clear()
+    <span class="kw">for</span> (kod, tip, vahid, mn, mx,
+         ardicil, hyst_faiz, kritik_faiz) <span class="kw">in</span> setirler:
+
+        mn, mx = float(mn), float(mx)
+        diapazon = mx - mn
+        hyst = float(hyst_faiz) / <span class="nm">100</span>
+        krit = float(kritik_faiz) / <span class="nm">100</span>
+
+        HEDLER[kod] = {
+            <span class="st">"tip"</span>:   tip,
+            <span class="st">"vahid"</span>: vahid,
+            <span class="st">"min"</span>:   mn,
+            <span class="st">"max"</span>:   mx,
+
+            <span class="cmt"># Hysteresis: alert BU dəyərlərdə bağlanır</span>
+            <span class="st">"berpa_yuxari"</span>: mx - diapazon * hyst,   <span class="cmt"># 35 - 40*0.06 = 32.6</span>
+            <span class="st">"berpa_asagi"</span>:  mn + diapazon * hyst,   <span class="cmt"># -5 + 40*0.06 = -2.6</span>
+
+            <span class="cmt"># Kritik: bu dəyərlərdən sonra səviyyə = "kritik"</span>
+            <span class="st">"kritik_yuxari"</span>: mx * (<span class="nm">1</span> + krit),          <span class="cmt"># 35 * 1.20 = 42.0</span>
+            <span class="st">"kritik_asagi"</span>:  mn * (<span class="nm">1</span> - krit) <span class="kw">if</span> mn &gt; <span class="nm">0</span>
+                               <span class="kw">else</span> mn * (<span class="nm">1</span> + krit),
+
+            <span class="st">"ardicil_hedd"</span>: int(ardicil),
+        }
+
+    <span class="kw">return</span> len(HEDLER)</pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Diqqət: <span class="mono">kritik_asagi</span>-da işarə tələsi</span>
+    <span class="mono">min_hedd</span> <strong>mənfi</strong> ola bilər (temperatur: −5 °C). Onda <span class="mono">mn * (1 - 0.20)</span> = <span class="mono">−5 × 0.8 = −4</span> — bu, <strong>səhvdir</strong>: −4, −5-dən <em>yuxarıdır</em>, yəni kritik hədd əsl həddən <em>daha yumşaqdır</em>.<br><br>
+    Düzgün: mənfi hədd üçün <span class="mono">mn * (1 + 0.20)</span> = <span class="mono">−6</span> — daha aşağı, daha sərt. Yuxarıdakı kodda <span class="mono">if mn &gt; 0</span> yoxlaması məhz bunu edir.<br><br>
+    Bu, kiçik detaldır, amma yoxlanmasa alert <em>heç vaxt kritikə çevrilməzdi</em> və heç kim səbəbini tapmazdı.
+  </div>
+
+  <div class="codebox">
+    <div class="cap">Nəticə — TEMP (S001) üçün</div>
+<pre>{
+  <span class="st">"tip"</span>: <span class="st">"TEMP"</span>, <span class="st">"vahid"</span>: <span class="st">"°C"</span>,
+  <span class="st">"min"</span>: -5.0,           <span class="st">"max"</span>: 35.0,
+  <span class="st">"berpa_asagi"</span>: -2.6,  <span class="st">"berpa_yuxari"</span>: 32.6,   <span class="cmt">// alert BURADA bağlanır</span>
+  <span class="st">"kritik_asagi"</span>: -6.0, <span class="st">"kritik_yuxari"</span>: 42.0,  <span class="cmt">// buradan sonra KRİTİK</span>
+  <span class="st">"ardicil_hedd"</span>: 5                              <span class="cmt">// 5 ardıcıl aşım lazımdır</span>
+}</pre>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03 — Mühərrik</p>
+  <h2>alert.py — vəziyyət maşını</h2>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/alert.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""
+Alert mühərriki — Dərs 06.
+Vəziyyət maşını: NORMAL → GÖZLƏMƏ → AKTİV → BAĞLANMIŞ
+Dörd mexanizm: ardıcıllıq, debouncing, hysteresis, səviyyələr.
+"""</span>
+<span class="kw">import</span> logging
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+
+<span class="kw">from</span> .baza <span class="kw">import</span> HEDLER
+
+log = logging.getLogger(<span class="st">"zarat.alert"</span>)
+
+<span class="cmt"># Ardıcıllıq sayğacları — YADDAŞDA saxlanır
+# {"S001": {"yuxari_hedd": 2, "asagi_hedd": 0}}</span>
+SAYGAC: dict[str, dict[str, int]] = {}
+
+ALERT_METRIKA = {<span class="st">"acilan"</span>: <span class="nm">0</span>, <span class="st">"yenilenen"</span>: <span class="nm">0</span>,
+                 <span class="st">"baglanan"</span>: <span class="nm">0</span>, <span class="st">"kritik"</span>: <span class="nm">0</span>, <span class="st">"udulan"</span>: <span class="nm">0</span>}
+
+
+@dataclass
+<span class="kw">class</span> <span class="fn">AlertEmri</span>:
+    <span class="st">"""Alert mühərrikinin qərarı — yazıcı bunu icra edəcək."""</span>
+    emr: str            <span class="cmt"># "ac_ve_ya_yenile" | "bagla" | "hec_ne"</span>
+    cihaz_kod: str
+    novu: str <span class="kw">or</span> <span class="kw">None</span>   <span class="cmt"># "yuxari_hedd" | "asagi_hedd"</span>
+    seviyye: str = <span class="st">"xeberdarliq"</span>
+    qiymet: float = <span class="nm">0.0</span>
+    olcme_vaxti = <span class="kw">None</span>
+    mesaj: str = <span class="st">""</span>
+
+
+<span class="kw">def</span> <span class="fn">sayqac_al</span>(kod: str, novu: str) -&gt; int:
+    <span class="kw">return</span> SAYGAC.setdefault(kod, {}).get(novu, <span class="nm">0</span>)
+
+
+<span class="kw">def</span> <span class="fn">sayqac_artir</span>(kod: str, novu: str) -&gt; int:
+    d = SAYGAC.setdefault(kod, {})
+    d[novu] = d.get(novu, <span class="nm">0</span>) + <span class="nm">1</span>
+    <span class="kw">return</span> d[novu]
+
+
+<span class="kw">def</span> <span class="fn">sayqac_sifirla</span>(kod: str, novu: str) -&gt; <span class="kw">None</span>:
+    SAYGAC.setdefault(kod, {})[novu] = <span class="nm">0</span>
+
+
+<span class="kw">def</span> <span class="fn">qiymetlendir</span>(kod: str, qiymet: float, vaxt) -&gt; AlertEmri:
+    <span class="st">"""
+    Bir ölçməni qiymətləndirir və NƏ EDİLMƏLİ olduğunu qaytarır.
+    Bazaya YAZMIR — yalnız QƏRAR verir. Test etmək asandır.
+    """</span>
+    h = HEDLER.get(kod)
+    <span class="kw">if</span> h <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="kw">return</span> AlertEmri(<span class="st">"hec_ne"</span>, kod, <span class="kw">None</span>)
+
+    vahid = h[<span class="st">"vahid"</span>]
+
+    <span class="cmt"># ---------- 1. YUXARI HƏDD ----------</span>
+    <span class="kw">if</span> qiymet &gt; h[<span class="st">"max"</span>]:
+        say = sayqac_artir(kod, <span class="st">"yuxari_hedd"</span>)
+
+        <span class="cmt"># ARDICILLIQ: hələ kifayət deyil → SUS</span>
+        <span class="kw">if</span> say &lt; h[<span class="st">"ardicil_hedd"</span>]:
+            ALERT_METRIKA[<span class="st">"udulan"</span>] += <span class="nm">1</span>
+            log.debug(<span class="st">"%s: aşım %d/%d — hələ alert yox"</span>,
+                      kod, say, h[<span class="st">"ardicil_hedd"</span>])
+            <span class="kw">return</span> AlertEmri(<span class="st">"hec_ne"</span>, kod, <span class="st">"yuxari_hedd"</span>)
+
+        <span class="cmt"># SƏVİYYƏ: kritikdirmi?</span>
+        seviyye = <span class="st">"kritik"</span> <span class="kw">if</span> qiymet &gt;= h[<span class="st">"kritik_yuxari"</span>] <span class="kw">else</span> <span class="st">"xeberdarliq"</span>
+
+        <span class="kw">return</span> AlertEmri(
+            emr=<span class="st">"ac_ve_ya_yenile"</span>, cihaz_kod=kod, novu=<span class="st">"yuxari_hedd"</span>,
+            seviyye=seviyye, qiymet=qiymet, olcme_vaxti=vaxt,
+            mesaj=<span class="st">f"{kod}: {qiymet} {vahid} > maks {h['max']} {vahid}"</span>,
+        )
+
+    <span class="cmt"># ---------- 2. AŞAĞI HƏDD ----------</span>
+    <span class="kw">if</span> qiymet &lt; h[<span class="st">"min"</span>]:
+        say = sayqac_artir(kod, <span class="st">"asagi_hedd"</span>)
+
+        <span class="kw">if</span> say &lt; h[<span class="st">"ardicil_hedd"</span>]:
+            ALERT_METRIKA[<span class="st">"udulan"</span>] += <span class="nm">1</span>
+            <span class="kw">return</span> AlertEmri(<span class="st">"hec_ne"</span>, kod, <span class="st">"asagi_hedd"</span>)
+
+        seviyye = <span class="st">"kritik"</span> <span class="kw">if</span> qiymet &lt;= h[<span class="st">"kritik_asagi"</span>] <span class="kw">else</span> <span class="st">"xeberdarliq"</span>
+
+        <span class="kw">return</span> AlertEmri(
+            emr=<span class="st">"ac_ve_ya_yenile"</span>, cihaz_kod=kod, novu=<span class="st">"asagi_hedd"</span>,
+            seviyye=seviyye, qiymet=qiymet, olcme_vaxti=vaxt,
+            mesaj=<span class="st">f"{kod}: {qiymet} {vahid} < min {h['min']} {vahid}"</span>,
+        )
+
+    <span class="cmt"># ---------- 3. HYSTERESIS ZOLAĞI ----------
+    # Dəyər hədlər arasındadır, AMMA bərpa həddinə çatmayıb.
+    # → alert AÇIQ qalmalıdır. Heç nə etmirik, sayğacı da SIFIRLAMIRIQ.</span>
+    <span class="kw">if</span> qiymet &gt; h[<span class="st">"berpa_yuxari"</span>] <span class="kw">or</span> qiymet &lt; h[<span class="st">"berpa_asagi"</span>]:
+        <span class="kw">return</span> AlertEmri(<span class="st">"hec_ne"</span>, kod, <span class="kw">None</span>)
+
+    <span class="cmt"># ---------- 4. TAM NORMAL → ALERTLƏRİ BAĞLA ----------</span>
+    sayqac_sifirla(kod, <span class="st">"yuxari_hedd"</span>)
+    sayqac_sifirla(kod, <span class="st">"asagi_hedd"</span>)
+
+    <span class="kw">return</span> AlertEmri(
+        emr=<span class="st">"bagla"</span>, cihaz_kod=kod, novu=<span class="kw">None</span>,
+        qiymet=qiymet, olcme_vaxti=vaxt,
+    )</pre>
+  </div>
+
+  <h3>Kritik incəliklərin izahı</h3>
+  <div class="expl">
+    <div class="row">
+      <div class="c">3-cü blok — hysteresis zolağı</div>
+      <div class="d"><strong>Bu, funksiyanın ən vacib hissəsidir.</strong> Dəyər həddi keçib (35-dən aşağı), amma bərpa həddinə (32.6) hələ düşməyib.<br>
+        <strong>Nə edirik:</strong> <span class="mono">"hec_ne"</span> qaytarırıq — alert <em>açıq qalır</em>.<br>
+        <strong>Sayğacı niyə SIFIRLAMIRIQ:</strong> əgər sıfırlasaq və dəyər yenidən 35-i keçsə, ardıcıllıq sayğacı yenidən 0-dan başlayardı — və 5 ölçmə gözləmək lazım gələrdi. Halbuki problem heç bitməmişdi. Zolaqda sayğac <strong>toxunulmaz</strong> qalır.</div>
+    </div>
+    <div class="row">
+      <div class="c">4-cü blok — sayğacların sıfırlanması</div>
+      <div class="d">Yalnız <strong>tam normal</strong> zonada sıfırlanır (bərpa hədləri arasında). Bu, "problem həqiqətən bitdi" siqnalıdır.</div>
+    </div>
+    <div class="row">
+      <div class="c">qiymetlendir() bazaya YAZMIR</div>
+      <div class="d"><strong>Şüurlu dizayn.</strong> Funksiya yalnız <em>qərar verir</em> və <span class="mono">AlertEmri</span> qaytarır. Bazaya yazmaq yazıcının işidir.<br>
+        <strong>Faydası:</strong> bu funksiyanı bazasız test etmək olar — sadəcə çağırıб nəticəyə baxırsınız. Yan təsiri olmayan (pure) funksiya həmişə test-dostudur.</div>
+    </div>
+    <div class="row">
+      <div class="c">SAYGAC — yaddaşda</div>
+      <div class="d">Ardıcıllıq sayğacları bazada yox, <strong>yaddaşdadır</strong>.<br>
+        <strong>Niyə:</strong> hər ölçmədə bazaya yazsaq, saniyədə onlarla lüzumsuz <span class="mono">UPDATE</span> olardı.<br>
+        <strong>Kompromis:</strong> servis restart olsa, sayğaclar sıfırlanır — yəni alert bir neçə ölçmə gec açılar. Qəbul edilə bilən itki. <em>Aktiv alertlər isə bazadadır və itmir.</em></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04 — Upsert</p>
+  <h2>Bir SQL: yoxdursa yarat, varsa yenilə</h2>
+  <p>Debouncing-i kodda belə yaza bilərdik:</p>
+
+  <div class="codebox">
+    <div class="cap">SƏHV yanaşma — yarış şəraiti (race condition)</div>
+<pre><span class="cmt"># 1) Aktiv alert var?</span>
+aktiv = <span class="kw">await</span> aktiv_alert_tap(kod, novu)
+
+<span class="kw">if</span> aktiv:
+    <span class="kw">await</span> alerti_yenile(aktiv.id)     <span class="cmt"># 2a) yenilə</span>
+<span class="kw">else</span>:
+    <span class="kw">await</span> alert_yarat(kod, novu)     <span class="cmt"># 2b) yarat</span>
+
+<span class="cmt"># PROBLEM: 1 və 2 arasında BAŞQA bir proses alert yarada bilər
+#          → iki alert → indeks xətası → dəstə itir</span></pre>
+  </div>
+
+  <p>Düzgün yanaşma: <strong>upsert</strong> — bir atomik SQL.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/alert.py — davamı</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>SQL_UPSERT = <span class="st">"""
+INSERT INTO xeberdarliq (
+    cihaz_kod, olcme_vaxti, qiymet, novu, mesaj,
+    seviyye, acilma_vaxti, tetik_sayi,
+    ilk_qiymet, son_qiymet, pik_qiymet, hell_olundu
+)
+VALUES (%(kod)s, %(vaxt)s, %(qiymet)s, %(novu)s, %(mesaj)s,
+        %(seviyye)s, %(vaxt)s, 1,
+        %(qiymet)s, %(qiymet)s, %(qiymet)s, FALSE)
+
+ON CONFLICT (cihaz_kod, novu) WHERE hell_olundu = FALSE
+DO UPDATE SET
+    tetik_sayi = xeberdarliq.tetik_sayi + 1,
+    son_qiymet = EXCLUDED.son_qiymet,
+    qiymet     = EXCLUDED.qiymet,
+    mesaj      = EXCLUDED.mesaj,
+
+    -- Pik: yuxarı hədd üçün MAKS, aşağı hədd üçün MİN
+    pik_qiymet = CASE
+        WHEN xeberdarliq.novu = 'yuxari_hedd'
+            THEN GREATEST(xeberdarliq.pik_qiymet, EXCLUDED.pik_qiymet)
+        ELSE LEAST(xeberdarliq.pik_qiymet, EXCLUDED.pik_qiymet)
+    END,
+
+    -- Səviyyə yalnız YÜKSƏLƏ bilər, enməz
+    seviyye = CASE
+        WHEN EXCLUDED.seviyye = 'kritik' THEN 'kritik'
+        ELSE xeberdarliq.seviyye
+    END
+
+RETURNING id, (xmax = 0) AS yeni_yaradildi, seviyye, tetik_sayi
+"""</span>
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">alerti_yaz</span>(conn, emr: AlertEmri) -&gt; dict | <span class="kw">None</span>:
+    <span class="st">"""Upsert icra edir. Nəticəni qaytarır — bildiriş üçün lazımdır."""</span>
+    <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+        <span class="kw">await</span> cur.execute(SQL_UPSERT, {
+            <span class="st">"kod"</span>:     emr.cihaz_kod,
+            <span class="st">"vaxt"</span>:    emr.olcme_vaxti,
+            <span class="st">"qiymet"</span>:  emr.qiymet,
+            <span class="st">"novu"</span>:    emr.novu,
+            <span class="st">"mesaj"</span>:   emr.mesaj,
+            <span class="st">"seviyye"</span>: emr.seviyye,
+        })
+        setir = <span class="kw">await</span> cur.fetchone()
+
+    <span class="kw">if</span> setir <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="kw">return</span> <span class="kw">None</span>
+
+    alert_id, yeni, seviyye, tetik = setir
+
+    <span class="kw">if</span> yeni:
+        ALERT_METRIKA[<span class="st">"acilan"</span>] += <span class="nm">1</span>
+        log.warning(<span class="st">"ALERT AÇILDI [%s] %s — %s"</span>,
+                    seviyye.upper(), emr.cihaz_kod, emr.mesaj)
+    <span class="kw">else</span>:
+        ALERT_METRIKA[<span class="st">"yenilenen"</span>] += <span class="nm">1</span>
+        log.debug(<span class="st">"Alert yeniləndi: %s (tətik %d)"</span>, emr.cihaz_kod, tetik)
+
+    <span class="kw">if</span> seviyye == <span class="st">"kritik"</span>:
+        ALERT_METRIKA[<span class="st">"kritik"</span>] += <span class="nm">1</span>
+
+    <span class="kw">return</span> {<span class="st">"id"</span>: alert_id, <span class="st">"yeni"</span>: yeni,
+            <span class="st">"seviyye"</span>: seviyye, <span class="st">"tetik_sayi"</span>: tetik}</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row">
+      <div class="c">ON CONFLICT (...) WHERE hell_olundu = FALSE</div>
+      <div class="d"><strong>Bu <span class="mono">WHERE</span> Hissə A-dakı qismən indeksə istinad edir.</strong> Onsuz PostgreSQL hansı indeksi nəzərdə tutduğunuzu bilməz və xəta verər. Yəni <em>bazadakı indeks</em> ilə <em>kodakı upsert</em> bir-birinə bağlıdır — biri olmasa, digəri işləməz.</div>
+    </div>
+    <div class="row">
+      <div class="c">xmax = 0</div>
+      <div class="d"><strong>PostgreSQL hiyləsi.</strong> Bu, "sətir <em>yeni</em> yaradıldımı, yoxsa <em>yeniləndi</em>mi?" sualına cavab verir. <span class="mono">xmax = 0</span> → yeni sətir.<br>
+        <strong>Niyə lazımdır:</strong> bildiriş yalnız <strong>yeni açılan</strong> alert üçün göndərilməlidir. Hər yeniləmədə e-poçt göndərsək — yenidən sel yaranar, sadəcə poçt qutusunda.</div>
+    </div>
+    <div class="row">
+      <div class="c">pik_qiymet — CASE ilə</div>
+      <div class="d">Yuxarı hədd alerti üçün pik = <strong>ən böyük</strong> dəyər (<span class="mono">GREATEST</span>). Aşağı hədd üçün pik = <strong>ən kiçik</strong> (<span class="mono">LEAST</span>) — çünki orada "ən pis" daha aşağı deməkdir.</div>
+    </div>
+    <div class="row">
+      <div class="c">seviyye — yalnız yüksəlir</div>
+      <div class="d">Alert <span class="mono">kritik</span> olubsa, sonrakı ölçmə 36 °C olsa belə (kritik həddin altında), səviyyə <strong>kritik qalır</strong>.<br>
+        <strong>Niyə:</strong> problem <em>kritik həddə çatıb</em> — bu fakt itməməlidir. Operator alerti bağlayanda tam hekayəni görməlidir.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05 — Bağlanma</p>
+  <h2>Alertin bağlanması</h2>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/alert.py — davamı</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>SQL_BAGLA = <span class="st">"""
+UPDATE xeberdarliq
+SET hell_olundu    = TRUE,
+    baglanma_vaxti = %(vaxt)s,
+    son_qiymet     = %(qiymet)s
+WHERE cihaz_kod = %(kod)s
+  AND hell_olundu = FALSE
+  AND novu IN ('yuxari_hedd', 'asagi_hedd')
+RETURNING id, novu, seviyye, tetik_sayi,
+          (baglanma_vaxti - acilma_vaxti) AS muddet
+"""</span>
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">alertleri_bagla</span>(conn, emr: AlertEmri) -&gt; list:
+    <span class="st">"""
+    Cihazın hədd alertlərini bağlayır (dəyər normala qayıdıb).
+    cihaz_susur alertinə TOXUNMUR — onu nezaretci idarə edir.
+    """</span>
+    <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+        <span class="kw">await</span> cur.execute(SQL_BAGLA, {
+            <span class="st">"kod"</span>:    emr.cihaz_kod,
+            <span class="st">"vaxt"</span>:   emr.olcme_vaxti,
+            <span class="st">"qiymet"</span>: emr.qiymet,
+        })
+        baglananlar = <span class="kw">await</span> cur.fetchall()
+
+    <span class="kw">for</span> alert_id, novu, seviyye, tetik, muddet <span class="kw">in</span> baglananlar:
+        ALERT_METRIKA[<span class="st">"baglanan"</span>] += <span class="nm">1</span>
+        log.info(<span class="st">"ALERT BAĞLANDI %s [%s] — %s ərzində, %d tətik"</span>,
+                 emr.cihaz_kod, novu, muddet, tetik)
+
+    <span class="kw">return</span> baglananlar</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə <span class="mono">novu IN ('yuxari_hedd', 'asagi_hedd')</span>?</span>
+    Cihaz normal dəyər göndərirsə, onun <strong>hədd</strong> alertləri bağlanmalıdır. Amma <span class="mono">cihaz_susur</span> alerti <strong>ayrı məntiqlə</strong> idarə olunur — o, mesaj <em>gəldiyi</em> anda bağlanır (dəyər normal olmasa da).<br><br>
+    Bu şərt olmasa: cihaz susub (alert var), sonra <em>anomal</em> dəyər göndərib — susma alerti bağlanmazdı, çünki dəyər normal deyil. Halbuki cihaz <strong>danışır</strong>! Məntiq səhv olardı.<br><br>
+    Susma alertini bölmə 07-də ayrıca bağlayacağıq.
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06 — İnteqrasiya</p>
+  <h2>yazici.py-nin yenidən qurulması</h2>
+  <p>İki <code class="inl">if</code> sətri gedir, alert mühərriki gəlir.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/yazici.py — deste_yaz() əvəzlənir</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="kw">from</span> . <span class="kw">import</span> alert <span class="kw">as</span> alert_modul
+<span class="kw">from</span> .bildiris <span class="kw">import</span> bildiris_gonder
+
+SQL_OLCME = <span class="st">"""
+    INSERT INTO olcme (cihaz_kod, olcme_vaxti, qiymet, keyfiyyet)
+    VALUES (%s, %s, %s, %s)
+    ON CONFLICT (cihaz_kod, olcme_vaxti) DO NOTHING
+"""</span>
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">deste_yaz</span>(deste: list) -&gt; <span class="kw">None</span>:
+    <span class="st">"""Dəstəni bir tranzaksiyada yazır + alert mühərrikini işə salır."""</span>
+    olcme_setirleri = []
+    emrler = []
+
+    <span class="cmt"># ---- 1. Qiymətləndir (bazasız, sürətli) ----</span>
+    <span class="kw">for</span> o <span class="kw">in</span> deste:
+        h = HEDLER.get(o.cihaz_kod)
+        <span class="kw">if</span> h <span class="kw">is</span> <span class="kw">None</span>:
+            log.warning(<span class="st">"Naməlum cihaz: %s"</span>, o.cihaz_kod)
+            YAZICI_METRIKA[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+            <span class="kw">continue</span>
+
+        keyfiyyet = <span class="nm">1</span> <span class="kw">if</span> h[<span class="st">"min"</span>] &lt;= o.qiymet &lt;= h[<span class="st">"max"</span>] <span class="kw">else</span> <span class="nm">0</span>
+        olcme_setirleri.append(
+            (o.cihaz_kod, o.olcme_vaxti, o.qiymet, keyfiyyet)
+        )
+        <span class="kw">if</span> keyfiyyet == <span class="nm">0</span>:
+            YAZICI_METRIKA[<span class="st">"anomal"</span>] += <span class="nm">1</span>
+
+        <span class="cmt"># ★ Alert mühərriki — QƏRAR verir, yazmır ★</span>
+        emrler.append(alert_modul.qiymetlendir(
+            o.cihaz_kod, o.qiymet, o.olcme_vaxti
+        ))
+
+    <span class="kw">if</span> <span class="kw">not</span> olcme_setirleri:
+        <span class="kw">return</span>
+
+    yeni_kritikler = []
+
+    <span class="cmt"># ---- 2. Bir tranzaksiyada hər şeyi yaz ----</span>
+    <span class="kw">try</span>:
+        <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+            <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+                <span class="kw">await</span> cur.executemany(SQL_OLCME, olcme_setirleri)
+
+            <span class="cmt"># Alert əmrlərini icra et</span>
+            <span class="kw">for</span> emr <span class="kw">in</span> emrler:
+                <span class="kw">if</span> emr.emr == <span class="st">"ac_ve_ya_yenile"</span>:
+                    netice = <span class="kw">await</span> alert_modul.alerti_yaz(conn, emr)
+                    <span class="cmt"># Bildiriş YALNIZ yeni açılan kritik alert üçün</span>
+                    <span class="kw">if</span> netice <span class="kw">and</span> netice[<span class="st">"yeni"</span>] <span class="kw">and</span> netice[<span class="st">"seviyye"</span>] == <span class="st">"kritik"</span>:
+                        yeni_kritikler.append(emr)
+
+                <span class="kw">elif</span> emr.emr == <span class="st">"bagla"</span>:
+                    <span class="kw">await</span> alert_modul.alertleri_bagla(conn, emr)
+
+        YAZICI_METRIKA[<span class="st">"yazilan"</span>] += len(olcme_setirleri)
+        YAZICI_METRIKA[<span class="st">"batch"</span>] += <span class="nm">1</span>
+
+    <span class="kw">except</span> psycopg.Error <span class="kw">as</span> e:
+        YAZICI_METRIKA[<span class="st">"xeta"</span>] += len(olcme_setirleri)
+        log.error(<span class="st">"Baza xətası, dəstə (%d) itdi: %s"</span>,
+                  len(olcme_setirleri), e)
+        <span class="kw">return</span>
+
+    <span class="cmt"># ---- 3. Bildiriş TRANZAKSİYADAN SONRA ----</span>
+    <span class="kw">for</span> emr <span class="kw">in</span> yeni_kritikler:
+        <span class="kw">await</span> bildiris_gonder(
+            baslik=<span class="st">f"KRİTİK: {emr.cihaz_kod}"</span>,
+            metn=emr.mesaj,
+        )</pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Niyə bildiriş tranzaksiyadan SONRA?</span>
+    <strong>İki səbəb:</strong><br><br>
+    <strong>①</strong> E-poçt göndərmək <em>şəbəkə əməliyyatıdır</em> — saniyələr çəkə bilər. Tranzaksiyanın içində etsək, baza bağlantısı və kilidlər <strong>bütün o müddət tutulu qalar</strong>. Digər yazmalar gözləyər.<br><br>
+    <strong>②</strong> Tranzaksiya <span class="mono">ROLLBACK</span> olarsa, e-poçt artıq getmiş olar — operator <strong>mövcud olmayan alert</strong> haqqında bildiriş alar. Utancverici və çaşdırıcı.<br><br>
+    <strong>Qayda:</strong> tranzaksiyanın içində yalnız baza əməliyyatı. Xarici dünya ilə ünsiyyət — commit-dən sonra.
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07 — Susan cihaz</p>
+  <h2><span class="mono">cihaz_susur</span>: LWT-nin vədi</h2>
+  <p>Dərs 04-A-da demişdik: <em>"Susan sensor xarab sensordan təhlükəlidir. Onu LWT ilə tutacağıq."</em> İndi o vədin vaxtıdır.</p>
+
+  <div class="callout err">
+    <span class="k">Niyə susma ən təhlükəli haldır</span>
+    Sensor <strong>səhv dəyər</strong> göndərsə — qrafikdə görünür, alert yaranır, operator reaksiya verir.<br><br>
+    Sensor <strong>heç nə</strong> göndərməsə — <em>heç nə baş vermir</em>. Qrafik sadəcə düz xətt kimi davam edir (son dəyərdə donur). Operator "hər şey normaldır" düşünür.<br><br>
+    Halbuki silo yana bilər, yataq dağıla bilər — və <strong>heç kim bilməz</strong>, çünki xəbər verən susub.
+  </div>
+
+  <h3>İki aşkarlama üsulu — hər ikisi lazımdır</h3>
+  <table class="tbl">
+    <thead><tr><th>Üsul</th><th>Necə işləyir</th><th>Nə tutur</th><th>Nəyi tuta bilmir</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>① LWT</strong></td>
+        <td>Broker cihazın qoşulmasının kəsildiyini görüb <span class="mono">"offline"</span> elan edir</td>
+        <td>Cihaz <strong>söndü / şəbəkəsi kəsildi</strong> — 45 saniyəyə aşkarlanır</td>
+        <td>Cihaz <em>qoşuludur</em>, amma sensor xarabdır və mesaj göndərmir</td>
+      </tr>
+      <tr>
+        <td><strong>② Vaxt nəzarəti</strong></td>
+        <td>"Son ölçmə N dəqiqədən köhnədirsə → susub"</td>
+        <td><strong>Hər cür susma</strong> — o cümlədən "qoşulu, amma lal" halı</td>
+        <td>Gec aşkarlayır (N dəqiqə)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Niyə ikisi birlikdə</span>
+    LWT <strong>sürətlidir</strong> (45 san.), amma yalnız qoşulma kəsilməsini tutur. Vaxt nəzarəti <strong>yavaşdır</strong>, amma <em>hər şeyi</em> tutur.<br><br>
+    Real sistemdə hər ikisi olmalıdır — biri sürət, digəri əhatə verir.
+  </div>
+
+  <h3>Nəzarətçi — vaxt əsaslı yoxlama</h3>
+  <div class="codebox">
+    <div class="cap">03_src/api/nezaretci.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""
+Nəzarətçi — susan cihazları tutur.
+Fon tapşırığı: hər 60 saniyədə bir bütün cihazları yoxlayır.
+"""</span>
+<span class="kw">import</span> asyncio
+<span class="kw">import</span> logging
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timezone
+
+<span class="kw">from</span> .baza <span class="kw">import</span> hovuz, HEDLER
+<span class="kw">from</span> .bildiris <span class="kw">import</span> bildiris_gonder
+
+log = logging.getLogger(<span class="st">"zarat.nezaretci"</span>)
+
+YOXLAMA_INTERVAL = <span class="nm">60</span>     <span class="cmt"># saniyə</span>
+SUSMA_HEDD_DEQ   = <span class="nm">5</span>      <span class="cmt"># 5 dəqiqədir mesaj yoxdursa → susub</span>
+
+NEZARET_METRIKA = {<span class="st">"susan"</span>: <span class="nm">0</span>, <span class="st">"berpa"</span>: <span class="nm">0</span>, <span class="st">"yoxlama"</span>: <span class="nm">0</span>}
+
+
+<span class="cmt"># Susan cihazları tapır və alert açır</span>
+SQL_SUSANLAR = <span class="st">"""
+WITH son_olcme AS (
+    SELECT c.kod,
+           max(o.olcme_vaxti) AS son_vaxt
+    FROM cihaz c
+    LEFT JOIN olcme o ON o.cihaz_kod = c.kod
+    WHERE c.status = 'aktiv'
+    GROUP BY c.kod
+)
+SELECT kod, son_vaxt,
+       now() - COALESCE(son_vaxt, now() - interval '999 days') AS susma_muddeti
+FROM son_olcme
+WHERE son_vaxt IS NULL
+   OR son_vaxt < now() - (%(hedd)s || ' minutes')::interval
+"""</span>
+
+SQL_SUSMA_ALERT = <span class="st">"""
+INSERT INTO xeberdarliq (
+    cihaz_kod, olcme_vaxti, qiymet, novu, mesaj,
+    seviyye, acilma_vaxti, tetik_sayi,
+    ilk_qiymet, son_qiymet, pik_qiymet, hell_olundu
+)
+VALUES (%(kod)s, now(), 0, 'cihaz_susur', %(mesaj)s,
+        'kritik', now(), 1, 0, 0, 0, FALSE)
+ON CONFLICT (cihaz_kod, novu) WHERE hell_olundu = FALSE
+DO UPDATE SET
+    tetik_sayi = xeberdarliq.tetik_sayi + 1,
+    mesaj      = EXCLUDED.mesaj
+RETURNING id, (xmax = 0) AS yeni
+"""</span>
+
+<span class="cmt"># Cihaz yenidən danışırsa → susma alertini bağla</span>
+SQL_SUSMA_BAGLA = <span class="st">"""
+UPDATE xeberdarliq
+SET hell_olundu    = TRUE,
+    baglanma_vaxti = now()
+WHERE novu = 'cihaz_susur'
+  AND hell_olundu = FALSE
+  AND cihaz_kod IN (
+      SELECT DISTINCT cihaz_kod FROM olcme
+      WHERE olcme_vaxti > now() - (%(hedd)s || ' minutes')::interval
+  )
+RETURNING cihaz_kod, (baglanma_vaxti - acilma_vaxti) AS muddet
+"""</span>
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">bir_yoxlama</span>():
+    <span class="st">"""Bir dövr: susanları tap, bərpa olunanları bağla."""</span>
+    NEZARET_METRIKA[<span class="st">"yoxlama"</span>] += <span class="nm">1</span>
+    yeni_susanlar = []
+
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="cmt"># --- 1) Bərpa olunanları bağla (ƏVVƏLCƏ bu!) ---</span>
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(SQL_SUSMA_BAGLA, {<span class="st">"hedd"</span>: SUSMA_HEDD_DEQ})
+            <span class="kw">for</span> kod, muddet <span class="kw">in</span> <span class="kw">await</span> cur.fetchall():
+                NEZARET_METRIKA[<span class="st">"berpa"</span>] += <span class="nm">1</span>
+                log.info(<span class="st">"CİHAZ BƏRPA OLUNDU: %s (%s susmuşdu)"</span>, kod, muddet)
+
+        <span class="cmt"># --- 2) Susanları tap ---</span>
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(SQL_SUSANLAR, {<span class="st">"hedd"</span>: SUSMA_HEDD_DEQ})
+            susanlar = <span class="kw">await</span> cur.fetchall()
+
+        <span class="cmt"># --- 3) Hər susan üçün alert ---</span>
+        <span class="kw">for</span> kod, son_vaxt, muddet <span class="kw">in</span> susanlar:
+            mesaj = (<span class="st">f"{kod}: {SUSMA_HEDD_DEQ} dəqiqədir mesaj yoxdur "</span>
+                     <span class="st">f"(son: {son_vaxt or 'heç vaxt'})"</span>)
+
+            <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+                <span class="kw">await</span> cur.execute(SQL_SUSMA_ALERT,
+                                  {<span class="st">"kod"</span>: kod, <span class="st">"mesaj"</span>: mesaj})
+                alert_id, yeni = <span class="kw">await</span> cur.fetchone()
+
+            <span class="kw">if</span> yeni:
+                NEZARET_METRIKA[<span class="st">"susan"</span>] += <span class="nm">1</span>
+                log.error(<span class="st">"CİHAZ SUSDU: %s"</span>, mesaj)
+                yeni_susanlar.append((kod, mesaj))
+
+    <span class="cmt"># --- 4) Bildiriş (tranzaksiyadan SONRA) ---</span>
+    <span class="kw">for</span> kod, mesaj <span class="kw">in</span> yeni_susanlar:
+        <span class="kw">await</span> bildiris_gonder(baslik=<span class="st">f"CİHAZ SUSDU: {kod}"</span>, metn=mesaj)
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">nezaretci_dovru</span>():
+    <span class="st">"""Fon tapşırığı — ölməməlidir."""</span>
+    log.info(<span class="st">"Nəzarətçi başladı (interval=%ds, hədd=%d dəq.)"</span>,
+             YOXLAMA_INTERVAL, SUSMA_HEDD_DEQ)
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="kw">try</span>:
+            <span class="kw">await</span> asyncio.sleep(YOXLAMA_INTERVAL)
+            <span class="kw">await</span> bir_yoxlama()
+
+        <span class="kw">except</span> asyncio.CancelledError:
+            log.info(<span class="st">"Nəzarətçi dayandırılır..."</span>)
+            <span class="kw">raise</span>
+
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            log.exception(<span class="st">"Nəzarətçidə xəta: %s"</span>, e)</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row">
+      <div class="c">Sıra: əvvəlcə BAĞLA, sonra TAP</div>
+      <div class="d"><strong>Vacib detal.</strong> Əvvəlcə susanları tapıб sonra bərpa olunanları bağlasaq, cihaz eyni dövrdə həm "susan" siyahısına düşər, həm bağlanardı — və nəticə <em>dövrün sırasından</em> asılı olardı. Səliqəsizdir.</div>
+    </div>
+    <div class="row">
+      <div class="c">seviyye = 'kritik'</div>
+      <div class="d">Susma <strong>həmişə kritikdir</strong>. Sensor məlumat vermirsə, sistem kordur — bu, hədd aşımından təhlükəlidir.</div>
+    </div>
+    <div class="row">
+      <div class="c">await asyncio.sleep(...) — dövrün ƏVVƏLİNDƏ</div>
+      <div class="d">Servis qalxan kimi yoxlama etməmək üçün. Əks halda: restart → cihazlar hələ mesaj göndərməyib → dərhal "hamı susub" alerti. Bir interval gözləmək bunun qarşısını alır.</div>
+    </div>
+  </div>
+
+  <h3>Bonus: LWT status topic-ini dinləmək</h3>
+  <p>Simulyator (və gələcək gateway) <span class="mono">zavod/siyezen/simulyator/status</span> topic-inə <span class="mono">"online"/"offline"</span> yazır. Onu da tutaq — bu, <strong>45 saniyəlik</strong> aşkarlama verir, 5 dəqiqəlik yox.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/mqtt.py — əlavə abunə</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># TOPIC_SUB yanına ikinci abunə</span>
+TOPIC_STATUS = <span class="st">f"{TOPIC_BASE}/+/status"</span>
+
+
+<span class="kw">def</span> <span class="fn">on_connect</span>(cl, userdata, flags, reason_code, properties):
+    <span class="kw">if</span> reason_code == <span class="nm">0</span>:
+        MQTT_METRIKA[<span class="st">"qosulub"</span>] = <span class="kw">True</span>
+        cl.subscribe(TOPIC_SUB, qos=<span class="nm">1</span>)      <span class="cmt"># ölçmələr</span>
+        cl.subscribe(TOPIC_STATUS, qos=<span class="nm">1</span>)   <span class="cmt"># ← YENİ: status</span>
+        log.info(<span class="st">"MQTT abunə: %s, %s"</span>, TOPIC_SUB, TOPIC_STATUS)
+
+
+<span class="kw">def</span> <span class="fn">on_message</span>(cl, userdata, msg):
+    <span class="cmt"># Status mesajıdırsa — ayrıca emal et</span>
+    <span class="kw">if</span> msg.topic.endswith(<span class="st">"/status"</span>):
+        status = msg.payload.decode(<span class="st">"utf-8"</span>).strip()
+        menbe  = msg.topic.split(<span class="st">"/"</span>)[-<span class="nm">2</span>]   <span class="cmt"># .../simulyator/status → "simulyator"</span>
+
+        <span class="kw">if</span> status == <span class="st">"offline"</span>:
+            log.error(<span class="st">"LWT: %s OFFLINE oldu!"</span>, menbe)
+            MQTT_METRIKA[<span class="st">"lwt_offline"</span>] = MQTT_METRIKA.get(<span class="st">"lwt_offline"</span>, <span class="nm">0</span>) + <span class="nm">1</span>
+        <span class="kw">else</span>:
+            log.info(<span class="st">"LWT: %s online"</span>, menbe)
+        <span class="kw">return</span>
+
+    <span class="cmt"># ... qalan kod dəyişmir (ölçmə emalı)</span></pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Niyə burada yalnız loglayırıq, alert yaratmırıq?</span>
+    Çünki <span class="mono">on_message</span> <strong>paho sapındadır</strong> — orada <span class="mono">await</span> yazıб bazaya müraciət etmək olmaz (Dərs 05-B, bölmə 02).<br><br>
+    Düzgün həll: status hadisəsini də <strong>növbəyə qoymaq</strong> və yazıcıda emal etmək. Bu, məşqi sizə buraxıram — <span class="mono">AlertEmri(emr="susma_lwt", ...)</span> yaradıб növbəyə atmaq kifayətdir.<br><br>
+    Hazırda vaxt əsaslı nəzarətçi (5 dəq.) susmanı onsuz da tutur — LWT yalnız <em>sürəti</em> artırır.
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08 — Bildiriş</p>
+  <h2>Kritik alert operatora</h2>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/bildiris.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""
+Bildiriş qatı — kritik alertləri operatora çatdırır.
+Hazırda: log + fayl. Sonra: Telegram / e-poçt.
+"""</span>
+<span class="kw">import</span> logging
+<span class="kw">import</span> os
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timezone
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+log = logging.getLogger(<span class="st">"zarat.bildiris"</span>)
+
+KOK = Path(__file__).resolve().parents[<span class="nm">2</span>]
+BILDIRIS_FAYL = KOK / <span class="st">"_LOG"</span> / <span class="st">"bildiris.log"</span>
+
+<span class="cmt"># .env-dən (yoxdursa — bildiriş söndürülüb)</span>
+TELEGRAM_TOKEN = os.getenv(<span class="st">"TELEGRAM_TOKEN"</span>, <span class="st">""</span>)
+TELEGRAM_CHAT  = os.getenv(<span class="st">"TELEGRAM_CHAT_ID"</span>, <span class="st">""</span>)
+
+BILDIRIS_METRIKA = {<span class="st">"gonderilen"</span>: <span class="nm">0</span>, <span class="st">"xeta"</span>: <span class="nm">0</span>}
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">bildiris_gonder</span>(baslik: str, metn: str) -&gt; <span class="kw">None</span>:
+    <span class="st">"""
+    Kritik hadisəni operatora çatdırır.
+    XƏTA ATMAMALIDIR — bildiriş uğursuz olsa da, sistem işləməlidir.
+    """</span>
+    indi = datetime.now(timezone.utc).isoformat()
+    setir = <span class="st">f"[{indi}] {baslik} | {metn}"</span>
+
+    <span class="cmt"># --- 1) Həmişə: log + fayl ---</span>
+    log.critical(<span class="st">"BİLDİRİŞ: %s — %s"</span>, baslik, metn)
+    <span class="kw">try</span>:
+        <span class="kw">with</span> open(BILDIRIS_FAYL, <span class="st">"a"</span>, encoding=<span class="st">"utf-8"</span>) <span class="kw">as</span> f:
+            f.write(setir + <span class="st">"\n"</span>)
+        BILDIRIS_METRIKA[<span class="st">"gonderilen"</span>] += <span class="nm">1</span>
+    <span class="kw">except</span> OSError <span class="kw">as</span> e:
+        BILDIRIS_METRIKA[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+        log.error(<span class="st">"Bildiriş faylı yazılmadı: %s"</span>, e)
+
+    <span class="cmt"># --- 2) Telegram (konfiqurasiya varsa) ---</span>
+    <span class="kw">if</span> <span class="kw">not</span> (TELEGRAM_TOKEN <span class="kw">and</span> TELEGRAM_CHAT):
+        <span class="kw">return</span>
+
+    <span class="kw">try</span>:
+        <span class="kw">import</span> httpx
+        url = <span class="st">f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"</span>
+        <span class="kw">async</span> <span class="kw">with</span> httpx.AsyncClient(timeout=<span class="nm">10.0</span>) <span class="kw">as</span> c:
+            <span class="kw">await</span> c.post(url, json={
+                <span class="st">"chat_id"</span>: TELEGRAM_CHAT,
+                <span class="st">"text"</span>: <span class="st">f"🔴 {baslik}\n\n{metn}"</span>,
+            })
+        log.info(<span class="st">"Telegram bildirişi göndərildi"</span>)
+
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="cmt"># Bildiriş uğursuz oldu — AMMA SİSTEM DAYANMIR</span>
+        BILDIRIS_METRIKA[<span class="st">"xeta"</span>] += <span class="nm">1</span>
+        log.error(<span class="st">"Telegram bildirişi göndərilmədi: %s"</span>, e)</pre>
+  </div>
+
+  <div class="callout err">
+    <span class="k">Ən vacib qayda: bildiriş <strong>heç vaxt</strong> sistemi dayandırmamalıdır</span>
+    Telegram serverı çöksə, internet kəssə, token bitsə — <strong>zavod telemetriyası işləməyə davam etməlidir</strong>.<br><br>
+    Ona görə <span class="mono">bildiris_gonder()</span> <strong>heç bir istisna atmır</strong>: hər şeyi tutur, loglayır, geri qayıdır.<br><br>
+    Əks halda absurd vəziyyət yaranardı: <em>"Telegram işləmədiyi üçün bütün sensor məlumatları itdi."</em> Köməkçi funksiya əsas funksiyanı öldürməməlidir.
+  </div>
+
+  <h4>Telegram-ı aktivləşdirmək</h4>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># 1) Telegram-da @BotFather-ə yazın → /newbot → token alın
+# 2) Botunuza bir mesaj yazın, sonra chat_id-ni öyrənin:
+#    https://api.telegram.org/bot<TOKEN>/getUpdates
+# 3) .env faylına əlavə edin:</span>
+
+cat &gt;&gt; 01_config/.env &lt;&lt; <span class="st">'EOF'</span>
+
+<span class="cmt"># Bildiriş (Dərs 06)</span>
+TELEGRAM_TOKEN=
+TELEGRAM_CHAT_ID=
+<span class="st">EOF</span>
+
+pip install httpx</pre>
+  </div>
+  <p>Boş qoysanız — bildiriş yalnız <span class="mono">_LOG/bildiris.log</span> faylına yazılacaq. Sistem normal işləyəcək.</p>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09 — API</p>
+  <h2>Yeni endpoint-lər</h2>
+  <p>Operator alertləri görməli və bağlaya bilməlidir.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/api/main.py — əlavələr</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="kw">from</span> . <span class="kw">import</span> alert <span class="kw">as</span> alert_modul
+<span class="kw">from</span> . <span class="kw">import</span> nezaretci <span class="kw">as</span> nezaret_modul
+<span class="kw">from</span> .bildiris <span class="kw">import</span> BILDIRIS_METRIKA
+
+
+<span class="cmt"># ---------- lifespan-a nəzarətçi əlavə olunur ----------</span>
+@asynccontextmanager
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">lifespan</span>(app: FastAPI):
+    <span class="kw">await</span> hovuz.open()
+    <span class="kw">await</span> hovuz.wait()
+    say = <span class="kw">await</span> hedleri_yukle()
+    log.info(<span class="st">"Baza hazır — %d cihaz"</span>, say)
+
+    loop  = asyncio.get_running_loop()
+    novbe = mqtt_modul.basla(loop)
+
+    yazici_task    = asyncio.create_task(yazici_dovru(novbe))
+    nezaret_task   = asyncio.create_task(
+        nezaret_modul.nezaretci_dovru())        <span class="cmt"># ← YENİ</span>
+
+    log.info(<span class="st">"Servis hazır — versiya %s"</span>, VERSIYA)
+    <span class="kw">yield</span>
+
+    <span class="cmt"># Sönmə — nəzarətçi də dayandırılır</span>
+    mqtt_modul.dayandir()
+    <span class="kw">try</span>:
+        <span class="kw">await</span> asyncio.wait_for(novbe.join(), timeout=<span class="nm">5.0</span>)
+    <span class="kw">except</span> asyncio.TimeoutError:
+        log.warning(<span class="st">"Növbədə %d mesaj qaldı"</span>, novbe.qsize())
+
+    <span class="kw">for</span> task <span class="kw">in</span> (yazici_task, nezaret_task):
+        task.cancel()
+        <span class="kw">try</span>:
+            <span class="kw">await</span> task
+        <span class="kw">except</span> asyncio.CancelledError:
+            <span class="kw">pass</span>
+
+    <span class="kw">await</span> hovuz.close()
+    log.info(<span class="st">"Servis söndü."</span>)
+
+
+<span class="cmt"># ---------- 1. Aktiv alertlər — dashboard bunu çağırır ----------</span>
+@app.get(<span class="st">"/xeberdarliq/aktiv"</span>, tags=[<span class="st">"Xəbərdarlıq"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">aktiv_alertler</span>():
+    <span class="st">"""Həll olunmamış alertlər — kritiklər öndə."""</span>
+    sql = <span class="st">"""
+        SELECT id, cihaz_kod, novu, seviyye, mesaj,
+               acilma_vaxti, tetik_sayi,
+               ilk_qiymet, son_qiymet, pik_qiymet,
+               now() - acilma_vaxti AS muddet
+        FROM xeberdarliq
+        WHERE hell_olundu = FALSE
+        ORDER BY (seviyye = 'kritik') DESC, acilma_vaxti ASC
+    """</span>
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(sql)
+            setirler = <span class="kw">await</span> cur.fetchall()
+
+    <span class="kw">return</span> [
+        {<span class="st">"id"</span>: r[<span class="nm">0</span>], <span class="st">"cihaz_kod"</span>: r[<span class="nm">1</span>], <span class="st">"novu"</span>: r[<span class="nm">2</span>],
+         <span class="st">"seviyye"</span>: r[<span class="nm">3</span>], <span class="st">"mesaj"</span>: r[<span class="nm">4</span>],
+         <span class="st">"acilma_vaxti"</span>: r[<span class="nm">5</span>], <span class="st">"tetik_sayi"</span>: r[<span class="nm">6</span>],
+         <span class="st">"ilk_qiymet"</span>: float(r[<span class="nm">7</span>]) <span class="kw">if</span> r[<span class="nm">7</span>] <span class="kw">else</span> <span class="kw">None</span>,
+         <span class="st">"son_qiymet"</span>: float(r[<span class="nm">8</span>]) <span class="kw">if</span> r[<span class="nm">8</span>] <span class="kw">else</span> <span class="kw">None</span>,
+         <span class="st">"pik_qiymet"</span>: float(r[<span class="nm">9</span>]) <span class="kw">if</span> r[<span class="nm">9</span>] <span class="kw">else</span> <span class="kw">None</span>,
+         <span class="st">"muddet"</span>: str(r[<span class="nm">10</span>])}
+        <span class="kw">for</span> r <span class="kw">in</span> setirler
+    ]
+
+
+<span class="cmt"># ---------- 2. Alerti əl ilə bağla ----------</span>
+@app.post(<span class="st">"/xeberdarliq/{alert_id}/hell-et"</span>, tags=[<span class="st">"Xəbərdarlıq"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">alerti_hell_et</span>(alert_id: int, qeyd: str | <span class="kw">None</span> = <span class="kw">None</span>):
+    <span class="st">"""
+    Operator alerti əl ilə bağlayır.
+    Məsələn: cihaz təmir olunub, problem həll edilib.
+    """</span>
+    sql = <span class="st">"""
+        UPDATE xeberdarliq
+        SET hell_olundu = TRUE, baglanma_vaxti = now()
+        WHERE id = %s AND hell_olundu = FALSE
+        RETURNING id, cihaz_kod, novu,
+                  (baglanma_vaxti - acilma_vaxti) AS muddet
+    """</span>
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(sql, (alert_id,))
+            setir = <span class="kw">await</span> cur.fetchone()
+
+    <span class="kw">if</span> setir <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="kw">raise</span> HTTPException(
+            status_code=<span class="nm">404</span>,
+            detail=<span class="st">f"Alert {alert_id} tapılmadı və ya artıq bağlanıb"</span>,
+        )
+
+    log.info(<span class="st">"Operator alerti bağladı: id=%s, qeyd=%s"</span>, alert_id, qeyd)
+    <span class="kw">return</span> {<span class="st">"status"</span>: <span class="st">"həll olundu"</span>, <span class="st">"id"</span>: setir[<span class="nm">0</span>],
+            <span class="st">"cihaz_kod"</span>: setir[<span class="nm">1</span>], <span class="st">"muddet"</span>: str(setir[<span class="nm">3</span>])}
+
+
+<span class="cmt"># ---------- 3. Alert tarixçəsi ----------</span>
+@app.get(<span class="st">"/xeberdarliq/tarixce"</span>, tags=[<span class="st">"Xəbərdarlıq"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">alert_tarixcesi</span>(
+    limit: int = Query(<span class="nm">50</span>, ge=<span class="nm">1</span>, le=<span class="nm">500</span>),
+    cihaz: str | <span class="kw">None</span> = Query(<span class="kw">None</span>),
+):
+    sql = <span class="st">"""
+        SELECT id, cihaz_kod, novu, seviyye, tetik_sayi,
+               acilma_vaxti, baglanma_vaxti, pik_qiymet, hell_olundu
+        FROM xeberdarliq
+        WHERE (%s::text IS NULL OR cihaz_kod = %s)
+        ORDER BY acilma_vaxti DESC
+        LIMIT %s
+    """</span>
+    <span class="kw">async</span> <span class="kw">with</span> hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(sql, (cihaz, cihaz, limit))
+            setirler = <span class="kw">await</span> cur.fetchall()
+
+    <span class="kw">return</span> [
+        {<span class="st">"id"</span>: r[<span class="nm">0</span>], <span class="st">"cihaz_kod"</span>: r[<span class="nm">1</span>], <span class="st">"novu"</span>: r[<span class="nm">2</span>],
+         <span class="st">"seviyye"</span>: r[<span class="nm">3</span>], <span class="st">"tetik_sayi"</span>: r[<span class="nm">4</span>],
+         <span class="st">"acilma_vaxti"</span>: r[<span class="nm">5</span>], <span class="st">"baglanma_vaxti"</span>: r[<span class="nm">6</span>],
+         <span class="st">"pik_qiymet"</span>: float(r[<span class="nm">7</span>]) <span class="kw">if</span> r[<span class="nm">7</span>] <span class="kw">else</span> <span class="kw">None</span>,
+         <span class="st">"hell_olundu"</span>: r[<span class="nm">8</span>]}
+        <span class="kw">for</span> r <span class="kw">in</span> setirler
+    ]
+
+
+<span class="cmt"># ---------- 4. Metrikalar genişlənir ----------</span>
+@app.get(<span class="st">"/metrikalar"</span>, tags=[<span class="st">"Sistem"</span>])
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">metrikalar</span>():
+    novbe = mqtt_modul.novbe
+    <span class="kw">return</span> {
+        <span class="st">"mqtt"</span>: {**mqtt_modul.MQTT_METRIKA,
+                 <span class="st">"novbe_uzunlugu"</span>: novbe.qsize() <span class="kw">if</span> novbe <span class="kw">else</span> <span class="nm">0</span>},
+        <span class="st">"yazici"</span>:     YAZICI_METRIKA,
+        <span class="st">"alert"</span>:      alert_modul.ALERT_METRIKA,      <span class="cmt"># ← YENİ</span>
+        <span class="st">"nezaretci"</span>:  nezaret_modul.NEZARET_METRIKA,  <span class="cmt"># ← YENİ</span>
+        <span class="st">"bildiris"</span>:   BILDIRIS_METRIKA,               <span class="cmt"># ← YENİ</span>
+        <span class="st">"cihaz_sayi"</span>: len(HEDLER),
+        <span class="st">"versiya"</span>:    VERSIYA,
+    }</pre>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10 — Test</p>
+  <h2>Alert seli susdumu? — sübut edək</h2>
+
+  <h3>Test 1 — Ardıcıllıq şərti işləyirmi?</h3>
+  <p><strong>Nə sınayırıq:</strong> tək sıçrayış alert yaratmamalıdır (S001 üçün <span class="mono">ardicil_hedd = 5</span>).</p>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+
+<span class="cmt"># Köməkçi: keçmiş vaxt yaradır (validasiya gələcəyi rədd edir!)</span>
+vaxt() { python3 -c <span class="st">"from datetime import datetime,timezone,timedelta
+print((datetime.now(timezone.utc)-timedelta(seconds=$1)).isoformat())"</span>; }
+
+<span class="cmt"># BİR sıçrayış (41.7 °C — hədd 35)</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  -m <span class="st">"{\"cihaz_kod\":\"S001\",\"qiymet\":41.7,\"olcme_vaxti\":\"$(vaxt 60)\"}"</span>
+
+sleep 3
+curl -s http://127.0.0.1:8000/metrikalar | python3 -c \
+  <span class="st">"import sys,json; print(json.load(sys.stdin)['alert'])"</span>
+
+<span class="cmt"># Gözlənilən: {"acilan": 0, "udulan": 1, ...}
+# Bir sıçrayış UDULDU — alert yaranmadı!</span></pre>
+  </div>
+
+  <h3>Test 2 — Beş ardıcıl aşım → BİR alert</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># 20 ardıcıl aşım göndər (ardicil_hedd = 5)</span>
+<span class="kw">for</span> i <span class="kw">in</span> $(seq 1 20); <span class="kw">do</span>
+  T=$(vaxt $((300 - i * 10)))
+  mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+    -m <span class="st">"{\"cihaz_kod\":\"S001\",\"qiymet\":38.5,\"olcme_vaxti\":\"$T\"}"</span>
+  sleep 0.2
+<span class="kw">done</span>
+
+sleep 4
+
+<span class="cmt"># NEÇƏ alert yarandı? BİR olmalıdır!</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT cihaz_kod, novu, seviyye, tetik_sayi,
+       ilk_qiymet, son_qiymet, pik_qiymet, hell_olundu
+FROM xeberdarliq
+WHERE cihaz_kod = 'S001' AND hell_olundu = FALSE;"</span></pre>
+  </div>
+  <div class="codebox">
+    <div class="cap">Gözlənilən — BİR sətir</div>
+<pre> cihaz_kod |    novu     |   seviyye   | tetik_sayi | ilk_qiymet | pik_qiymet
+-----------+-------------+-------------+------------+------------+------------
+ S001      | yuxari_hedd | xeberdarliq |         16 |    38.5000 |    38.5000
+
+<span class="cmt"># 20 aşım → 5-i udulub (ardıcıllıq), 16-sı BİR alerti yeniləyib.
+# KÖHNƏ SİSTEMDƏ: 20 ayrı sətir olardı!</span></pre>
+  </div>
+
+  <h3>Test 3 — Kritik səviyyəyə yüksəlmə</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># İndi 45 °C göndər (kritik hədd: 35 * 1.20 = 42)</span>
+<span class="kw">for</span> i <span class="kw">in</span> 1 2 3; <span class="kw">do</span>
+  mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+    -m <span class="st">"{\"cihaz_kod\":\"S001\",\"qiymet\":45.2,\"olcme_vaxti\":\"$(vaxt $((30 - i*5)))\"}"</span>
+  sleep 0.3
+<span class="kw">done</span>
+
+sleep 4
+
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT cihaz_kod, seviyye, tetik_sayi, pik_qiymet
+FROM xeberdarliq WHERE cihaz_kod='S001' AND hell_olundu=FALSE;"</span>
+
+<span class="cmt"># seviyye 'xeberdarliq' → 'kritik' oldu
+# pik_qiymet 38.5 → 45.2 oldu
+# YENİ SƏTİR YARANMADI — eyni alert yüksəldi!</span>
+
+<span class="cmt"># Bildiriş getdi?</span>
+tail -3 _LOG/bildiris.log</pre>
+  </div>
+
+  <h3>Test 4 — Hysteresis: alert nə vaxt bağlanır?</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># S001: max=35, hysteresis 6% → bərpa həddi = 32.6</span>
+
+<span class="cmt"># a) 34 °C — hədddən aşağı, AMMA bərpa həddindən yuxarı</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  -m <span class="st">"{\"cihaz_kod\":\"S001\",\"qiymet\":34.0,\"olcme_vaxti\":\"$(vaxt 20)\"}"</span>
+sleep 3
+
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT hell_olundu FROM xeberdarliq
+WHERE cihaz_kod='S001' AND novu='yuxari_hedd'
+ORDER BY id DESC LIMIT 1;"</span>
+<span class="cmt"># → f (FALSE) — alert HƏLƏ AÇIQ! Hysteresis zolağındayıq.</span>
+
+<span class="cmt"># b) 30 °C — bərpa həddinin ALTINDA</span>
+mosquitto_pub -t <span class="st">"zavod/siyezen/S001/olcme"</span> \
+  -m <span class="st">"{\"cihaz_kod\":\"S001\",\"qiymet\":30.0,\"olcme_vaxti\":\"$(vaxt 10)\"}"</span>
+sleep 3
+
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT hell_olundu, baglanma_vaxti,
+       (baglanma_vaxti - acilma_vaxti) AS muddet, tetik_sayi
+FROM xeberdarliq
+WHERE cihaz_kod='S001' AND novu='yuxari_hedd'
+ORDER BY id DESC LIMIT 1;"</span>
+<span class="cmt"># → t (TRUE) — alert BAĞLANDI. Tam hekayə bir sətirdə.</span></pre>
+  </div>
+
+  <h3>Test 5 — Susan cihaz</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Simulyatoru DAYANDIRIN (Ctrl+C), 6 dəqiqə gözləyin
+# (SUSMA_HEDD_DEQ = 5, nəzarətçi hər 60 san. yoxlayır)</span>
+
+sleep 380
+
+curl -s http://127.0.0.1:8000/xeberdarliq/aktiv | python3 -m json.tool
+
+<span class="cmt"># Gözlənilən: hər 5 cihaz üçün cihaz_susur alerti, seviyye=kritik</span>
+
+<span class="cmt"># Simulyatoru yenidən başladın → alertlər avtomatik bağlanmalıdır</span>
+<span class="cmt"># python 03_src/publisher/sensor_simulyator.py</span>
+
+sleep 90
+curl -s http://127.0.0.1:8000/metrikalar | python3 -c \
+  <span class="st">"import sys,json; print(json.load(sys.stdin)['nezaretci'])"</span>
+<span class="cmt"># → {"susan": 5, "berpa": 5, ...}</span></pre>
+  </div>
+
+  <h3>Yekun müqayisə</h3>
+  <table class="tbl">
+    <thead><tr><th>Ssenari</th><th>Dərs 05 (köhnə)</th><th>Dərs 06 (yeni)</th></tr></thead>
+    <tbody>
+      <tr><td>Tək sıçrayış (41.7 °C)</td><td>1 alert (<strong>yalan həyəcan</strong>)</td><td><strong>0</strong> — udulur</td></tr>
+      <tr><td>20 ardıcıl aşım</td><td><strong>20</strong> alert</td><td><strong>1</strong> alert, <span class="mono">tetik_sayi=16</span></td></tr>
+      <tr><td>Sərhəddə titrəyən dəyər</td><td>Onlarla alert</td><td><strong>1</strong> — hysteresis tutur</td></tr>
+      <tr><td>Dəyər kritikə qalxır</td><td>Yeni alert</td><td>Eyni alert <strong>yüksəlir</strong> + bildiriş</td></tr>
+      <tr><td>Cihaz susur</td><td><strong>Aşkarlanmır!</strong></td><td>Kritik alert + bildiriş</td></tr>
+      <tr><td>17 saatlıq problem</td><td><strong>122</strong> sətir</td><td><strong>1</strong> sətir, tam hekayə</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11 — Diaqnostika</p>
+  <h2>Tipik xətalar</h2>
+  <table class="tbl">
+    <thead><tr><th>Xəta</th><th>Səbəb</th><th>Həll</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">there is no unique or exclusion constraint matching the ON CONFLICT specification</td>
+        <td>Qismən indeks yaradılmayıb (Hissə A, bölmə 09)</td>
+        <td><code class="inl">psql -f 02_db/edge/05_alert_sxem.sql</code></td>
+      </tr>
+      <tr>
+        <td class="mono">duplicate key ... xeberdarliq_aktiv_unikal</td>
+        <td>Kod <span class="mono">ON CONFLICT</span>-siz <span class="mono">INSERT</span> edir</td>
+        <td>Bütün alert yazmaları <strong>upsert</strong> olmalıdır. <em>Yaxşı xəbər: indeks sizi qorudu.</em></td>
+      </tr>
+      <tr>
+        <td>Alert <strong>heç vaxt açılmır</strong></td>
+        <td><span class="mono">ardicil_hedd</span> çox böyükdür, yaxud dəyər sabit hədd altındadır</td>
+        <td><code class="inl">SELECT kod, ardicil_hedd FROM sensor_tipi;</code> — yoxlayın</td>
+      </tr>
+      <tr>
+        <td>Alert <strong>heç vaxt bağlanmır</strong></td>
+        <td>Dəyər bərpa həddinə düşmür (hysteresis çox geniş)</td>
+        <td><span class="mono">hysteresis_faiz</span>-i azaldın, yaxud <code class="inl">POST /xeberdarliq/{id}/hell-et</code></td>
+      </tr>
+      <tr>
+        <td><span class="mono">acilan</span> sayğacı artmır, <span class="mono">udulan</span> artır</td>
+        <td><strong>Bu, normaldır!</strong> Ardıcıllıq şərti işləyir</td>
+        <td>Heç nə — sistem düzgün davranır</td>
+      </tr>
+      <tr>
+        <td>Servis restartdan sonra alert gec açılır</td>
+        <td>Sayğaclar yaddaşdadır, sıfırlanıb</td>
+        <td>Gözlənilən davranış. Kritikdirsə, sayğacları bazada saxlayın (performans bahasına)</td>
+      </tr>
+      <tr>
+        <td>Susma alerti <strong>dərhal</strong> yaranır (servis qalxan kimi)</td>
+        <td><span class="mono">sleep</span> dövrün sonundadır</td>
+        <td><span class="mono">await asyncio.sleep()</span> dövrün <strong>əvvəlində</strong> olmalıdır</td>
+      </tr>
+      <tr>
+        <td>Telegram bildirişi getmir</td>
+        <td>Token/chat_id boşdur</td>
+        <td>Normaldır — <span class="mono">_LOG/bildiris.log</span> faylına baxın. Sistem işləməyə davam edir.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Nə qazandıq və Dərs 07</h2>
+
+  <ul class="check">
+    <li>Alert <strong>hadisə</strong> deyil, <strong>vəziyyətdir</strong> — 390 sətir 5-ə düşdü.</li>
+    <li><strong>Ardıcıllıq şərti</strong> yalan həyəcanları udur.</li>
+    <li><strong>Debouncing</strong> — bir problem, bir alert (bazada məcburi).</li>
+    <li><strong>Hysteresis</strong> — titrəyən dəyər alert seli yaratmır.</li>
+    <li><strong>Səviyyələr</strong> — kritik alert bildiriş göndərir, adi alert səssiz gözləyir.</li>
+    <li><strong><span class="mono">cihaz_susur</span></strong> — susan cihaz artıq görünmür deyil, <strong>görünür</strong>.</li>
+    <li>Operator API-si: aktiv alertlər, əl ilə bağlama, tarixçə.</li>
+  </ul>
+
+  <div class="callout why">
+    <span class="k">Böyük mənzərə</span>
+    Dərs 03-də sistem sadəcə <em>data toplayırdı</em>.<br>
+    Dərs 05-də <em>təmiz</em> data toplayırdı.<br>
+    <strong>Dərs 06-da sistem artıq <em>düşünür</em>:</strong> nəyin vacib olduğunu, nəyin səs-küy olduğunu ayırır və yalnız vacib olanı operatora çatdırır.<br><br>
+    Bu, "data toplama"dan <strong>"monitorinq sistemi"nə</strong> keçiddir.
+  </div>
+
+  <div class="callout">
+    <span class="k">Dərs 07 — Mərkəzi sinxronizasiya</span>
+    Bütün bu data hələ <strong>zavodda</strong> qalır (<span class="mono">zavod_edge_db</span>, port 5434). Mərkəzi ERP (<span class="mono">zarat_erp_2</span>, port 5432) ondan xəbərsizdir.<br><br>
+    Dərs 07-də:<br>
+    <strong>①</strong> <span class="mono">sync_status = 0</span> olan sətirləri mərkəzə göndərmək (<span class="mono">idx_olcme_sync</span> indeksi Dərs 02-dən bunun üçün gözləyir);<br>
+    <strong>②</strong> <strong>Outbox pattern</strong> — şəbəkə kəsiləndə data itməsin;<br>
+    <strong>③</strong> Təkrar cəhd və eksponensial gözləmə;<br>
+    <strong>④</strong> Konflikt idarəsi və idempotentlik (mərkəzdə də <span class="mono">ON CONFLICT</span>);<br>
+    <strong>⑤</strong> İki maşınlı qurulum — <em>sizin real ssenarinizdir</em>: edge bu Mac-də, mərkəz digərində.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 06-B — Alert Mühərriki: Kod, Susan Cihaz və Bildiriş</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>
