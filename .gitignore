@@ -17,3 +17,4 @@ _LOG/*.log
 *_pgdata/
 *.bak
 *.bak
+01_config/.env
