@@ -3,7 +3,7 @@ AI agent bazası — Faza 3.
 
 Hər agent bu ABC-ni implement edir:
   - icra() → AgentCixisi
-  - Agent öz nəticəsini ai.cixaris-ə ÖZÜ YAZMİR.
+  - Agent öz nəticəsini zavod_ai.cixaris-ə ÖZÜ YAZMİR.
     Agent server (agent_server.py) yazır.
 
 §0 qayda: AI TƏKLİF edir, İNSAN qərar verir.

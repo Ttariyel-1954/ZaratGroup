@@ -9,8 +9,8 @@ Endpointlər:
   GET  /metrikalar       — Token xərci statistikası
 
 Hər çağırış:
-  1. ai.jurnal-a yazılır (xərcə nəzarət)
-  2. Nəticə ai.cixaris-ə yazılır (status='teklif')
+  1. zavod_ai.jurnal-a yazılır (xərcə nəzarət)
+  2. Nəticə zavod_ai.cixaris-ə yazılır (status='teklif')
   3. Panel operatorun qərarını gözləyir
 
 İşə salma:
@@ -96,7 +96,7 @@ async def _jurnal_yaz(cixis: AgentCixisi, sened_id: int) -> None:
     async with conn.cursor() as cur:
         await cur.execute(
             """
-            INSERT INTO ai.jurnal
+            INSERT INTO zavod_ai.jurnal
                 (agent_kod, model, sened_id, giris_token, cixis_token,
                  muddet_ms, ugurlu, xeta, prompt_sha)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -111,12 +111,12 @@ async def _jurnal_yaz(cixis: AgentCixisi, sened_id: int) -> None:
 
 async def _cixaris_yaz(cixis: AgentCixisi, sened_id: int,
                         fayl_id: int | None) -> int:
-    """ai.cixaris-ə yazır, id qaytarır."""
+    """zavod_ai.cixaris-ə yazır, id qaytarır."""
     conn = await _merkez()
     async with conn.cursor() as cur:
         await cur.execute(
             """
-            INSERT INTO ai.cixaris
+            INSERT INTO zavod_ai.cixaris
                 (sened_id, fayl_id, agent_kod, model,
                  netice, eminlik, status)
             VALUES (%s, %s, %s, %s, %s::jsonb, %s::jsonb, 'teklif')
@@ -136,7 +136,7 @@ async def _gunluk_token_yoxla() -> bool:
             await cur.execute(
                 """
                 SELECT coalesce(sum(giris_token + cixis_token), 0)
-                FROM ai.jurnal
+                FROM zavod_ai.jurnal
                 WHERE vaxt > now() - interval '1 day'
                   AND ugurlu = true
                 """,

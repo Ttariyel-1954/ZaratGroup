@@ -29,7 +29,7 @@ SQL_SEC = """
 
 # İdempotent: eyni (zavod_kod, edge_id) ikinci dəfə gəlsə — statusu yenilə
 SQL_MERKEZ = """
-    INSERT INTO sened.sened (
+    INSERT INTO zavod_sened.sened (
         zavod_kod, edge_id,
         novu, nomre, sened_tarixi, qarsi_teref, qeyd,
         daxil_eden, menbe, status, metadata,

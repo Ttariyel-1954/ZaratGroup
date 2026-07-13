@@ -7,7 +7,7 @@ Axın:
      a) Edge MinIO-dan endir
      b) SHA-256 yoxla — uyğun gəlmirsə faylı ATLA (korrupsiya)
      c) Mərkəz MinIO-ya yüklə
-     d) Mərkəz DB-yə sened.fayl yazısı (idempotent)
+     d) Mərkəz DB-yə zavod_sened.fayl yazısı (idempotent)
      e) Edge-də sync_status = 1
   3. Xəta baş verərsə → sync_cehd_sayi artır, son_xeta yazılır
      3+ cəhd uğursuz olan fayl paneldə xəbərdarlıq verir.
@@ -52,13 +52,13 @@ SQL_SEC = """
 
 # Mərkəzdəki sened_id-ni tap — sened_sync artıq göndərmişdirsə mövcuddur
 SQL_MERKEZ_SENED_ID = """
-    SELECT id FROM sened.sened
+    SELECT id FROM zavod_sened.sened
     WHERE zavod_kod = %s AND edge_id = %s
 """
 
 # Fayl metadatasını mərkəzə yaz (idempotent)
 SQL_MERKEZ_FAYL = """
-    INSERT INTO sened.fayl (
+    INSERT INTO zavod_sened.fayl (
         zavod_kod, edge_id, sened_id,
         orijinal_ad, mime_tipi, olcu_bayt,
         obyekt_acari, sha256, sha256_yoxlandi
