@@ -1,0 +1,7 @@
+Royas-MacBook-Pro:Zarat_Faza2_Zavod royatalibova$ echo "IP:       $(ipconfig getifaddr en0)"
+IP:       192.168.91.108
+Royas-MacBook-Pro:Zarat_Faza2_Zavod royatalibova$ echo "Bonjour:  $(scutil --get LocalHostName).local"
+Bonjour:  Royas-MacBook-Pro.local
+Royas-MacBook-Pro:Zarat_Faza2_Zavod royatalibova$ echo "Şəbəkə:   $(ipconfig getifaddr en0 | cut -d. -f1-3).0/24"
+Şəbəkə:   192.168.91.0/24
+Royas-MacBook-Pro:Zarat_Faza2_Zavod royatalibova$ 

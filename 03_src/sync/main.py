@@ -15,6 +15,8 @@ from sync.baza import ac, bagla, merkez_elcatandir
 from sync.backoff import Backoff
 from sync.olcme_sync import olcme_gonder, OLCME_METRIKA
 from sync.alert_sync import alert_gonder, ALERT_METRIKA
+from sync.sened_sync import sened_gonder, SENED_METRIKA
+from sync.fayl_sync import fayl_gonder, FAYL_METRIKA
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,8 +38,10 @@ async def gozle(saniye: float) -> None:
 
 async def bir_dovr(backoff: Backoff) -> None:
     try:
-        # ALERTLER ONCE - kritik melumat olcmelerin arxasinda gozlemesin
+        # PRİORİTET SIRASI: alert → sənəd → ölçmə → fayl
+        # (Kritik məlumat böyük faylların arxasında gözləməsin)
         alert_say = await alert_gonder()
+        sened_say = await sened_gonder()
         olcme_say = await olcme_gonder()
 
         if backoff.problemdedir:
@@ -45,8 +49,8 @@ async def bir_dovr(backoff: Backoff) -> None:
                      backoff.ugursuz_say)
         backoff.ugurlu()
 
-        # Novbe hele doludur - GOZLEMEDEN davam et
-        if olcme_say >= 1 or alert_say >= 1:
+        # Növbə hələ doludur — GÖZLƏMƏDƏN davam et
+        if alert_say >= 1 or sened_say >= 1 or olcme_say >= 1:
             return
 
     except Exception as e:
@@ -55,6 +59,12 @@ async def bir_dovr(backoff: Backoff) -> None:
                   backoff.ugursuz_say, e, gozleme)
         await gozle(gozleme)
         return
+
+    # Fayl sync ayrıca cəhd: MinIO xətası DB sync-i dayandırmasın
+    try:
+        await fayl_gonder()
+    except Exception as e:
+        log.warning("Fayl sync xətası (davam edir): %s", e)
 
     await gozle(SYNC_INTERVAL)
 
@@ -74,8 +84,10 @@ async def esas():
         await bir_dovr(backoff)
 
     log.info("Sonme... Metrikalar:")
-    log.info("  Olcme: %s", OLCME_METRIKA)
-    log.info("  Alert: %s", ALERT_METRIKA)
+    log.info("  Alert:  %s", ALERT_METRIKA)
+    log.info("  Sened:  %s", SENED_METRIKA)
+    log.info("  Olcme:  %s", OLCME_METRIKA)
+    log.info("  Fayl:   %s", FAYL_METRIKA)
     await bagla()
     log.info("Sync isciisi sondu.")
 

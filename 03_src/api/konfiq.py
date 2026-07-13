@@ -19,3 +19,10 @@ TOPIC_BASE = os.getenv("MQTT_TOPIC_BASE", "zavod/siyezen")
 
 VERSIYA  = "1.0.0"
 API_PORT = int(os.getenv("API_PORT", "8000"))
+
+# --- Faza 3 ---
+ZAVOD_KOD        = os.getenv("ZAVOD_KOD", "SIYEZEN")
+MINIO_EDGE_URL   = os.getenv("MINIO_EDGE_URL", "http://localhost:9010")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "zaratuser")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "Siyezen2026Minio")
+MINIO_BUCKET     = os.getenv("MINIO_BUCKET", "zarat-sened")

@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 07-B — Sync İşçisi: Kod, İki Maşın və Xaos Testi</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524;
+    --blue:#5aa9e6; --green:#5bd08a; --green-deep:#2f8f5b;
+    --violet:#a78bfa; --danger:#e5695f; --danger-deep:#c0453a;
+    --paper:#f6f4ef; --paper-2:#efece4; --ink:#1a222c;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1200px 400px at 78% -10%,rgba(91,208,138,.16),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:66px 32px 54px;border-bottom:3px solid var(--green);}
+  .wrap{max-width:980px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--green);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(29px,4.8vw,48px);line-height:1.08;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:770px;margin:0;line-height:1.7;}
+  .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(91,208,138,.12);
+    border:1px solid rgba(91,208,138,.35);color:#a3e6bf;padding:6px 13px;border-radius:2px;}
+
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:980px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;} .toc a{color:var(--green-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:980px;margin:0 auto;padding:0 32px;}
+  section{padding:46px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--green-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.3vw,32px);line-height:1.15;margin:0 0 20px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;margin:32px 0 10px;}
+  h4{font-family:"Oswald",Arial,sans-serif;font-weight:500;font-size:17px;margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:17px 22px;border-radius:0 4px 4px 0;margin:22px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout.ok{border-left-color:var(--green);background:#eaf7f0;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:#b9781a;} .callout.why .k{color:#6d4fc4;}
+  .callout.err .k{color:var(--danger-deep);} .callout.ok .k{color:var(--green-deep);}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--green);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+
+  .codebox{position:relative;margin:20px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.7;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .fn{color:var(--blue);} .nm{color:#c3a6f0;}
+  .copybtn{position:absolute;top:32px;right:10px;background:rgba(91,208,138,.14);color:#a3e6bf;
+    border:1px solid rgba(91,208,138,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(91,208,138,.28);}
+
+  .expl{margin:18px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;}
+  .expl .row{display:flex;border-bottom:1px solid #e8e3d8;}
+  .expl .row:last-child{border-bottom:none;}
+  .expl .row:nth-child(even){background:var(--paper-2);}
+  .expl .c{flex:0 0 40%;padding:11px 14px;font-family:ui-monospace,Menlo,monospace;
+    font-size:12.5px;color:#0b5f57;background:rgba(13,148,136,.05);
+    border-right:1px solid #e8e3d8;word-break:break-word;}
+  .expl .d{flex:1;padding:11px 14px;font-size:14.5px;line-height:1.55;}
+
+  .arch{background:var(--graphite);border-radius:10px;padding:30px 24px;margin:26px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--green);margin-bottom:16px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:13px 14px;
+    text-align:center;min-width:118px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;color:#fff;text-transform:uppercase;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:11px;color:#8fa6ba;display:block;margin-top:3px;}
+  .bx.hl{border-color:var(--green);box-shadow:0 0 0 1px rgba(91,208,138,.3);}
+  .ar{color:var(--green);font-size:20px;}
+
+  .graf{background:var(--graphite);border-radius:10px;padding:24px;margin:24px 0;}
+  .graf svg{width:100%;height:auto;display:block;}
+
+  .test{border:1px solid #ddd8cc;border-radius:8px;margin:20px 0;overflow:hidden;background:#fff;}
+  .test-h{display:flex;align-items:center;gap:12px;padding:12px 18px;
+    background:var(--paper-2);border-bottom:1px solid #ddd8cc;}
+  .test-n{font-family:"Oswald",Arial,sans-serif;font-weight:700;font-size:14px;
+    background:var(--green-deep);color:#fff;padding:3px 11px;border-radius:12px;flex-shrink:0;}
+  .test-t{font-family:"Oswald",Arial,sans-serif;font-size:16px;font-weight:500;}
+  .test-b{padding:16px 18px;}
+  .verdict{margin-top:12px;padding:11px 15px;border-radius:5px;font-size:15px;
+    background:#eaf7f0;border-left:3px solid var(--green);}
+  .verdict b{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--green-deep);display:block;margin-bottom:2px;}
+
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{padding:12px 16px 12px 44px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--green);}
+  .check li::before{content:"✓";position:absolute;left:15px;top:10px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--green);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+  @media (max-width:700px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .expl .row{flex-direction:column;} .expl .c{flex:1;border-right:none;border-bottom:1px solid #e8e3d8;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Dərs 07 — Hissə B</p>
+    <h1>Sync İşçisi: Kod, İki Maşın və Xaos Testi</h1>
+    <p class="lede">Hissə A-da modeli qurduq — indi <strong>kod</strong>. Ayrıca sync prosesi, eksponensial backoff, alert prioriteti. Sonra <strong>iki maşınlı real qurulum</strong>: edge bu Intel Mac-də, mərkəz digərində. Və sonda ən vacibi — <strong>şəbəkəni qəsdən kəsib data itmədiyini sübut edirik</strong>.</p>
+    <div class="meta">
+      <span class="chip">Sync işçisi</span>
+      <span class="chip">Backoff</span>
+      <span class="chip">İki maşın</span>
+      <span class="chip">pg_hba.conf</span>
+      <span class="chip">Xaos testi</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Ayrıca proses — niyə</a></li>
+    <li><a href="#s2">Konfiqurasiya və iki hovuz</a></li>
+    <li><a href="#s3">Eksponensial backoff</a></li>
+    <li><a href="#s4">sync.py — ölçmə göndərmə</a></li>
+    <li><a href="#s5">Alert göndərmə — DO UPDATE</a></li>
+    <li><a href="#s6">Ana dövr və sağlamlıq</a></li>
+    <li><a href="#s7">Tək maşında sınaq</a></li>
+    <li><a href="#s8">İki maşınlı qurulum</a></li>
+    <li><a href="#s9">Xaos testi: şəbəkəni kəs</a></li>
+    <li><a href="#s10">Monitorinq və gecikmə</a></li>
+    <li><a href="#s11">Tipik xətalar</a></li>
+    <li><a href="#s12">Yekun — sistem tamamlandı</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01 — Memarlıq</p>
+  <h2>Sync — ayrıca proses olmalıdır</h2>
+  <p>Sync işçisini FastAPI-nin içinə fon tapşırığı kimi qoya bilərdik (nəzarətçi kimi). <strong>Amma qoymuruq.</strong></p>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>FastAPI daxilində</th><th>Ayrıca proses</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Sync çökərsə</strong></td><td>Bütün servis risk altındadır</td><td>Yalnız sync dayanır — <strong>data yazılmağa davam edir</strong></td></tr>
+      <tr><td><strong>Yenidən başlatma</strong></td><td>Telemetriya kəsilir</td><td>Sync-i müstəqil restart edirsən</td></tr>
+      <tr><td><strong>Fərqli maşında</strong></td><td>Mümkün deyil</td><td><strong>Mümkün</strong> — sync ayrıca serverdə də işləyə bilər</td></tr>
+      <tr><td><strong>Yük</strong></td><td>Uzun şəbəkə gözləmələri event loop-u yükləyir</td><td>Təcrid olunub</td></tr>
+      <tr><td><strong>Seçim</strong></td><td>—</td><td class="yes"><strong>BU</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Əsas prinsip — data yolu müqəddəsdir</span>
+    <strong>Sensor → MQTT → FastAPI → edge baza</strong> yolu <em>heç vaxt</em> dayanmamalıdır. Bu, ilkin faktın yazıldığı yoldur — o itsə, geri qaytarmaq olmaz.<br><br>
+    Sync isə <strong>ikinci dərəcəlidir</strong>: gecikə bilər, çökə bilər, saatlarla işləməyə bilər. Data edge-də təhlükəsiz durur və gözləyir.<br><br>
+    Ona görə onları <strong>fiziki olaraq ayırırıq</strong>. Zəif komponent güclünü aşağı çəkməsin.
+  </div>
+
+  <div class="arch">
+    <div class="lbl">İki müstəqil proses</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">FastAPI</span><span class="s">:8000 — yazır</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">zavod_edge_db</span><span class="s">:5434</span></div>
+      <span class="ar">◄</span>
+      <div class="bx hl"><span class="t">Sync işçisi</span><span class="s">ayrıca proses</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">zarat_erp_2</span><span class="s">:5432</span></div>
+    </div>
+  </div>
+
+  <h3>Fayl strukturu</h3>
+  <div class="codebox">
+<pre>03_src/
+├── api/                  <span class="cmt"># FastAPI (Dərs 05-06)</span>
+├── publisher/            <span class="cmt"># simulyator</span>
+└── <span class="kw">sync/</span>                 <span class="cmt"># ← YENİ paket</span>
+    ├── __init__.py
+    ├── konfiq.py         <span class="cmt"># iki DSN, intervallar</span>
+    ├── baza.py           <span class="cmt"># iki hovuz: edge + mərkəz</span>
+    ├── backoff.py        <span class="cmt"># eksponensial gözləmə</span>
+    ├── olcme_sync.py     <span class="cmt"># ölçmə göndərmə</span>
+    ├── alert_sync.py     <span class="cmt"># alert göndərmə</span>
+    └── main.py           <span class="cmt"># ana dövr</span></pre>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02 — Qurulum</p>
+  <h2>Konfiqurasiya və iki hovuz</h2>
+
+  <h3>.env genişlənir</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+
+cat &gt;&gt; 01_config/.env &lt;&lt; <span class="st">'EOF'</span>
+
+<span class="cmt"># ===== Dərs 07: Mərkəzi sinxronizasiya =====</span>
+ZAVOD_KOD=SIYEZEN
+
+<span class="cmt"># Mərkəzi baza — TƏK maşında sınaq üçün localhost</span>
+MERKEZ_DSN=postgresql://royatalibova@localhost:5432/zarat_erp_2
+
+<span class="cmt"># İKİ maşınlı iş üçün (Hissə B, bölmə 08):
+# MERKEZ_DSN=postgresql://zavod_sync:PAROL@192.168.1.50:5432/zarat_erp_2</span>
+
+SYNC_INTERVAL=10          <span class="cmt"># saniyə — normal dövr</span>
+SYNC_BATCH_OLCME=500      <span class="cmt"># bir dəfəyə neçə ölçmə</span>
+SYNC_BATCH_ALERT=100
+SYNC_ALERT_TEKRAR=60      <span class="cmt"># saniyə — alert nə tez-tez yenilənsin</span>
+<span class="st">EOF</span>
+
+grep MERKEZ 01_config/.env</pre>
+  </div>
+
+  <h3>sync/konfiq.py</h3>
+  <div class="codebox">
+    <div class="cap">03_src/sync/konfiq.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""Sync konfiqurasiyasi - .env-den oxuyur."""</span>
+<span class="kw">import</span> os
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+
+KOK = Path(__file__).resolve().parents[<span class="nm">2</span>]
+load_dotenv(KOK / <span class="st">"01_config"</span> / <span class="st">".env"</span>)
+
+EDGE_DSN   = os.getenv(<span class="st">"EDGE_DSN"</span>)
+MERKEZ_DSN = os.getenv(<span class="st">"MERKEZ_DSN"</span>)
+ZAVOD_KOD  = os.getenv(<span class="st">"ZAVOD_KOD"</span>, <span class="st">"SIYEZEN"</span>)
+
+SYNC_INTERVAL     = int(os.getenv(<span class="st">"SYNC_INTERVAL"</span>, <span class="st">"10"</span>))
+SYNC_BATCH_OLCME  = int(os.getenv(<span class="st">"SYNC_BATCH_OLCME"</span>, <span class="st">"500"</span>))
+SYNC_BATCH_ALERT  = int(os.getenv(<span class="st">"SYNC_BATCH_ALERT"</span>, <span class="st">"100"</span>))
+SYNC_ALERT_TEKRAR = int(os.getenv(<span class="st">"SYNC_ALERT_TEKRAR"</span>, <span class="st">"60"</span>))
+
+VERSIYA = <span class="st">"1.0.0"</span>
+
+<span class="kw">if</span> <span class="kw">not</span> EDGE_DSN <span class="kw">or</span> <span class="kw">not</span> MERKEZ_DSN:
+    <span class="kw">raise</span> RuntimeError(
+        <span class="st">"EDGE_DSN ve MERKEZ_DSN .env faylinda olmalidir"</span>)</pre>
+  </div>
+
+  <h3>sync/baza.py — iki hovuz</h3>
+  <div class="codebox">
+    <div class="cap">03_src/sync/baza.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""
+Iki ayri baglanti hovuzu.
+Edge - HEMISE elcatan olmalidir.
+Merkez - kesile biler, ve bu NORMALDIR.
+"""</span>
+<span class="kw">import</span> logging
+
+<span class="kw">from</span> psycopg_pool <span class="kw">import</span> AsyncConnectionPool
+
+<span class="kw">from</span> .konfiq <span class="kw">import</span> EDGE_DSN, MERKEZ_DSN
+
+log = logging.getLogger(<span class="st">"sync.baza"</span>)
+
+<span class="cmt"># Edge hovuzu - kicik, cunki yalniz sync istifade edir</span>
+edge_hovuz = AsyncConnectionPool(
+    conninfo=EDGE_DSN,
+    min_size=<span class="nm">1</span>, max_size=<span class="nm">3</span>,
+    open=<span class="kw">False</span>,
+)
+
+<span class="cmt"># Merkez hovuzu - TIMEOUT VACIBDIR!
+# Sebeke kesilse, sonsuz gozlemek olmaz.</span>
+merkez_hovuz = AsyncConnectionPool(
+    conninfo=MERKEZ_DSN,
+    min_size=<span class="nm">0</span>,          <span class="cmt"># ← 0! Baglanti lazim olanda yaradilir</span>
+    max_size=<span class="nm">3</span>,
+    timeout=<span class="nm">10.0</span>,      <span class="cmt"># ← 10 saniyeden cox gozleme</span>
+    open=<span class="kw">False</span>,
+)
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">ac</span>():
+    <span class="kw">await</span> edge_hovuz.open()
+    <span class="kw">await</span> edge_hovuz.wait()
+    log.info(<span class="st">"Edge hovuzu aciq"</span>)
+
+    <span class="cmt"># Merkez hovuzunu ACIRIQ, amma WAIT ETMIRIK!
+    # Cunki merkez elcatmaz ola biler - ve bu, servisi
+    # baslamaqdan SAXLAMAMALIDIR.</span>
+    <span class="kw">await</span> merkez_hovuz.open()
+    log.info(<span class="st">"Merkez hovuzu aciq (elcatanliq yoxlanmadi)"</span>)
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">bagla</span>():
+    <span class="kw">await</span> edge_hovuz.close()
+    <span class="kw">await</span> merkez_hovuz.close()
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">merkez_elcatandir</span>() -&gt; bool:
+    <span class="st">"""Merkez cavab verirmi? Istisna ATMIR."""</span>
+    <span class="kw">try</span>:
+        <span class="kw">async</span> <span class="kw">with</span> merkez_hovuz.connection(timeout=<span class="nm">5.0</span>) <span class="kw">as</span> conn:
+            <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+                <span class="kw">await</span> cur.execute(<span class="st">"SELECT 1"</span>)
+        <span class="kw">return</span> <span class="kw">True</span>
+    <span class="kw">except</span> Exception:
+        <span class="kw">return</span> <span class="kw">False</span></pre>
+  </div>
+
+  <div class="expl">
+    <div class="row">
+      <div class="c">merkez_hovuz: min_size=0</div>
+      <div class="d"><strong>Kritik detal.</strong> <span class="mono">min_size=1</span> olsa, hovuz açılanda <em>dərhal</em> qoşulmağa çalışar. Mərkəz əlçatmazsa — <strong>sync servisi ümumiyyətlə qalxmaz</strong>.<br>
+        <span class="mono">min_size=0</span> ilə: bağlantı yalnız <em>lazım olanda</em> yaradılır. Mərkəz sonra qalxsa, sync onu tutacaq.</div>
+    </div>
+    <div class="row">
+      <div class="c">await merkez_hovuz.wait() — YOXDUR</div>
+      <div class="d">Eyni səbəb. <span class="mono">wait()</span> "bütün bağlantılar hazır olana qədər gözlə" deməkdir. Mərkəz sönübsə, bu, əbədi gözləmədir.</div>
+    </div>
+    <div class="row">
+      <div class="c">timeout=10.0</div>
+      <div class="d">Şəbəkə "yarım ölü" ola bilər: paket gedir, cavab gəlmir. Timeout olmasa, sync <strong>dondu</strong> qalar — nə xəta verər, nə işləyər. Ən pis hal.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03 — Backoff</p>
+  <h2>Eksponensial gözləmə</h2>
+  <p>Şəbəkə kəsildi. Sync nə etməlidir?</p>
+
+  <div class="callout err">
+    <span class="k">Sadəlövh: hər saniyə yenidən cəhd et</span>
+    Şəbəkə 3 saat kəsilibsə — <strong>10 800 uğursuz cəhd</strong>.<br><br>
+    Nəticə: log faylı şişir, CPU boşuna yanır, mərkəz bərpa olanda <em>onlarla client eyni anda</em> hücum edir (thundering herd) və onu yenidən yıxır.
+  </div>
+
+  <div class="graf">
+    <svg viewBox="0 0 860 240" xmlns="http://www.w3.org/2000/svg">
+      <line x1="60" y1="200" x2="820" y2="200" stroke="#3a4b5d" stroke-width="1.5"/>
+      <line x1="60" y1="20" x2="60" y2="200" stroke="#3a4b5d" stroke-width="1.5"/>
+      <text x="25" y="30" fill="#8fa6ba" font-family="monospace" font-size="10">300s</text>
+      <text x="30" y="204" fill="#8fa6ba" font-family="monospace" font-size="10">0</text>
+      <text x="440" y="228" text-anchor="middle" fill="#8fa6ba" font-family="monospace" font-size="11">cəhd sayı →</text>
+
+      <!-- naive: constant -->
+      <line x1="60" y1="195" x2="820" y2="195" stroke="#e5695f" stroke-width="2" stroke-dasharray="5,4"/>
+      <text x="828" y="192" fill="#e5695f" font-family="monospace" font-size="10">1s — sadəlövh</text>
+
+      <!-- exponential -->
+      <polyline points="80,197 140,194 200,188 260,176 320,152 380,104 440,40 500,30 560,30 620,30 680,30 740,30 800,30"
+        fill="none" stroke="#5bd08a" stroke-width="2.5"/>
+      <text x="828" y="34" fill="#5bd08a" font-family="monospace" font-size="10">tavan: 300s</text>
+
+      <circle cx="80" cy="197" r="4" fill="#5bd08a"/>
+      <text x="80" y="185" text-anchor="middle" fill="#a3e6bf" font-family="monospace" font-size="9">1s</text>
+      <circle cx="200" cy="188" r="4" fill="#5bd08a"/>
+      <text x="200" y="176" text-anchor="middle" fill="#a3e6bf" font-family="monospace" font-size="9">4s</text>
+      <circle cx="320" cy="152" r="4" fill="#5bd08a"/>
+      <text x="320" y="140" text-anchor="middle" fill="#a3e6bf" font-family="monospace" font-size="9">16s</text>
+      <circle cx="440" cy="40" r="4" fill="#5bd08a"/>
+      <text x="440" y="28" text-anchor="middle" fill="#a3e6bf" font-family="monospace" font-size="9">64s</text>
+
+      <text x="440" y="80" text-anchor="middle" fill="#f5a524" font-family="Oswald,sans-serif" font-size="13">EKSPONENSİAL BACKOFF — cəhdlər seyrəlir, tavana çatır</text>
+    </svg>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">03_src/sync/backoff.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""
+Eksponensial backoff + jitter.
+Ugursuzluqda gozleme muddeti IKI QAT artir, tavana catir.
+"""</span>
+<span class="kw">import</span> random
+
+
+<span class="kw">class</span> <span class="fn">Backoff</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, bas=<span class="nm">1.0</span>, tavan=<span class="nm">300.0</span>, emsal=<span class="nm">2.0</span>):
+        self.bas    = bas       <span class="cmt"># ilk gozleme: 1 saniye</span>
+        self.tavan  = tavan     <span class="cmt"># maksimum: 5 deqiqe</span>
+        self.emsal  = emsal     <span class="cmt"># her defe 2 qat</span>
+        self.cari   = bas
+        self.ugursuz_say = <span class="nm">0</span>
+
+    <span class="kw">def</span> <span class="fn">ugursuz</span>(self) -&gt; float:
+        <span class="st">"""Ugursuzluq: gozleme muddetini artir ve qaytar."""</span>
+        self.ugursuz_say += <span class="nm">1</span>
+        gozleme = self.cari
+
+        <span class="cmt"># JITTER: ±25% tesadufi deyisiklik.
+        # Niye: bir nece client eyni anda cehd etmesin
+        # (thundering herd problemi).</span>
+        jitter = gozleme * random.uniform(-<span class="nm">0.25</span>, <span class="nm">0.25</span>)
+        gozleme = max(<span class="nm">0.5</span>, gozleme + jitter)
+
+        <span class="cmt"># Novbeti defe ucun iki qat artir (tavana qeder)</span>
+        self.cari = min(self.tavan, self.cari * self.emsal)
+
+        <span class="kw">return</span> gozleme
+
+    <span class="kw">def</span> <span class="fn">ugurlu</span>(self) -&gt; <span class="kw">None</span>:
+        <span class="st">"""Ugur: her seyi sifirla."""</span>
+        self.cari = self.bas
+        self.ugursuz_say = <span class="nm">0</span>
+
+    @property
+    <span class="kw">def</span> <span class="fn">problemdedir</span>(self) -&gt; bool:
+        <span class="kw">return</span> self.ugursuz_say &gt; <span class="nm">0</span></pre>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Cəhd</th><th>Gözləmə</th><th>Toplam vaxt</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>~1 san.</td><td>1 san.</td></tr>
+      <tr><td>2</td><td>~2 san.</td><td>3 san.</td></tr>
+      <tr><td>3</td><td>~4 san.</td><td>7 san.</td></tr>
+      <tr><td>5</td><td>~16 san.</td><td>31 san.</td></tr>
+      <tr><td>9</td><td>~256 san.</td><td>~8,5 dəq.</td></tr>
+      <tr><td>10+</td><td><strong>300 san. (tavan)</strong></td><td>Hər 5 dəqiqədə bir cəhd</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout why">
+    <span class="k">Jitter niyə lazımdır</span>
+    Təsəvvür edin: üç zavod var, hər birində sync işçisi. Mərkəz 10 dəqiqə sönüb.<br><br>
+    <strong>Jitter olmasa:</strong> hər üçü eyni cədvəllə cəhd edir — 1s, 2s, 4s... Mərkəz qalxan an <strong>üçü də eyni anda</strong> hücum edir. Mərkəz yenidən yıxılır.<br><br>
+    <strong>Jitter ilə:</strong> cəhdlər təsadüfi yayılır. Yük hamarlanır.<br><br>
+    Bu, kiçik detaldır — amma böyük sistemlərdə <em>çökmə ilə sağ qalma</em> arasındakı fərqdir.
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04 — Ölçmə</p>
+  <h2>olcme_sync.py — dəyişməz faktları göndərmək</h2>
+
+  <div class="codebox">
+    <div class="cap">03_src/sync/olcme_sync.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""Olcme sinxronizasiyasi - deyismez faktlar, DO NOTHING."""</span>
+<span class="kw">import</span> logging
+<span class="kw">import</span> time
+
+<span class="kw">from</span> .baza <span class="kw">import</span> edge_hovuz, merkez_hovuz
+<span class="kw">from</span> .konfiq <span class="kw">import</span> ZAVOD_KOD, SYNC_BATCH_OLCME
+
+log = logging.getLogger(<span class="st">"sync.olcme"</span>)
+
+OLCME_METRIKA = {<span class="st">"gonderilen"</span>: <span class="nm">0</span>, <span class="st">"yeni"</span>: <span class="nm">0</span>,
+                 <span class="st">"dublikat"</span>: <span class="nm">0</span>, <span class="st">"dovr"</span>: <span class="nm">0</span>}
+
+<span class="cmt"># KOHNEDEN yeniye - FIFO. Sebeb: Hisse A, bolme 10.</span>
+SQL_SEC = <span class="st">"""
+    SELECT id, cihaz_kod, olcme_vaxti, qiymet, keyfiyyet
+    FROM olcme
+    WHERE sync_status = 0
+    ORDER BY olcme_vaxti
+    LIMIT %s
+"""</span>
+
+<span class="cmt"># IDEMPOTENT: tekrar gonderilse, sessizce atilir.</span>
+SQL_MERKEZ = <span class="st">"""
+    INSERT INTO zavod.olcme
+        (zavod_kod, cihaz_kod, olcme_vaxti, qiymet, keyfiyyet)
+    VALUES (%s, %s, %s, %s, %s)
+    ON CONFLICT (zavod_kod, cihaz_kod, olcme_vaxti) DO NOTHING
+"""</span>
+
+SQL_BAYRAQ = <span class="st">"""
+    UPDATE olcme
+    SET sync_status = 1
+    WHERE id = ANY(%s)
+"""</span>
+
+SQL_JURNAL = <span class="st">"""
+    INSERT INTO zavod.sync_jurnal
+        (zavod_kod, cedvel, setir_sayi, yeni_setir, muddet_ms)
+    VALUES (%s, 'olcme', %s, %s, %s)
+"""</span>
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">olcme_gonder</span>() -&gt; int:
+    <span class="st">"""
+    Bir dovr: gonderilmemis olcmeleri merkeze apar.
+    Qaytarir: gonderilen setir sayi (0 = gonderilecek yox idi).
+    ISTISNA ATIR - ana dovr onu tutub backoff isledecek.
+    """</span>
+    baslangic = time.monotonic()
+
+    <span class="cmt"># ---- 1. Edge-den oxu ----</span>
+    <span class="kw">async</span> <span class="kw">with</span> edge_hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(SQL_SEC, (SYNC_BATCH_OLCME,))
+            setirler = <span class="kw">await</span> cur.fetchall()
+
+    <span class="kw">if</span> <span class="kw">not</span> setirler:
+        <span class="kw">return</span> <span class="nm">0</span>
+
+    idler = [r[<span class="nm">0</span>] <span class="kw">for</span> r <span class="kw">in</span> setirler]
+    merkez_setirler = [
+        (ZAVOD_KOD, r[<span class="nm">1</span>], r[<span class="nm">2</span>], r[<span class="nm">3</span>], r[<span class="nm">4</span>])
+        <span class="kw">for</span> r <span class="kw">in</span> setirler
+    ]
+
+    <span class="cmt"># ---- 2. MERKEZE yaz (istisna ata biler!) ----</span>
+    <span class="kw">async</span> <span class="kw">with</span> merkez_hovuz.connection() <span class="kw">as</span> mconn:
+        <span class="kw">async</span> <span class="kw">with</span> mconn.cursor() <span class="kw">as</span> mcur:
+            <span class="kw">await</span> mcur.executemany(SQL_MERKEZ, merkez_setirler)
+            yeni_say = mcur.rowcount <span class="kw">if</span> mcur.rowcount &gt;= <span class="nm">0</span> <span class="kw">else</span> len(setirler)
+
+            muddet_ms = int((time.monotonic() - baslangic) * <span class="nm">1000</span>)
+            <span class="kw">await</span> mcur.execute(SQL_JURNAL, (
+                ZAVOD_KOD, len(setirler), yeni_say, muddet_ms))
+        <span class="cmt"># commit avtomatik - context menecer cixanda</span>
+
+    <span class="cmt"># ---- 3. YALNIZ INDI bayragi deyis ----
+    # Merkez commit oldu. Indi bayragi deyismek TEHLUKESIZDIR.
+    # Eger bu addim ugursuz olsa - setirler TEKRAR gonderilecek,
+    # ve ON CONFLICT onlari sessizce atacaq. Zerersizdir.</span>
+    <span class="kw">async</span> <span class="kw">with</span> edge_hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(SQL_BAYRAQ, (idler,))
+
+    dublikat = len(setirler) - yeni_say
+    OLCME_METRIKA[<span class="st">"gonderilen"</span>] += len(setirler)
+    OLCME_METRIKA[<span class="st">"yeni"</span>] += yeni_say
+    OLCME_METRIKA[<span class="st">"dublikat"</span>] += max(<span class="nm">0</span>, dublikat)
+    OLCME_METRIKA[<span class="st">"dovr"</span>] += <span class="nm">1</span>
+
+    log.info(<span class="st">"Olcme: %d gonderildi (%d yeni, %d dublikat) - %d ms"</span>,
+             len(setirler), yeni_say, max(<span class="nm">0</span>, dublikat),
+             int((time.monotonic() - baslangic) * <span class="nm">1000</span>))
+
+    <span class="kw">return</span> len(setirler)</pre>
+  </div>
+
+  <div class="callout err">
+    <span class="k">Sıra — bu dərsin ən vacib üç sətri</span>
+    <strong>1.</strong> Edge-dən oxu<br>
+    <strong>2.</strong> Mərkəzə yaz və <strong>commit et</strong><br>
+    <strong>3.</strong> <em>Yalnız indi</em> bayrağı dəyiş<br><br>
+    Bu sıra pozulsa (əvvəlcə bayraq, sonra göndərmə) — <strong>data əbədi itir</strong>. Bayraq "göndərilib" deyər, mərkəzdə isə heç nə olmaz. Və heç kim bunu tapmaz.<br><br>
+    Düzgün sıra ilə ən pis hal: <em>təkrar göndərmə</em> — və <span class="mono">ON CONFLICT</span> onu udur.
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05 — Alert</p>
+  <h2>alert_sync.py — yaşayan vəziyyəti göndərmək</h2>
+  <p>Alert ölçmədən fərqlidir: o, <strong>dəyişir</strong>. Ona görə <span class="mono">DO NOTHING</span> yox, <span class="mono">DO UPDATE</span>.</p>
+
+  <div class="codebox">
+    <div class="cap">03_src/sync/alert_sync.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""Alert sinxronizasiyasi - yasayan veziyyet, DO UPDATE."""</span>
+<span class="kw">import</span> logging
+<span class="kw">import</span> time
+
+<span class="kw">from</span> .baza <span class="kw">import</span> edge_hovuz, merkez_hovuz
+<span class="kw">from</span> .konfiq <span class="kw">import</span> ZAVOD_KOD, SYNC_BATCH_ALERT, SYNC_ALERT_TEKRAR
+
+log = logging.getLogger(<span class="st">"sync.alert"</span>)
+
+ALERT_METRIKA = {<span class="st">"gonderilen"</span>: <span class="nm">0</span>, <span class="st">"yeni"</span>: <span class="nm">0</span>,
+                 <span class="st">"yenilenen"</span>: <span class="nm">0</span>, <span class="st">"dovr"</span>: <span class="nm">0</span>}
+
+<span class="cmt"># KRITIKLER ONDE + "hot setir" mudafiesi (Hisse A, bolme 10)</span>
+SQL_SEC = <span class="st">"""
+    SELECT id, cihaz_kod, novu, seviyye, mesaj,
+           acilma_vaxti, baglanma_vaxti, tetik_sayi,
+           ilk_qiymet, son_qiymet, pik_qiymet, hell_olundu
+    FROM xeberdarliq
+    WHERE sync_status = 0
+      AND (
+          sync_vaxti IS NULL
+          OR sync_vaxti < now() - (%s || ' seconds')::interval
+      )
+    ORDER BY
+        (seviyye = 'kritik') DESC,
+        acilma_vaxti
+    LIMIT %s
+"""</span>
+
+<span class="cmt"># DO UPDATE - cunki alert YASAYIR</span>
+SQL_MERKEZ = <span class="st">"""
+    INSERT INTO zavod.xeberdarliq (
+        zavod_kod, edge_id, cihaz_kod, novu, seviyye, mesaj,
+        acilma_vaxti, baglanma_vaxti, tetik_sayi,
+        ilk_qiymet, son_qiymet, pik_qiymet, hell_olundu
+    )
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ON CONFLICT (zavod_kod, edge_id) DO UPDATE SET
+        seviyye        = EXCLUDED.seviyye,
+        mesaj          = EXCLUDED.mesaj,
+        baglanma_vaxti = EXCLUDED.baglanma_vaxti,
+        tetik_sayi     = EXCLUDED.tetik_sayi,
+        son_qiymet     = EXCLUDED.son_qiymet,
+        pik_qiymet     = EXCLUDED.pik_qiymet,
+        hell_olundu    = EXCLUDED.hell_olundu,
+        qebul_vaxti    = now()
+    RETURNING (xmax = 0) AS yeni
+"""</span>
+
+SQL_BAYRAQ = <span class="st">"""
+    UPDATE xeberdarliq
+    SET sync_status = 1, sync_vaxti = now()
+    WHERE id = ANY(%s)
+"""</span>
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">alert_gonder</span>() -&gt; int:
+    <span class="st">"""Bir dovr: alertleri merkeze apar. ISTISNA ATIR."""</span>
+    baslangic = time.monotonic()
+
+    <span class="kw">async</span> <span class="kw">with</span> edge_hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(SQL_SEC,
+                              (SYNC_ALERT_TEKRAR, SYNC_BATCH_ALERT))
+            setirler = <span class="kw">await</span> cur.fetchall()
+
+    <span class="kw">if</span> <span class="kw">not</span> setirler:
+        <span class="kw">return</span> <span class="nm">0</span>
+
+    idler = [r[<span class="nm">0</span>] <span class="kw">for</span> r <span class="kw">in</span> setirler]
+    yeni_say = <span class="nm">0</span>
+
+    <span class="cmt"># ---- Merkeze yaz ----</span>
+    <span class="kw">async</span> <span class="kw">with</span> merkez_hovuz.connection() <span class="kw">as</span> mconn:
+        <span class="kw">async</span> <span class="kw">with</span> mconn.cursor() <span class="kw">as</span> mcur:
+            <span class="kw">for</span> r <span class="kw">in</span> setirler:
+                <span class="kw">await</span> mcur.execute(SQL_MERKEZ, (
+                    ZAVOD_KOD, r[<span class="nm">0</span>], r[<span class="nm">1</span>], r[<span class="nm">2</span>], r[<span class="nm">3</span>], r[<span class="nm">4</span>],
+                    r[<span class="nm">5</span>], r[<span class="nm">6</span>], r[<span class="nm">7</span>], r[<span class="nm">8</span>], r[<span class="nm">9</span>], r[<span class="nm">10</span>], r[<span class="nm">11</span>],
+                ))
+                netice = <span class="kw">await</span> mcur.fetchone()
+                <span class="kw">if</span> netice <span class="kw">and</span> netice[<span class="nm">0</span>]:
+                    yeni_say += <span class="nm">1</span>
+
+    <span class="cmt"># ---- YALNIZ INDI bayraq ----</span>
+    <span class="kw">async</span> <span class="kw">with</span> edge_hovuz.connection() <span class="kw">as</span> conn:
+        <span class="kw">async</span> <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            <span class="kw">await</span> cur.execute(SQL_BAYRAQ, (idler,))
+
+    ALERT_METRIKA[<span class="st">"gonderilen"</span>] += len(setirler)
+    ALERT_METRIKA[<span class="st">"yeni"</span>] += yeni_say
+    ALERT_METRIKA[<span class="st">"yenilenen"</span>] += len(setirler) - yeni_say
+    ALERT_METRIKA[<span class="st">"dovr"</span>] += <span class="nm">1</span>
+
+    log.info(<span class="st">"Alert: %d gonderildi (%d yeni, %d yenilendi) - %d ms"</span>,
+             len(setirler), yeni_say, len(setirler) - yeni_say,
+             int((time.monotonic() - baslangic) * <span class="nm">1000</span>))
+
+    <span class="kw">return</span> len(setirler)</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row">
+      <div class="c">DO UPDATE — DO NOTHING deyil</div>
+      <div class="d">Alert yenilənəndə (<span class="mono">tetik_sayi</span> artır, bağlanır) mərkəz <strong>yeni vəziyyəti görməlidir</strong>. <span class="mono">DO NOTHING</span> olsa, mərkəzdə alert əbədi "açıq" qalardı.</div>
+    </div>
+    <div class="row">
+      <div class="c">SQL_BAYRAQ-da sync_vaxti = now()</div>
+      <div class="d">"Hot sətir" müdafiəsi. Növbəti dövrdə bu alert <span class="mono">sync_vaxti &lt; now() - 60s</span> şərtinə görə <strong>seçilməyəcək</strong> — 60 saniyə keçənə qədər.</div>
+    </div>
+    <div class="row">
+      <div class="c">for döngüsü — executemany deyil</div>
+      <div class="d"><span class="mono">RETURNING</span> nəticəsini hər sətir üçün ayrıca oxumaq lazımdır (yeni/yenilənən statistikası üçün). Alert sayı azdır (onlarla), ona görə performans problemi deyil. Ölçmə üçün isə <span class="mono">executemany</span> istifadə etdik — orada minlərlə sətir var.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06 — Ana dövr</p>
+  <h2>main.py — hər şeyi birləşdirmək</h2>
+
+  <div class="codebox">
+    <div class="cap">03_src/sync/main.py</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">"""
+Sync isciisi - ayrica proses.
+Isledilir: python 03_src/sync/main.py
+"""</span>
+<span class="kw">import</span> asyncio
+<span class="kw">import</span> logging
+<span class="kw">import</span> signal
+<span class="kw">import</span> sys
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="cmt"># 03_src-i yola elave et (reqemle basladigi ucun import olunmur)</span>
+sys.path.insert(<span class="nm">0</span>, str(Path(__file__).resolve().parents[<span class="nm">1</span>]))
+
+<span class="kw">from</span> sync.konfiq <span class="kw">import</span> SYNC_INTERVAL, ZAVOD_KOD, VERSIYA
+<span class="kw">from</span> sync.baza <span class="kw">import</span> ac, bagla, merkez_elcatandir
+<span class="kw">from</span> sync.backoff <span class="kw">import</span> Backoff
+<span class="kw">from</span> sync.olcme_sync <span class="kw">import</span> olcme_gonder, OLCME_METRIKA
+<span class="kw">from</span> sync.alert_sync <span class="kw">import</span> alert_gonder, ALERT_METRIKA
+
+logging.basicConfig(
+    level=logging.INFO,
+    format=<span class="st">"%(asctime)s [%(levelname)-7s] %(name)-14s | %(message)s"</span>,
+    datefmt=<span class="st">"%Y-%m-%d %H:%M:%S"</span>,
+)
+log = logging.getLogger(<span class="st">"sync"</span>)
+
+dayan = asyncio.Event()
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">bir_dovr</span>(backoff: Backoff) -&gt; <span class="kw">None</span>:
+    <span class="st">"""Bir sync dovru: ALERTLER once, sonra olcmeler."""</span>
+    <span class="kw">try</span>:
+        <span class="cmt"># ---- 1. ALERTLER ONCE (Hisse A, bolme 07) ----
+        # Sebeke 3 saat kesilibse, kritik alert 2000 olcmenin
+        # arxasinda gozlememelidir.</span>
+        alert_say = <span class="kw">await</span> alert_gonder()
+
+        <span class="cmt"># ---- 2. Sonra olcmeler ----
+        # Novbe bosalana qeder tekrar-tekrar</span>
+        olcme_say = <span class="kw">await</span> olcme_gonder()
+
+        <span class="cmt"># Ugur - backoff sifirlanir</span>
+        <span class="kw">if</span> backoff.problemdedir:
+            log.info(<span class="st">"MERKEZ BERPA OLUNDU (%d ugursuz cehdden sonra)"</span>,
+                     backoff.ugursuz_say)
+        backoff.ugurlu()
+
+        <span class="cmt"># Hele gonderilecek var? Derhal davam et.</span>
+        <span class="kw">if</span> olcme_say &gt;= <span class="nm">1</span> <span class="kw">or</span> alert_say &gt;= <span class="nm">1</span>:
+            <span class="kw">return</span>
+
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        gozleme = backoff.ugursuz()
+        log.error(<span class="st">"Sync ugursuz (#%d): %s - %.1f san. gozleyirem"</span>,
+                  backoff.ugursuz_say, e, gozleme)
+        <span class="kw">try</span>:
+            <span class="kw">await</span> asyncio.wait_for(dayan.wait(), timeout=gozleme)
+        <span class="kw">except</span> asyncio.TimeoutError:
+            <span class="kw">pass</span>
+        <span class="kw">return</span>
+
+    <span class="cmt"># Gonderilecek yox idi - normal interval gozle</span>
+    <span class="kw">try</span>:
+        <span class="kw">await</span> asyncio.wait_for(dayan.wait(), timeout=SYNC_INTERVAL)
+    <span class="kw">except</span> asyncio.TimeoutError:
+        <span class="kw">pass</span>
+
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">esas</span>():
+    log.info(<span class="st">"Sync isciisi baslayir - zavod=%s, versiya=%s"</span>,
+             ZAVOD_KOD, VERSIYA)
+    <span class="kw">await</span> ac()
+
+    <span class="kw">if</span> <span class="kw">await</span> merkez_elcatandir():
+        log.info(<span class="st">"Merkez elcatandir"</span>)
+    <span class="kw">else</span>:
+        log.warning(<span class="st">"Merkez ELCATMAZDIR - gozleyecek, data itmeyecek"</span>)
+
+    backoff = Backoff(bas=<span class="nm">1.0</span>, tavan=<span class="nm">300.0</span>)
+
+    <span class="kw">while</span> <span class="kw">not</span> dayan.is_set():
+        <span class="kw">await</span> bir_dovr(backoff)
+
+    log.info(<span class="st">"Sonme... Metrikalar:"</span>)
+    log.info(<span class="st">"  Olcme: %s"</span>, OLCME_METRIKA)
+    log.info(<span class="st">"  Alert: %s"</span>, ALERT_METRIKA)
+    <span class="kw">await</span> bagla()
+    log.info(<span class="st">"Sync isciisi sondu."</span>)
+
+
+<span class="kw">def</span> <span class="fn">signal_tut</span>():
+    log.info(<span class="st">"Dayandirma siqnali alindi..."</span>)
+    dayan.set()
+
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    <span class="kw">for</span> sig <span class="kw">in</span> (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, signal_tut)
+
+    <span class="kw">try</span>:
+        loop.run_until_complete(esas())
+    <span class="kw">finally</span>:
+        loop.close()</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Növbə dolu olanda dərhal davam etmək</span>
+    Diqqət edin: dövrün sonunda <span class="mono">if olcme_say &gt;= 1: return</span> var. Yəni <strong>göndəriləcək data qalıbsa, 10 saniyə gözləmirik</strong> — dərhal növbəti dövrə keçirik.<br><br>
+    <strong>Niyə:</strong> şəbəkə 3 saat kəsilib, 2000 sətir yığılıб. Hər dövrdə 500 göndəririk. Əgər hər dövr arasında 10 saniyə gözləsək — bərpa 40 saniyə çəkərdi. Gözləmədən — <strong>4 saniyə</strong>.<br><br>
+    Növbə boşalan kimi normal 10 saniyəlik ritmə qayıdırıq.
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07 — Sınaq</p>
+  <h2>Tək maşında işə salaq</h2>
+  <p>İki maşına keçməzdən əvvəl — hər şeyi bir Mac-də sınayaq. Mərkəz <span class="mono">localhost:5432</span> olacaq.</p>
+
+  <div class="callout warn">
+    <span class="k">Mərkəzi baza bu maşındadırmı?</span>
+    <code class="inl">psql -p 5432 -d zarat_erp_2 -c "SELECT 1"</code><br><br>
+    <strong>İşləyirsə</strong> — davam edin.<br>
+    <strong>İşləmirsə</strong> — mərkəz digər Mac-dədir; birbaşa bölmə 08-ə keçin.
+  </div>
+
+  <h3>Addım 1 — Sxemləri qur</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+
+<span class="cmt"># Edge terefi (Hisse A)</span>
+psql -p 5434 -d zavod_edge_db -f 02_db/edge/08_sync_sxem.sql
+
+<span class="cmt"># Merkez terefi</span>
+mkdir -p 02_db/merkez
+psql -p 5432 -d zarat_erp_2 -f 02_db/merkez/01_zavod_sxem.sql
+
+<span class="cmt"># Yoxla</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT * FROM sync_veziyyet;"</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"SELECT count(*) FROM zavod.olcme;"</span></pre>
+  </div>
+
+  <h3>Addım 2 — Sync paketini yarat</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>mkdir -p 03_src/sync
+touch 03_src/sync/__init__.py
+
+<span class="cmt"># Yuxaridaki bes fayli yaradin:
+# konfiq.py, baza.py, backoff.py, olcme_sync.py, alert_sync.py, main.py</span>
+
+source 00_env/bin/activate
+python -m py_compile 03_src/sync/*.py &amp;&amp; echo <span class="st">"Sintaksis OK"</span></pre>
+  </div>
+
+  <h3>Addım 3 — ⑤ TERMİNAL: Sync işçisi</h3>
+  <div class="codebox">
+    <div class="cap">Yeni terminal — Cmd+T</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+python 03_src/sync/main.py</pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">Gözlənilən — ilk dövr böyük olacaq!</div>
+<pre>[INFO] sync           | Sync isciisi baslayir - zavod=SIYEZEN
+[INFO] sync.baza      | Edge hovuzu aciq
+[INFO] sync.baza      | Merkez hovuzu aciq (elcatanliq yoxlanmadi)
+[INFO] sync           | Merkez elcatandir
+[INFO] sync.alert     | Alert: 16 gonderildi (16 yeni, 0 yenilendi) - 89 ms
+[INFO] sync.olcme     | Olcme: 500 gonderildi (500 yeni, 0 dublikat) - 412 ms
+[INFO] sync.olcme     | Olcme: 500 gonderildi (500 yeni, 0 dublikat) - 398 ms
+[INFO] sync.olcme     | Olcme: 500 gonderildi (500 yeni, 0 dublikat) - 405 ms
+...
+[INFO] sync.olcme     | Olcme: 143 gonderildi (143 yeni, 0 dublikat) - 121 ms
+<span class="cmt"># Novbe bosaldi - indi her 10 saniyede kicik desteler</span></pre>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">İlk işə salmada bütün tarixçə gedir</span>
+    Bazanızda minlərlə ölçmə var (Dərs 03-dən bəri toplanıb) — hamısı <span class="mono">sync_status = 0</span>. İlk dövrlərdə hamısı mərkəzə axacaq.<br><br>
+    Bu, <strong>həm də bir testdir</strong>: sistem böyük yığılmış növbəni necə boşaldır? Real həyatda bu, uzun şəbəkə kəsilməsindən sonra baş verəcək.
+  </div>
+
+  <h3>Addım 4 — Nəticəni yoxla</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Edge: gozleyen qaldimi?</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT * FROM sync_veziyyet;"</span>
+
+<span class="cmt"># Merkez: data catdimi?</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"
+SELECT count(*) AS olcme_sayi,
+       min(olcme_vaxti) AS en_kohne,
+       max(olcme_vaxti) AS en_yeni
+FROM zavod.olcme;"</span>
+
+<span class="cmt"># Sayqaclar UYGUN gelirmi?</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT count(*) FROM olcme WHERE sync_status=1;"</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"SELECT count(*) FROM zavod.olcme;"</span>
+<span class="cmt"># ← Bu iki reqem BERABER olmalidir!</span></pre>
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08 — İki maşın</p>
+  <h2>Real qurulum: edge bu Mac-də, mərkəz digərində</h2>
+  <p>Bu, sizin faktiki ssenarinizdir. PostgreSQL default olaraq <strong>yalnız localhost-u dinləyir</strong> — onu açmaq lazımdır.</p>
+
+  <div class="arch">
+    <div class="lbl">İki maşın</div>
+    <div class="rowf">
+      <div class="bx hl"><span class="t">Intel MacBook</span><span class="s">edge :5434 + sync</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">LAN / VPN</span><span class="s">192.168.x.x</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">Apple Silicon Mac</span><span class="s">zarat_erp_2 :5432</span></div>
+    </div>
+  </div>
+
+  <h3>MƏRKƏZ maşında (birinci Mac)</h3>
+
+  <h4>① IP ünvanını öyrən</h4>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>ipconfig getifaddr en0
+<span class="cmt"># Nümunə çıxış: 192.168.1.50
+# Wi-Fi əvəzinə Ethernet istifadə edirsinizsə: en1</span></pre>
+  </div>
+
+  <h4>② PostgreSQL-i şəbəkəyə aç</h4>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Konfiq faylını tap</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"SHOW config_file;"</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"SHOW hba_file;"</span>
+
+<span class="cmt"># YEDEK GOTUR (check before changing!)</span>
+PGDATA=$(psql -p 5432 -d zarat_erp_2 -tAc <span class="st">"SHOW data_directory;"</span>)
+cp <span class="st">"$PGDATA/postgresql.conf"</span> <span class="st">"$PGDATA/postgresql.conf.bak"</span>
+cp <span class="st">"$PGDATA/pg_hba.conf"</span> <span class="st">"$PGDATA/pg_hba.conf.bak"</span></pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">postgresql.conf — dəyişiklik</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># listen_addresses = 'localhost'  →  '*'</span>
+listen_addresses = <span class="st">'*'</span></pre>
+  </div>
+
+  <div class="codebox">
+    <div class="cap">pg_hba.conf — SONUNA əlavə</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Zavod sync — yalnız daxili şəbəkədən, parolla</span>
+host    zarat_erp_2    zavod_sync    192.168.1.0/24    scram-sha-256</pre>
+  </div>
+
+  <div class="callout err">
+    <span class="k">Təhlükəsizlik — bunları ETMƏYİN</span>
+    <span class="mono">host all all 0.0.0.0/0 trust</span> — <strong>bütün dünyaya parolsuz giriş</strong>. Bu, bazanızı internetdə açıq qoymaq deməkdir.<br><br>
+    <strong>Düzgün üç qayda:</strong><br>
+    ① Konkret <strong>baza</strong> (<span class="mono">zarat_erp_2</span>, <span class="mono">all</span> deyil)<br>
+    ② Konkret <strong>istifadəçi</strong> (<span class="mono">zavod_sync</span> — məhdud icazələrlə)<br>
+    ③ Konkret <strong>şəbəkə</strong> (<span class="mono">192.168.1.0/24</span>, <span class="mono">0.0.0.0/0</span> deyil)<br>
+    ④ <strong>Parol</strong> (<span class="mono">scram-sha-256</span>, <span class="mono">trust</span> deyil)
+  </div>
+
+  <h4>③ Məhdud icazəli istifadəçi yarat</h4>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5432 -d zarat_erp_2 &lt;&lt; <span class="st">'SQLEOF'</span>
+
+<span class="cmt">-- Yalnız zavod sxeminə yaza bilən istifadəçi</span>
+DROP ROLE IF EXISTS zavod_sync;
+CREATE ROLE zavod_sync WITH LOGIN PASSWORD 'GUCLU_PAROL_BURA';
+
+GRANT CONNECT ON DATABASE zarat_erp_2 TO zavod_sync;
+GRANT USAGE ON SCHEMA zavod TO zavod_sync;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA zavod TO zavod_sync;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA zavod TO zavod_sync;
+
+<span class="cmt">-- Gələcək cədvəllər üçün də</span>
+ALTER DEFAULT PRIVILEGES IN SCHEMA zavod
+    GRANT SELECT, INSERT, UPDATE ON TABLES TO zavod_sync;
+
+<span class="cmt">-- Yoxla: bu istifadəçi BAŞQA sxemləri GÖRMÜR</span>
+SELECT rolname FROM pg_roles WHERE rolname = 'zavod_sync';
+SQLEOF</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə ayrıca istifadəçi</span>
+    ERP-də <strong>14 sxem</strong> var: maliyyə, kadrlar, satış... Sync işçisinin onlara <strong>heç bir işi yoxdur</strong>.<br><br>
+    <span class="mono">zavod_sync</span> istifadəçisi yalnız <span class="mono">zavod</span> sxemini görür. Sync kodunda səhv olsa belə — digər datanı zədələyə bilməz.<br><br>
+    <strong>Ən az imtiyaz prinsipi</strong> (principle of least privilege). Hər prosesə <em>yalnız</em> lazım olan icazə.
+  </div>
+
+  <h4>④ PostgreSQL-i yenidən başlat və yoxla</h4>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>brew services restart postgresql@18
+
+<span class="cmt"># Şəbəkəyə açıldımı?</span>
+lsof -i :5432 | grep LISTEN
+<span class="cmt"># "*:postgresql" görünməlidir — "localhost:postgresql" YOX!</span></pre>
+  </div>
+
+  <h3>EDGE maşında (bu Intel Mac)</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># 1) Şəbəkə əlçatandırmı?</span>
+ping -c 3 192.168.1.50
+nc -zv 192.168.1.50 5432
+<span class="cmt"># "succeeded!" görünməlidir</span>
+
+<span class="cmt"># 2) psql ilə birbaşa sınayaq</span>
+psql <span class="st">"postgresql://zavod_sync:GUCLU_PAROL_BURA@192.168.1.50:5432/zarat_erp_2"</span> \
+     -c <span class="st">"SELECT count(*) FROM zavod.olcme;"</span>
+
+<span class="cmt"># 3) İşlədisə — .env-i yenilə</span>
+cd ~/Desktop/Zarat_Faza2_Zavod
+sed -i.bak <span class="st">'s|^MERKEZ_DSN=.*|MERKEZ_DSN=postgresql://zavod_sync:GUCLU_PAROL_BURA@192.168.1.50:5432/zarat_erp_2|'</span> 01_config/.env
+
+grep MERKEZ_DSN 01_config/.env
+
+<span class="cmt"># 4) Sync-i yenidən başlat (⑤ terminal)</span></pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Parol .env faylındadır — GitHub-a getməməlidir!</span>
+    <code class="inl">grep -n "01_config/.env" .gitignore</code><br><br>
+    Çıxmasa, dərhal əlavə edin:<br>
+    <code class="inl">echo "01_config/.env" >> .gitignore</code><br>
+    <code class="inl">git rm --cached 01_config/.env 2>/dev/null</code>
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09 — Xaos testi</p>
+  <h2>Şəbəkəni kəsək — data itirmi?</h2>
+  <p>Bütün bu dərsin əsl imtahanı budur. <strong>İddianı sübut edirik:</strong> <em>şəbəkə saatlarla kəsilsə də, bir dənə də ölçmə itməz.</em></p>
+
+  <!-- TEST 1 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Xaos 1</span><span class="test-t">Mərkəzi öldür — sync sağ qalırmı?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Başlanğıc vəziyyəti yaz</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT * FROM sync_veziyyet;"</span>
+
+<span class="cmt"># MƏRKƏZİ SÖNDÜR (tək maşın halı)</span>
+brew services stop postgresql@18
+
+<span class="cmt"># İki maşın halında: mərkəz Mac-in Wi-Fi-ni söndürün</span>
+
+<span class="cmt"># ⑤ terminalda sync loglarına baxın:</span></pre>
+      </div>
+      <div class="codebox">
+        <div class="cap">Gözlənilən — backoff işə düşür</div>
+<pre>[ERROR] sync | Sync ugursuz (#1): connection failed - 1.1 san. gozleyirem
+[ERROR] sync | Sync ugursuz (#2): connection failed - 1.8 san. gozleyirem
+[ERROR] sync | Sync ugursuz (#3): connection failed - 4.2 san. gozleyirem
+[ERROR] sync | Sync ugursuz (#4): connection failed - 7.9 san. gozleyirem
+[ERROR] sync | Sync ugursuz (#5): connection failed - 15.3 san. gozleyirem
+<span class="cmt"># Gozleme muddeti IKI QAT artir - tavana (300 san.) catana qeder</span></pre>
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        Sync <strong>çökmür</strong>, backoff işləyir, gözləmə müddəti artır. <strong>Ən vacibi: FastAPI və simulyator normal işləyir</strong> — ② və ③ terminallara baxın. Data yazılmağa davam edir.
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 2 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Xaos 2</span><span class="test-t">Kəsilmə zamanı data yığılır</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Mərkəz hələ sönülüdür. 5 dəqiqə gözləyin.</span>
+sleep 300
+
+<span class="cmt"># Edge-də nə qədər yığıldı?</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT * FROM sync_veziyyet;"</span>
+
+<span class="cmt"># Gözlənilən: gozleyen ≈ 60 (5 dəq × 5 cihaz × 12 ölçmə/dəq)
+# en_kohne_gozleyen = kəsilmə anı</span></pre>
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        <span class="mono">gozleyen</span> sayı <strong>artır</strong>, <span class="mono">en_kohne_gozleyen</span> kəsilmə anını göstərir. Data <strong>itmir — gözləyir</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 3 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Xaos 3</span><span class="test-t">Bərpa — yığılmış data axırmı?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># MƏRKƏZİ QALDIR</span>
+brew services start postgresql@18
+sleep 5
+
+<span class="cmt"># ⑤ terminalda izləyin — backoff tavanda ola bilər (5 dəq.),
+# ona görə ilk cəhd bir qədər gecikə bilər. SƏBRLİ OLUN.</span></pre>
+      </div>
+      <div class="codebox">
+        <div class="cap">Gözlənilən — bərpa mesajı və axın</div>
+<pre>[INFO] sync           | MERKEZ BERPA OLUNDU (7 ugursuz cehdden sonra)
+[INFO] sync.alert     | Alert:  3 gonderildi (0 yeni, 3 yenilendi) - 45 ms
+[INFO] sync.olcme     | Olcme: 500 gonderildi (500 yeni, 0 dublikat) - 380 ms
+[INFO] sync.olcme     | Olcme: 187 gonderildi (187 yeni, 0 dublikat) - 142 ms
+<span class="cmt"># Novbe bosaldi!</span></pre>
+      </div>
+      <div class="codebox">
+        <div class="cap">Yekun yoxlama — ƏN VACİB SORĞU</div>
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>sleep 30
+
+<span class="cmt"># Edge: gozleyen SIFIR olmalidir</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT * FROM sync_veziyyet;"</span>
+
+<span class="cmt"># SAYQAC MUQAYISESI — data itdimi?</span>
+echo <span class="st">"--- EDGE ---"</span>
+psql -p 5434 -d zavod_edge_db -tAc <span class="st">"SELECT count(*) FROM olcme;"</span>
+
+echo <span class="st">"--- MERKEZ ---"</span>
+psql -p 5432 -d zarat_erp_2 -tAc <span class="st">"SELECT count(*) FROM zavod.olcme;"</span>
+
+<span class="cmt"># BU IKI REQEM BERABER OLMALIDIR!</span></pre>
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        Edge və mərkəz sayğacları <strong>bərabərdir</strong>. Şəbəkə 5 dəqiqə kəsildi, sonra bərpa oldu — və <strong>bir dənə də ölçmə itmədi</strong>. Bu, dərsin sübutudur.
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 4 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Xaos 4</span><span class="test-t">İdempotentlik — təkrar göndərmə zərərsizdirmi?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Bayrağı QƏSDƏN geri qaytar — 200 sətri "göndərilməmiş" et</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+UPDATE olcme SET sync_status = 0
+WHERE id IN (SELECT id FROM olcme WHERE sync_status = 1
+             ORDER BY id DESC LIMIT 200);"</span>
+
+<span class="cmt"># Mərkəzdəki sayğacı yadda saxla</span>
+psql -p 5432 -d zarat_erp_2 -tAc <span class="st">"SELECT count(*) FROM zavod.olcme;"</span>
+
+<span class="cmt"># Sync 200 sətri TƏKRAR göndərəcək. 20 saniyə gözləyin.</span>
+sleep 20
+
+<span class="cmt"># Mərkəzdə sayğac ARTDIMI?</span>
+psql -p 5432 -d zarat_erp_2 -tAc <span class="st">"SELECT count(*) FROM zavod.olcme;"</span>
+
+<span class="cmt"># Jurnalda dublikat görünür</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"
+SELECT cedvel, setir_sayi, yeni_setir,
+       setir_sayi - yeni_setir AS dublikat
+FROM zavod.sync_jurnal ORDER BY vaxt DESC LIMIT 3;"</span></pre>
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        Mərkəzdəki sayğac <strong>DƏYİŞMİR</strong>. Jurnalda <span class="mono">setir_sayi = 200</span>, <span class="mono">yeni_setir = 0</span>, <span class="mono">dublikat = 200</span>.<br><br>
+        200 sətir yenidən göndərildi — <strong>heç biri yazılmadı</strong>. <span class="mono">ON CONFLICT DO NOTHING</span> hamısını səssizcə atdı. <strong>İdempotentlik işləyir.</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST 5 -->
+  <div class="test">
+    <div class="test-h"><span class="test-n">Xaos 5</span><span class="test-t">Alert yenilənməsi mərkəzə çatırmı?</span></div>
+    <div class="test-b">
+      <div class="codebox">
+        <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt"># Edge-də aktiv alerti tap</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT id, cihaz_kod, tetik_sayi, hell_olundu
+FROM xeberdarliq WHERE hell_olundu = FALSE LIMIT 1;"</span>
+
+<span class="cmt"># Mərkəzdə həmin alert (edge_id ilə)</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"
+SELECT edge_id, cihaz_kod, tetik_sayi, hell_olundu
+FROM zavod.xeberdarliq WHERE hell_olundu = FALSE LIMIT 1;"</span>
+
+<span class="cmt"># 2 dəqiqə gözləyin (simulyator alerti yeniləyir)</span>
+sleep 120
+
+<span class="cmt"># tetik_sayi HƏR İKİ tərəfdə ARTMALIDIR</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT id, tetik_sayi FROM xeberdarliq WHERE hell_olundu=FALSE LIMIT 1;"</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"SELECT edge_id, tetik_sayi FROM zavod.xeberdarliq WHERE hell_olundu=FALSE LIMIT 1;"</span></pre>
+      </div>
+      <div class="verdict">
+        <b>Keçdi əgər</b>
+        Mərkəzdəki <span class="mono">tetik_sayi</span> də artıb. <strong>Trigger</strong> (Hissə A) bayrağı sıfırladı, sync <span class="mono">DO UPDATE</span> ilə mərkəzi yenilədi. <strong>Yaşayan vəziyyət sinxronlaşır.</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10 — Monitorinq</p>
+  <h2>Gecikməni izləmək</h2>
+  <p>Sync işləyir — amma <strong>nə qədər gecikir?</strong> Bunu görmək lazımdır.</p>
+
+  <div class="codebox">
+    <div class="cap">Sync gecikməsi — bir sorğu ilə</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT
+    count(*) FILTER (WHERE sync_status = 0)  AS gozleyen,
+    count(*) FILTER (WHERE sync_status = 1)  AS gonderilen,
+
+    -- EN VACIB METRIKA: en kohne gonderilmemis setir nece yaslidir?
+    COALESCE(
+        EXTRACT(EPOCH FROM (now() - min(olcme_vaxti)
+            FILTER (WHERE sync_status = 0)))::int,
+        0
+    ) AS gecikme_saniye
+
+FROM olcme;"</span></pre>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Gecikmə</th><th>Vəziyyət</th><th>Nə etməli</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 30 san.</td><td class="yes">Normal</td><td>Heç nə</td></tr>
+      <tr><td>30 san. – 5 dəq.</td><td>Yüngül yığılma</td><td>İzləyin — batch ölçüsü kifayət edirmi?</td></tr>
+      <tr><td>5 dəq. – 1 saat</td><td>Şəbəkə problemi</td><td>Sync loglarına baxın, backoff sayğacını yoxlayın</td></tr>
+      <tr><td>&gt; 1 saat</td><td class="no">Ciddi problem</td><td>Mərkəz əlçatandırmı? Disk dolmayıb?</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Mərkəzdə: sync jurnalı</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5432 -d zarat_erp_2 -c <span class="st">"
+SELECT
+    date_trunc('hour', vaxt) AS saat,
+    cedvel,
+    sum(setir_sayi)              AS gonderilen,
+    sum(yeni_setir)              AS yeni,
+    sum(setir_sayi - yeni_setir) AS dublikat,
+    round(avg(muddet_ms))        AS orta_ms
+FROM zavod.sync_jurnal
+WHERE vaxt > now() - interval '24 hours'
+GROUP BY 1, 2
+ORDER BY 1 DESC;"</span></pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Dublikat sayı nə deyir</span>
+    <span class="mono">dublikat = 0</span> — hər şey ilk cəhddə keçir. İdeal.<br><br>
+    <span class="mono">dublikat &gt; 0</span> — təkrar göndərmə olub. Bu, <strong>xəta deyil</strong>: şəbəkə titrəyib, sync ehtiyatlı davranıb, at-least-once işləyib.<br><br>
+    <span class="mono">dublikat</span> davamlı yüksəkdirsə — bayraq yeniləməsi tez-tez uğursuz olur. Edge bazanın sağlamlığını yoxlayın.
+  </div>
+
+  <h3>Fon xidməti kimi qurmaq (opsional)</h3>
+  <div class="codebox">
+    <div class="cap">05_servisler/sync_start.sh</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cat &gt; 05_servisler/sync_start.sh &lt;&lt; <span class="st">'EOF'</span>
+#!/bin/bash
+cd ~/Desktop/Zarat_Faza2_Zavod
+source 00_env/bin/activate
+mkdir -p _LOG
+nohup python 03_src/sync/main.py &gt;&gt; _LOG/sync.log 2&gt;&amp;1 &amp;
+echo $! &gt; _LOG/sync.pid
+echo <span class="st">"Sync isciisi basladi (PID: $(cat _LOG/sync.pid))"</span>
+<span class="st">EOF</span>
+
+cat &gt; 05_servisler/sync_stop.sh &lt;&lt; <span class="st">'EOF'</span>
+#!/bin/bash
+cd ~/Desktop/Zarat_Faza2_Zavod
+if [ -f _LOG/sync.pid ]; then
+    kill $(cat _LOG/sync.pid) 2&gt;/dev/null
+    rm _LOG/sync.pid
+    echo <span class="st">"Sync isciisi dayandirildi"</span>
+else
+    pkill -f <span class="st">"sync/main.py"</span>
+    echo <span class="st">"Sync isciisi dayandirildi (pkill)"</span>
+fi
+<span class="st">EOF</span>
+
+chmod +x 05_servisler/sync_*.sh</pre>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11 — Diaqnostika</p>
+  <h2>Tipik xətalar</h2>
+  <table class="tbl">
+    <thead><tr><th>Xəta</th><th>Səbəb</th><th>Həll</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">connection refused (5432)</td>
+        <td>Mərkəz sönüb və ya <span class="mono">listen_addresses</span> localhost-dur</td>
+        <td><code class="inl">brew services start postgresql@18</code>; <span class="mono">listen_addresses = '*'</span></td>
+      </tr>
+      <tr>
+        <td class="mono">no pg_hba.conf entry for host</td>
+        <td><span class="mono">pg_hba.conf</span>-a sətir əlavə olunmayıb</td>
+        <td><span class="mono">host zarat_erp_2 zavod_sync 192.168.1.0/24 scram-sha-256</span> + restart</td>
+      </tr>
+      <tr>
+        <td class="mono">permission denied for schema zavod</td>
+        <td><span class="mono">GRANT</span> verilməyib</td>
+        <td>Bölmə 08, addım ③-ü təkrar işlədin</td>
+      </tr>
+      <tr>
+        <td class="mono">relation "zavod.olcme" does not exist</td>
+        <td>Mərkəz sxemi qurulmayıb</td>
+        <td><code class="inl">psql -p 5432 -d zarat_erp_2 -f 02_db/merkez/01_zavod_sxem.sql</code></td>
+      </tr>
+      <tr>
+        <td><span class="mono">gozleyen</span> sayı <strong>artmağa davam edir</strong></td>
+        <td>Sync işləmir, ya batch çox kiçikdir</td>
+        <td>⑤ terminala baxın; <span class="mono">SYNC_BATCH_OLCME</span> artırın</td>
+      </tr>
+      <tr>
+        <td>Alert <strong>sonsuz</strong> göndərilir</td>
+        <td>Trigger <span class="mono">WHEN</span> şərtsizdir → sonsuz dövr</td>
+        <td>Hissə A, bölmə 08 — <span class="mono">WHEN</span> şərtini yoxlayın</td>
+      </tr>
+      <tr>
+        <td>Mərkəzdə sayğac edge-dən <strong>ÇOXDUR</strong></td>
+        <td>Edge datası silinib (təmizlik), mərkəzdə qalıb</td>
+        <td><strong>Normaldır</strong> — mərkəz uzunmüddətli arxivdir</td>
+      </tr>
+      <tr>
+        <td>Mərkəzdə sayğac <strong>AZDIR</strong></td>
+        <td>Sync geri qalır və ya bayraq səhv qoyulub</td>
+        <td><span class="mono">sync_veziyyet</span>-ə baxın; jurnalı yoxlayın</td>
+      </tr>
+      <tr>
+        <td>Sync <strong>donub</strong> — nə xəta, nə iş</td>
+        <td>Timeout qoyulmayıb, şəbəkə "yarım ölü"dür</td>
+        <td><span class="mono">baza.py</span>-də <span class="mono">timeout=10.0</span> varmı?</td>
+      </tr>
+      <tr>
+        <td class="mono">password authentication failed</td>
+        <td>.env-də parol səhvdir</td>
+        <td><code class="inl">grep MERKEZ_DSN 01_config/.env</code> — parolu yoxlayın</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Sistem tamamlandı</h2>
+
+  <ul class="check">
+    <li><strong>Outbox pattern</strong> — yazma və göndərmə tam ayrıldı. Şəbəkə kəsilsə, yazıcı xəbər tutmur.</li>
+    <li><strong>Eksponensial backoff + jitter</strong> — kəsilmə zamanı ağıllı gözləmə, bərpa olanda hücum yox.</li>
+    <li><strong>At-least-once + idempotentlik</strong> — cəsarətlə təkrar göndər, dublikatı baza tutur.</li>
+    <li><strong>Alert prioriteti</strong> — kritik məlumat 2000 ölçmənin arxasında gözləmir.</li>
+    <li><strong>İki maşınlı qurulum</strong> — <span class="mono">pg_hba.conf</span>, məhdud icazəli istifadəçi, ən az imtiyaz.</li>
+    <li><strong>Xaos testi sübut etdi:</strong> şəbəkə kəsildi, bərpa oldu — <strong>data itmədi</strong>.</li>
+  </ul>
+
+  <h3>Yeddi dərsin yolu</h3>
+  <table class="tbl">
+    <thead><tr><th>Dərs</th><th>Sistem nə qazandı</th></tr></thead>
+    <tbody>
+      <tr><td><strong>01–02</strong></td><td>Baza sxemi — data <em>hara</em> yazılacaq</td></tr>
+      <tr><td><strong>03</strong></td><td>İlk ölçmələr — sistem <strong>data toplayır</strong></td></tr>
+      <tr><td><strong>04</strong></td><td>MQTT — sensorlar <strong>real protokolla</strong> danışır</td></tr>
+      <tr><td><strong>05</strong></td><td>Validasiya + idempotentlik — data <strong>təmizdir</strong></td></tr>
+      <tr><td><strong>06</strong></td><td>Alert vəziyyət maşını — sistem <strong>düşünür</strong></td></tr>
+      <tr><td><strong>07</strong></td><td>Sinxronizasiya — bilik <strong>mərkəzə çatır</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout ok">
+    <span class="k">Nə quruldu</span>
+    Siyəzəndəki sensor bir dəyər ölçür. O dəyər <strong>validasiyadan keçir</strong>, dublikatı rədd olunur, <strong>anomaliyası ağıllı şəkildə qiymətləndirilir</strong> (səs-küy udulur, real problem alert yaradır), <strong>edge bazaya yazılır</strong>, sonra <strong>mərkəzi ERP-yə çatdırılır</strong> — və şəbəkə kəsilsə də <strong>itmir</strong>.<br><br>
+    Bakıdakı rəhbər indi zavodun nəbzini görür. Kritik alert dəqiqələr içində ona çatır.<br><br>
+    <strong>Bu, tam bir sənaye telemetriya sistemidir.</strong>
+  </div>
+
+  <div class="callout">
+    <span class="k">Buradan hara</span>
+    <strong>Dashboard</strong> — mərkəzdəki datanı vizuallaşdırmaq (Grafana, ya öz React panelin).<br>
+    <strong>Real gateway</strong> — simulyatoru əsl Modbus/OPC-UA oxuyucu ilə əvəz etmək.<br>
+    <strong>İkinci zavod</strong> — <span class="mono">zavod_kod</span> sütunu artıq hazırdır.<br>
+    <strong>Proqnoz</strong> — toplanan data ilə nasazlığı <em>əvvəlcədən</em> görmək (predictive maintenance).<br><br>
+    Amma bunların hamısı <strong>möhkəm bünövrə</strong> üzərində qurulur — və o bünövrə indi hazırdır.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 07-B — Sync İşçisi: Kod, İki Maşın və Xaos Testi</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>

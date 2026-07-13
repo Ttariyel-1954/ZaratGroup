@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zavod Nəzarət Paneli — Operator Təlimatı</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --grafit:#0e1620; --polad:#17222f; --xett:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --kehreba:#f5a524;
+    --mavi:#5aa9e6; --yasil:#5bd08a; --yasil-deep:#2f8f5b;
+    --qirmizi:#e5695f; --qirmizi-deep:#c0453a; --bnovsheyi:#a78bfa;
+    --kagiz:#f6f4ef; --kagiz2:#efece4; --murekkeb:#1a222c;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--kagiz);color:var(--murekkeb);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1100px 380px at 80% -10%,rgba(45,212,191,.16),transparent 60%),
+    linear-gradient(180deg,var(--grafit),var(--polad));
+    color:#e8eef5;padding:60px 32px 48px;border-bottom:3px solid var(--teal);}
+  .wrap{max-width:960px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--teal);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",sans-serif;font-weight:700;
+    font-size:clamp(28px,4.6vw,46px);line-height:1.08;margin:0 0 16px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:740px;margin:0;line-height:1.7;}
+
+  .toc{background:var(--kagiz2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:960px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;} .toc a{color:var(--teal-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:960px;margin:0 auto;padding:0 32px;}
+  section{padding:44px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--teal-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",sans-serif;font-weight:600;
+    font-size:clamp(23px,3.2vw,31px);line-height:1.15;margin:0 0 18px;}
+  h3{font-family:"Oswald",sans-serif;font-weight:600;font-size:20px;margin:30px 0 10px;}
+  h4{font-family:"Oswald",sans-serif;font-weight:500;font-size:17px;margin:20px 0 8px;color:#33465a;}
+  p{margin:0 0 15px;}
+
+  .callout{background:var(--kagiz2);border-left:4px solid var(--teal-deep);
+    padding:16px 21px;border-radius:0 4px 4px 0;margin:20px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--kehreba);background:#fbf3e2;}
+  .callout.err{border-left-color:var(--qirmizi);background:#fbeceb;}
+  .callout.ok{border-left-color:var(--yasil);background:#eaf7f0;}
+  .callout.ai{border-left-color:var(--bnovsheyi);background:#f1eefb;}
+  .callout .k{font-family:"Oswald",sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:#b9781a;} .callout.err .k{color:var(--qirmizi-deep);}
+  .callout.ok .k{color:var(--yasil-deep);} .callout.ai .k{color:#6d4fc4;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--polad);color:#dbe6f0;font-family:"Oswald",sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--teal);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--kagiz2);}
+
+  .kod{position:relative;margin:18px 0;}
+  .kod pre{background:var(--grafit);color:#d7e3ee;border-radius:6px;padding:16px 19px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,monospace;font-size:13px;
+    line-height:1.7;margin:0;border:1px solid var(--xett);}
+  .cmt{color:#6f8598;}
+  .kopya{position:absolute;top:9px;right:9px;background:rgba(45,212,191,.14);color:#7fe6d8;
+    border:1px solid rgba(45,212,191,.4);border-radius:3px;font-family:"Oswald",sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .kopya:hover{background:rgba(45,212,191,.28);}
+
+  /* Addım kartları */
+  .addim{display:flex;gap:16px;margin-bottom:16px;background:#fff;
+    border:1px solid #e3ded4;border-radius:8px;padding:16px 18px;
+    box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .addim .n{flex:0 0 34px;height:34px;border-radius:50%;background:var(--teal-deep);
+    color:#fff;font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;
+    display:flex;align-items:center;justify-content:center;}
+  .addim .m{flex:1;}
+  .addim .m b{font-family:"Oswald",sans-serif;font-size:16px;display:block;margin-bottom:3px;}
+
+  /* Boru xətti nümunəsi */
+  .boru{background:var(--grafit);border-radius:10px;padding:24px 16px;margin:22px 0;overflow-x:auto;}
+  .boru-sira{display:flex;align-items:stretch;justify-content:center;gap:6px;min-width:820px;}
+  .mrh{flex:1;min-width:120px;background:var(--polad);border:1px solid var(--xett);
+    border-radius:7px;padding:12px 10px;text-align:center;}
+  .mrh.ok{border-color:var(--yasil);}
+  .mrh.qm{border-color:var(--qirmizi);}
+  .lampa{width:10px;height:10px;border-radius:50%;margin:0 auto 8px;background:#64748b;}
+  .lampa.y{background:var(--yasil);box-shadow:0 0 8px var(--yasil);}
+  .lampa.q{background:var(--qirmizi);box-shadow:0 0 8px var(--qirmizi);}
+  .lampa.k{background:var(--kehreba);box-shadow:0 0 8px var(--kehreba);}
+  .mrh .ad{font-family:"Oswald",sans-serif;font-size:11px;text-transform:uppercase;
+    letter-spacing:.06em;color:#c6d3df;margin-bottom:5px;}
+  .mrh .rq{font-family:"Oswald",sans-serif;font-size:19px;font-weight:600;color:#fff;}
+  .mrh .et{font-size:9.5px;color:#8fa6ba;margin-top:2px;}
+  .ar{color:var(--teal);font-size:17px;align-self:center;}
+
+  .lampa-legend{display:flex;gap:22px;flex-wrap:wrap;margin:18px 0;}
+  .lg{display:flex;align-items:center;gap:9px;font-size:15px;}
+  .lg .d{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+
+  /* Ssenari */
+  .ssen{border:1px solid #e3ded4;border-radius:8px;margin:20px 0;overflow:hidden;background:#fff;}
+  .ssen-h{display:flex;align-items:center;gap:11px;padding:12px 17px;
+    background:var(--kagiz2);border-bottom:1px solid #e3ded4;}
+  .ssen-h .ik{font-size:19px;}
+  .ssen-h .t{font-family:"Oswald",sans-serif;font-size:16px;font-weight:500;}
+  .ssen-b{padding:15px 17px;}
+  .ssen-b .lbl{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.11em;
+    text-transform:uppercase;color:#7a8a99;margin:12px 0 3px;}
+  .ssen-b .lbl:first-child{margin-top:0;}
+  .ssen-b ol{margin:4px 0 0;padding-left:20px;}
+  .ssen-b li{margin-bottom:3px;}
+
+  .siyahi{list-style:none;padding:0;margin:18px 0;}
+  .siyahi li{padding:11px 15px 11px 42px;position:relative;background:var(--kagiz2);
+    border-radius:6px;margin-bottom:7px;font-size:15.5px;line-height:1.55;
+    border-left:3px solid var(--yasil);}
+  .siyahi li::before{content:"✓";position:absolute;left:14px;top:9px;color:var(--yasil-deep);
+    font-weight:bold;font-size:17px;font-family:Arial,sans-serif;}
+
+  .tehluke{background:#fbeceb;border:2px solid var(--qirmizi);border-radius:8px;
+    padding:20px 24px;margin:24px 0;}
+  .tehluke h4{color:var(--qirmizi-deep);margin-top:0;font-size:18px;}
+
+  footer{background:var(--grafit);color:#8ea2b4;padding:30px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",sans-serif;color:var(--teal);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+
+  @media print{
+    .hero{background:#0e1620 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .kopya{display:none;} section{page-break-inside:avoid;}
+  }
+  @media (max-width:700px){
+    .hero{padding:44px 20px 36px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .kopya{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Siyəzən yem zavodu</p>
+    <h1>Nəzarət Paneli — Operator Təlimatı</h1>
+    <p class="lede">Bu təlimat sizə lazım olan hər şeyi öyrədir: paneli açmaq, ekranı oxumaq, problemi tanımaq və düzəltmək. <strong>Xüsusi hazırlıq tələb olunmur.</strong> Kompüter bilikləriniz nə qədər olursa olsun — bu səhifəni oxuyandan sonra sistemi idarə edə biləcəksiniz.</p>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Panel nədir və nə göstərir</a></li>
+    <li><a href="#s2">Hər səhər: paneli açmaq</a></li>
+    <li><a href="#s3">Boru xətti — ən vacib ekran</a></li>
+    <li><a href="#s4">Lampa rəngləri nə deməkdir</a></li>
+    <li><a href="#s5">Sağlamlıq xalı</a></li>
+    <li><a href="#s6">«Nə baş verir» — problemlər</a></li>
+    <li><a href="#s7">Cihazlar bölməsi</a></li>
+    <li><a href="#s8">Xəbərdarlıqlar</a></li>
+    <li><a href="#s9">Mərkəzə göndərmə</a></li>
+    <li><a href="#s10">AI köməkçi ilə danışmaq</a></li>
+    <li><a href="#s11">İdarəetmə düymələri</a></li>
+    <li><a href="#s12">Altı real ssenari</a></li>
+    <li><a href="#s13">Nə vaxt mühəndisə zəng etməli</a></li>
+    <li><a href="#s14">Axşam: sistemi söndürmək</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01</p>
+  <h2>Panel nədir və nə göstərir</h2>
+
+  <p>Zavodda <strong>5 sensor</strong> var. Onlar hər 5 saniyədə bir ölçü götürür: temperatur, rütubət, çəki, vibrasiya, enerji.</p>
+
+  <p>Bu ölçülər uzun bir yol keçir — sensordan Bakıdakı mərkəzi bazaya qədər. Yolda <strong>altı mərhələ</strong> var. Hər hansı biri sınsa, məlumat dayanır.</p>
+
+  <div class="callout">
+    <span class="k">Panelin bir işi var</span>
+    Sizə göstərmək: <strong>data axırmı, harada dayanıb, nə etməlisiniz.</strong><br><br>
+    Hamısı bir ekranda. Terminala girməyə, əmr yazmağa ehtiyac yoxdur.
+  </div>
+
+  <h3>Panelin altı bölməsi</h3>
+  <table class="tbl">
+    <thead><tr><th>Bölmə</th><th>Nə üçün</th><th>Nə vaxt açırsınız</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Panel</strong></td><td>Ümumi mənzərə — boru xətti, problemlər, cihazlar</td><td><strong>Hər zaman.</strong> Əsas ekran budur</td></tr>
+      <tr><td><strong>Cihazlar</strong></td><td>Bir sensorun qrafiki — dəyər necə dəyişir</td><td>Bir cihaz şübhəli görünəndə</td></tr>
+      <tr><td><strong>Xəbərdarlıqlar</strong></td><td>Aktiv problemlər və tarixçə</td><td>Alert yaranan kimi</td></tr>
+      <tr><td><strong>Mərkəzə göndərmə</strong></td><td>Bakıya nə qədər çatıb, nə qədər gözləyir</td><td>Şəbəkə problemi olanda</td></tr>
+      <tr><td><strong>AI Köməkçi</strong></td><td>Sual verirsiniz — cavab alırsınız</td><td>Nə edəcəyinizi bilməyəndə</td></tr>
+      <tr><td><strong>İdarəetmə</strong></td><td>Başlat / söndür düymələri, loglar</td><td>Səhər, axşam və problem zamanı</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02</p>
+  <h2>Hər səhər: paneli açmaq</h2>
+
+  <div class="addim">
+    <div class="n">1</div>
+    <div class="m">
+      <b>Terminal proqramını açın</b>
+      Mac-də: <code class="inl">Cmd + Boşluq</code> → «Terminal» yazın → <code class="inl">Enter</code>
+    </div>
+  </div>
+
+  <div class="addim">
+    <div class="n">2</div>
+    <div class="m">
+      <b>Bu iki sətri yapışdırın və Enter basın</b>
+      Hər səhər eyni əmr. Yadda saxlamağa ehtiyac yoxdur — bu səhifədən kopyalayın.
+    </div>
+  </div>
+
+  <div class="kod">
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+R --no-save -e 'shiny::runApp("07_panel/app.R", port = 3970, launch.browser = TRUE)'</pre>
+  </div>
+
+  <div class="addim">
+    <div class="n">3</div>
+    <div class="m">
+      <b>Brauzer avtomatik açılacaq</b>
+      10-15 saniyə gözləyin. Panel görünəndə iş başlayır.
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Terminal pəncərəsini BAĞLAMAYIN</span>
+    Panel o pəncərədə işləyir. Bağlasanız, panel sönəcək.<br><br>
+    Pəncərəni <strong>arxa plana ata bilərsiniz</strong> — sadəcə bağlamayın.
+  </div>
+
+  <h3>Panel açılmasa</h3>
+  <div class="kod">
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt"># Köhnə nüsxəni öldürün, sonra yenidən açın</span>
+pkill -9 -f app.R
+cd ~/Desktop/Zarat_Faza2_Zavod
+R --no-save -e 'shiny::runApp("07_panel/app.R", port = 3971, launch.browser = TRUE)'</pre>
+  </div>
+  <p>Diqqət: port nömrəsi dəyişdi — <code class="inl">3970</code> → <code class="inl">3971</code>. Köhnə nömrə ilişibsə, yenisi işləyəcək.</p>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03</p>
+  <h2>Boru xətti — ən vacib ekran</h2>
+
+  <p>Panelin yuxarısında <strong>altı qutu</strong> var, soldan sağa. Bu, məlumatın yoludur.</p>
+
+  <div class="boru">
+    <div class="boru-sira">
+      <div class="mrh ok"><div class="lampa y"></div><div class="ad">Sensorlar</div><div class="rq">5/5</div><div class="et">cihaz işləyir</div></div>
+      <span class="ar">▸</span>
+      <div class="mrh ok"><div class="lampa y"></div><div class="ad">Məlumat qutusu</div><div class="rq">1 357</div><div class="et">mesaj qəbul edildi</div></div>
+      <span class="ar">▸</span>
+      <div class="mrh ok"><div class="lampa y"></div><div class="ad">Emal proqramı</div><div class="rq">1 351</div><div class="et">ölçmə qəbul edildi</div></div>
+      <span class="ar">▸</span>
+      <div class="mrh ok"><div class="lampa y"></div><div class="ad">Zavod bazası</div><div class="rq">8 140</div><div class="et">sətir bazada</div></div>
+      <span class="ar">▸</span>
+      <div class="mrh ok"><div class="lampa y"></div><div class="ad">Göndərici</div><div class="rq">15</div><div class="et">növbədə gözləyir</div></div>
+      <span class="ar">▸</span>
+      <div class="mrh ok"><div class="lampa y"></div><div class="ad">Bakı — ERP</div><div class="rq">8 125</div><div class="et">sətir mərkəzdə</div></div>
+    </div>
+  </div>
+
+  <h3>Hər qutu nə deməkdir</h3>
+  <table class="tbl">
+    <thead><tr><th>Mərhələ</th><th>Sadə dildə</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Sensorlar</strong></td><td>Zavoddakı 5 cihaz. Ölçü götürüb göndərirlər.</td></tr>
+      <tr><td><strong>Məlumat qutusu</strong></td><td>Poçt qutusu kimidir. Sensorlar məktubu bura atır.</td></tr>
+      <tr><td><strong>Emal proqramı</strong></td><td>Məktubu oxuyur, yoxlayır, düzgündürsə saxlayır.</td></tr>
+      <tr><td><strong>Zavod bazası</strong></td><td>Zavoddakı yaddaş. Bütün ölçmələr burada.</td></tr>
+      <tr><td><strong>Göndərici</strong></td><td>Məlumatı Bakıya aparır.</td></tr>
+      <tr><td><strong>Bakı — ERP</strong></td><td>Mərkəzi baza. Rəhbərlik oradan baxır.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout ok">
+    <span class="k">Ən vacib qayda — bunu yadda saxlayın</span>
+    Qutular arasında <strong>hərəkət edən xətlər</strong> var. Bunlar «axın» deməkdir.<br><br>
+    <strong>Xətlər hərəkət edirsə</strong> — məlumat axır, hər şey yolundadır.<br>
+    <strong>Xətlər donubsa</strong> — məlumat orada dayanıb.<br><br>
+    <strong>SOLDAN SAĞA baxın. İLK qırmızı qutunu tapın. Onu düzəldin.</strong><br>
+    Sağdakılar özləri bərpa olunacaq — çünki onlar sadəcə soldakını gözləyir.
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04</p>
+  <h2>Lampa rəngləri nə deməkdir</h2>
+
+  <p>Hər qutunun yuxarısında kiçik bir lampa var.</p>
+
+  <div class="lampa-legend">
+    <div class="lg"><span class="d" style="background:#5bd08a;box-shadow:0 0 8px #5bd08a;"></span> <strong>YAŞIL</strong> — hər şey qaydasındadır</div>
+    <div class="lg"><span class="d" style="background:#f5a524;box-shadow:0 0 8px #f5a524;"></span> <strong>SARI</strong> — diqqət lazımdır, amma təcili deyil</div>
+    <div class="lg"><span class="d" style="background:#e5695f;box-shadow:0 0 8px #e5695f;"></span> <strong>QIRMIZI</strong> — problem var, müdaxilə edin</div>
+    <div class="lg"><span class="d" style="background:#64748b;"></span> <strong>BOZ</strong> — bilinmir</div>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Qırmızı qutu döyünür</span>
+    Qırmızı olanda qutu <strong>nəbz kimi döyünür</strong> — gözdən qaçmasın deyə.<br><br>
+    Bu, təcili müdaxilə deməkdir — amma <strong>panik yox</strong>. Aşağıda «Nə baş verir» bölməsi sizə tam olaraq nə edəcəyinizi deyəcək.
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Ən vacib təsəlli — bunu unutmayın</span>
+    <strong>Şəbəkə kəsilsə, məlumat İTMİR.</strong><br><br>
+    Bakı ilə əlaqə saatlarla kəsilsə də, bütün ölçmələr zavodda toplanıb <strong>gözləyir</strong>. Əlaqə qayıdan kimi hamısı avtomatik göndəriləcək.<br><br>
+    Sistem məhz bunun üçün qurulub. «Göndərici» və «Bakı» qırmızı olanda <em>tələsməyin</em> — data təhlükəsizdir.
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05</p>
+  <h2>Sağlamlıq xalı</h2>
+
+  <p>Ekranın <strong>yuxarı sağ küncündə</strong> böyük bir faiz var. Bu, sistemin ümumi vəziyyətidir.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Xal</th><th>Yazı</th><th>Nə etməli</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#2f8f5b;">90–100%</strong></td>
+        <td>Sistem sağlamdır</td>
+        <td>Heç nə. İşinizə davam edin.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#b9781a;">60–89%</strong></td>
+        <td>Diqqət tələb edir</td>
+        <td>«Nə baş verir» bölməsinə baxın. Təcili deyil, amma baxın.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#c0453a;">0–59%</strong></td>
+        <td>Müdaxilə lazımdır</td>
+        <td>Dərhal «Nə baş verir» bölməsini oxuyun və addımları yerinə yetirin.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Xal <strong>hər 5 saniyədə</strong> yenilənir. Problemi düzəldəndən sonra qalxdığını görəcəksiniz — bu, işinizin nəticəsidir.</p>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06</p>
+  <h2>«Nə baş verir» — problemlər siyahısı</h2>
+
+  <p>Boru xəttinin altında, solda. <strong>Bütün cavablar buradadır.</strong></p>
+
+  <p>Hər problem üçün üç şey yazılır:</p>
+
+  <div class="addim">
+    <div class="n">1</div>
+    <div class="m">
+      <b>Nə olub</b>
+      Sadə cümlə. Məsələn: «S004 cihazı 5 dəqiqədir məlumat göndərmir.»
+    </div>
+  </div>
+
+  <div class="addim">
+    <div class="n">2</div>
+    <div class="m">
+      <b>Niyə</b>
+      Səbəbin izahı. Məsələn: «Bir-iki cihazın susması adətən kabel, qidalanma və ya sensorun özündəki problemdir.»
+    </div>
+  </div>
+
+  <div class="addim">
+    <div class="n">3</div>
+    <div class="m">
+      <b>Nə etməli</b>
+      <strong>Nömrələnmiş addımlar.</strong> Ardıcıl yerinə yetirin. Düşünməyə ehtiyac yoxdur.
+    </div>
+  </div>
+
+  <h3>Rəngli nişanlar</h3>
+  <table class="tbl">
+    <thead><tr><th>Nişan</th><th>Mənası</th><th>Nə qədər tələsmək</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:#c0453a;">KRİTİK</strong></td><td>Ciddi problem</td><td><strong>İndi</strong></td></tr>
+      <tr><td><strong style="color:#b9781a;">DİQQƏT</strong></td><td>Baxmaq lazımdır</td><td>Bu gün</td></tr>
+      <tr><td><strong style="color:#2c6b9e;">MƏLUMAT</strong></td><td>Sadəcə bilin</td><td>Heç bir hərəkət lazım deyil</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout ok">
+    <span class="k">Siyahı boşdursa</span>
+    Yaşıl qutu görəcəksiniz: <strong>«Hər şey qaydasındadır»</strong>.<br><br>
+    Məlumat sensorlardan Bakıya problemsiz axır. Sizə heç nə etmək lazım deyil.
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07</p>
+  <h2>Cihazlar bölməsi</h2>
+
+  <h3>Panel ekranında — sağ tərəf</h3>
+  <p>Beş kart. Hər birində:</p>
+  <ul class="siyahi">
+    <li><strong>Böyük rəqəm</strong> — cihazın son ölçdüyü dəyər (məsələn <code class="inl">31.9 °C</code>)</li>
+    <li><strong>Kod və tip</strong> — məsələn <code class="inl">S001 · TEMP</code></li>
+    <li><strong>Nə vaxt</strong> — «12 saniyə əvvəl» (bu, yaxşıdır) və ya «SUSUR — 8 dəqiqədir» (bu, pisdir)</li>
+    <li><strong>Yer</strong> — cihaz zavodun harasındadır («Yem anbarı, silo 1»)</li>
+  </ul>
+
+  <table class="tbl">
+    <thead><tr><th>Kartın rəngi</th><th>Nə deməkdir</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:#2f8f5b;">Yaşıl kənar</strong></td><td>Cihaz işləyir, məlumat gəlir</td></tr>
+      <tr><td><strong style="color:#c0453a;">Qırmızı kənar</strong></td><td><strong>SUSUR</strong> — 5 dəqiqədən çoxdur xəbər yoxdur</td></tr>
+      <tr><td><strong style="color:#64748b;">Boz, solğun</strong></td><td><strong>XARAB</strong> kimi işarələnib — sistem ondan məlumat gözləmir</td></tr>
+    </tbody>
+  </table>
+
+  <h3>«Cihazlar» tabı — qrafik</h3>
+  <p>Yuxarıdakı menyudan <strong>«Cihazlar»</strong> seçin. Burada:</p>
+  <ul class="siyahi">
+    <li>Solda — hansı cihaza baxmaq istəyirsiniz (5-dən birini seçin)</li>
+    <li>Dövr — son 1 saat / 6 saat / 24 saat / 3 gün</li>
+    <li>Sağda — <strong>qrafik</strong>: dəyər vaxt ərzində necə dəyişib</li>
+  </ul>
+
+  <div class="callout">
+    <span class="k">Qrafikdə nə görürsünüz</span>
+    <strong>Yaşıl xətt</strong> — cihazın ölçdüyü dəyərlər.<br>
+    <strong>Qırmızı kəsik xətt</strong> — yuxarı hədd. Dəyər bundan yuxarı qalxmamalıdır.<br>
+    <strong>Mavi kəsik xətt</strong> — aşağı hədd.<br>
+    <strong>Qırmızı nöqtələr</strong> — anomal ölçmələr (həddi aşıb).<br><br>
+    Siçanı qrafiğin üzərinə aparsanız, dəqiq dəyəri və vaxtı görəcəksiniz.
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Nəyə diqqət etməli</span>
+    <strong>Yaşıl xətt qırmızı xəttə yaxınlaşırsa</strong> — problem yaxınlaşır. Avadanlığı yoxlayın.<br>
+    <strong>Xətt düz və hərəkətsizdirsə</strong> — sensor «ilişib» ola bilər.<br>
+    <strong>Xətt kəskin sıçrayırsa</strong> — kabel və ya qidalanma problemi.
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08</p>
+  <h2>Xəbərdarlıqlar</h2>
+
+  <p>Xəbərdarlıq — sistemin sizə «bir şey səhvdir» deməsidir. <strong>Amma o, adi səs-küy deyil.</strong></p>
+
+  <div class="callout">
+    <span class="k">Sistem ağıllıdır — buna güvənin</span>
+    Bir ölçmə həddi aşdı deyə dərhal həyəcan çalınmır. Sistem gözləyir: <strong>ardıcıl bir neçə ölçmə</strong> həddi aşarsa, o zaman xəbərdarlıq açılır.<br><br>
+    Ona görə: <strong>xəbərdarlıq görürsünüzsə, problem REALDIR.</strong> Bu, yalançı həyəcan deyil.
+  </div>
+
+  <h3>İki səviyyə</h3>
+  <table class="tbl">
+    <thead><tr><th>Səviyyə</th><th>Nə deməkdir</th><th>Nə etməli</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#b9781a;">xeberdarliq</strong></td>
+        <td>Dəyər həddi aşıb</td>
+        <td>Avadanlığı yoxlayın. Bu gün.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#c0453a;">kritik</strong></td>
+        <td>Dəyər həddi <strong>20% aşıb</strong> — ciddi</td>
+        <td><strong>Dərhal</strong> yoxlayın. Bakıya da bildiriş gedib.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Cədvəldəki sütunlar</h3>
+  <table class="tbl">
+    <thead><tr><th>Sütun</th><th>Nə deyir</th></tr></thead>
+    <tbody>
+      <tr><td><strong>№</strong></td><td>Xəbərdarlığın nömrəsi</td></tr>
+      <tr><td><strong>Cihaz</strong></td><td>Hansı sensor</td></tr>
+      <tr><td><strong>Təkrar</strong></td><td>Neçə dəfə təsdiqlənib. <strong>Böyük rəqəm = uzun müddətdir davam edir</strong></td></tr>
+      <tr><td><strong>Pik dəyər</strong></td><td>Ən pis nöqtə — dəyər nə qədər uzağa getdi</td></tr>
+      <tr><td><strong>Açılıb</strong></td><td>Problem nə vaxt başladı</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tehluke">
+    <h4>⚠️ Xəbərdarlığı ƏL İLƏ BAĞLAMAYIN</h4>
+    <p>Aşağıda «Həll olundu kimi işarələ» düyməsi var. <strong>Ona toxunmayın</strong> — ta ki problemi <em>həqiqətən</em> aradan qaldırana qədər.</p>
+    <p><strong>Niyə:</strong> dəyər normaya qayıdanda sistem xəbərdarlığı <strong>özü bağlayır</strong>. Bu, avtomatikdir.</p>
+    <p>Əl ilə bağlasanız, amma problem qalsa — sistem yeni xəbərdarlıq açacaq. Heç nə qazanmırsınız, sadəcə tarixçəni qarışdırırsınız.</p>
+    <p><strong>Düyməni yalnız bu halda işlədin:</strong> sensor xarabdır, saxta dəyər göndərir və siz onu artıq bilirsiniz.</p>
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09</p>
+  <h2>Mərkəzə göndərmə</h2>
+
+  <p>Bu bölmə bir suala cavab verir: <strong>Bakı zavodun məlumatını görürmü?</strong></p>
+
+  <table class="tbl">
+    <thead><tr><th>Göstərici</th><th>Nə deməkdir</th><th>Normal dəyər</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Göndərici proqram</strong></td><td>Məlumatı Bakıya aparan proqram</td><td>«İşləyir»</td></tr>
+      <tr><td><strong>Növbədə gözləyir</strong></td><td>Hələ göndərilməmiş sətir sayı</td><td><strong>0–50</strong></td></tr>
+      <tr><td><strong>Bakıdakı sətir sayı</strong></td><td>Mərkəzə çatan ölçmələr</td><td>Artmalıdır</td></tr>
+      <tr><td><strong>Mərkəzi baza</strong></td><td>Bakı ilə əlaqə var?</td><td>«Əlçatandır»</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Qrafik — növbənin dərinliyi</h3>
+  <p>Xətt <strong>aşağıdadırsa</strong> (0-a yaxın) — hər şey vaxtında gedir.<br>
+  Xətt <strong>qalxırsa</strong> — məlumat yığılır, göndərilmir.</p>
+
+  <div class="callout ok">
+    <span class="k">Növbə qalxırsa — panik YOX</span>
+    Bu, <strong>data itkisi deyil</strong>. Bu, <strong>gecikmədir</strong>.<br><br>
+    Ölçmələr zavodda təhlükəsiz saxlanılır. Şəbəkə qayıdanda hamısı avtomatik göndəriləcək — bir dənəsi də itməz.<br><br>
+    Siz sadəcə yoxlayın: Bakıdakı kompüter açıqdırmı? Wi-Fi işləyirmi?
+  </div>
+
+  <h3>«Təkrar» sütunu</h3>
+  <p>Göndərmə jurnalında «Təkrar» sütunu görəcəksiniz. Rəqəm sıfırdan böyükdürsə — <strong>narahat olmayın</strong>.</p>
+  <p>Şəbəkə titrəyəndə sistem ehtiyatlı davranır: «əmin deyiləm, təkrar göndərim». Bakı təkrarı özü tanıyıb atır. Bu, <strong>qorunma mexanizmidir</strong>, xəta deyil.</p>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10</p>
+  <h2>AI köməkçi ilə danışmaq</h2>
+
+  <p>Yuxarı menyudan <strong>«AI Köməkçi»</strong> seçin.</p>
+
+  <div class="callout ai">
+    <span class="k">O, sistemin hazırkı vəziyyətini GÖRÜR</span>
+    Bu, adi söhbət robotu deyil. Sual verəndə o, <strong>həmin anda</strong> boru xəttinin vəziyyətini, aktiv problemləri, cihazların halını görür.<br><br>
+    Ona görə cavabları <strong>konkretdir</strong>, ümumi deyil.
+  </div>
+
+  <h3>Dörd hazır düymə — ən tez yol</h3>
+  <div class="addim">
+    <div class="n">1</div>
+    <div class="m"><b>«Sistem necədir?»</b>Qısa xülasə. Səhər ilk basdığınız düymə.</div>
+  </div>
+  <div class="addim">
+    <div class="n">2</div>
+    <div class="m"><b>«Problemi izah et»</b>Hazırkı problemləri sadə dildə açır. Ən vacibini deyir.</div>
+  </div>
+  <div class="addim">
+    <div class="n">3</div>
+    <div class="m"><b>«Mən nə etməliyəm?»</b>Addım-addım göstəriş. <strong>Ən faydalı düymə.</strong></div>
+  </div>
+  <div class="addim">
+    <div class="n">4</div>
+    <div class="m"><b>«Alertlər nə deyir?»</b>Xəbərdarlıqları izah edir — təhlükəlidirmi?</div>
+  </div>
+
+  <h3>Öz sualınızı yazmaq</h3>
+  <p>Aşağıdakı qutuya <strong>adi dildə</strong> yazın. Nümunələr:</p>
+
+  <div class="kod">
+<pre>S004 niyə tez-tez xəbərdarlıq verir?
+
+Temperatur qalxırsa nə edim?
+
+Bakı ilə əlaqə kəsilib — data itəcəkmi?
+
+Bu vibrasiya dəyəri təhlükəlidirmi?
+
+Sensoru necə yenidən işə salım?</pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">AI-nın hüdudları</span>
+    AI <strong>proqramı</strong> yaxşı bilir. Amma <strong>zavodun fiziki avadanlığını</strong> görmür.<br><br>
+    O sizə deyə bilər: «S004 vibrasiya sensoru 10 dəqiqədir susub — kabeli yoxlayın.»<br>
+    Amma o, <em>kabelin harada qopduğunu</em> bilmir. Onu siz tapmalısınız.<br><br>
+    <strong>AI məsləhətçidir, mühəndis deyil.</strong> Şübhə varsa, mühəndisə zəng edin.
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11</p>
+  <h2>İdarəetmə düymələri</h2>
+
+  <div class="callout ok">
+    <span class="k">Ən çox işlədəcəyiniz düymə</span>
+    <strong>«① Hər şeyi başlat»</strong> — böyük yaşıl düymə.<br><br>
+    Bir kliklə bütün sistemi düzgün sıra ilə qaldırır. Səhər gələndə <strong>yalnız bunu basın</strong>.<br><br>
+    15 saniyə çəkir. Sonra «Panel» tabına keçib boru xəttinin soldan sağa yaşıllaşmasını izləyin.
+  </div>
+
+  <h3>Ayrı-ayrı düymələr</h3>
+  <p>Bunlar <strong>yalnız problem olanda</strong> lazımdır. «Nə baş verir» bölməsi sizə hansını basacağınızı deyəcək.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Düymə</th><th>Nə vaxt basılır</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Broker başlat</strong></td><td>«Məlumat qutusu» mərhələsi qırmızıdırsa</td></tr>
+      <tr><td><strong>Emal proqramını başlat</strong></td><td>«Emal proqramı» mərhələsi qırmızıdırsa</td></tr>
+      <tr><td><strong>Sensorları başlat</strong></td><td>Bütün cihazlar birdən susubsa</td></tr>
+      <tr><td><strong>Mərkəzə göndərməni başlat</strong></td><td>«Göndərici» mərhələsi qırmızıdırsa</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">Sıra vacibdir</span>
+    Bir neçəsini basacaqsınızsa, bu sıra ilə:<br><br>
+    <strong>① Broker → ② Emal proqramı → ③ Sensorlar → ④ Göndərici</strong><br><br>
+    Niyə: hər biri əvvəlkinə güvənir. Tərsinə etsəniz, qoşula bilməzlər.<br><br>
+    <strong>Bunu düşünmək istəmirsinizsə — sadəcə «Hər şeyi başlat» basın.</strong> O, sıranı özü bilir.
+  </div>
+
+  <h3>«Son əmrin nəticəsi» qutusu</h3>
+  <p>Düymə basandan sonra qara qutuda nəticə görünür. Uğurlu olsa, adətən qısa mətn olur. Xəta olsa — <strong>onu AI köməkçiyə göstərin</strong>: mətni kopyalayıb suala yapışdırın.</p>
+
+  <h3>Loglar</h3>
+  <p>Sağ tərəfdə. Proqramların «gündəliyi». Adətən lazım olmur, amma <strong>mühəndis istəsə</strong>, oradan oxuya bilərsiniz.</p>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12</p>
+  <h2>Altı real ssenari</h2>
+
+  <div class="ssen">
+    <div class="ssen-h"><span class="ik">🔴</span><span class="t">Ssenari 1 — Bir sensor susdu</span></div>
+    <div class="ssen-b">
+      <div class="lbl">Ekranda</div>
+      «Sensorlar» qutusu <strong>sarı</strong>, yazır <code class="inl">4/5</code>. Bir cihaz kartı qırmızıdır: «SUSUR — 7 dəqiqədir».
+      <div class="lbl">Nə deməkdir</div>
+      Digər 4 cihaz işləyir — deməli proqram və şəbəkə sağlamdır. <strong>Problem həmin cihazdadır.</strong>
+      <div class="lbl">Nə etməli</div>
+      <ol>
+        <li>Kartda yazılan yerə gedin (məsələn: «Qranulyator mühərriki»).</li>
+        <li>Sensorun <strong>kabelini</strong> yoxlayın — qopubmu, boşalıbmı?</li>
+        <li>Sensorun üzərində <strong>işıq yanırmı</strong>?</li>
+        <li>Kabel qaydasındadırsa və işıq yanmırsa — <strong>sensor xarabdır</strong>. Mühəndisə bildirin.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="ssen">
+    <div class="ssen-h"><span class="ik">🔴</span><span class="t">Ssenari 2 — BÜTÜN sensorlar susdu</span></div>
+    <div class="ssen-b">
+      <div class="lbl">Ekranda</div>
+      «Sensorlar» qutusu <strong>qırmızı</strong>, <code class="inl">0/5</code>. Bütün kartlar qırmızıdır.
+      <div class="lbl">Nə deməkdir</div>
+      Beş sensorun eyni anda xarab olması <strong>mümkün deyil</strong>. Deməli problem ümumi mənbədədir.
+      <div class="lbl">Nə etməli</div>
+      <ol>
+        <li>Boru xəttinə baxın — <strong>«Məlumat qutusu» də qırmızıdırmı</strong>?</li>
+        <li>Bəli isə → «İdarəetmə» → <strong>«Hər şeyi başlat»</strong>.</li>
+        <li>Xeyr isə → «İdarəetmə» → <strong>«Sensorları başlat»</strong>.</li>
+        <li>Real quraşdırmada: <strong>gateway qutusunun qidalanmasını</strong> yoxlayın.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="ssen">
+    <div class="ssen-h"><span class="ik">⚡</span><span class="t">Ssenari 3 — KRİTİK xəbərdarlıq</span></div>
+    <div class="ssen-b">
+      <div class="lbl">Ekranda</div>
+      Qırmızı «KRİTİK» nişanı. Sağlamlıq xalı düşüb.
+      <div class="lbl">Nə deməkdir</div>
+      Avadanlıqda <strong>real problem</strong> var. Dəyər normadan çox uzaqlaşıb. Bu, adi dalğalanma deyil.
+      <div class="lbl">Nə etməli</div>
+      <ol>
+        <li>«Xəbərdarlıqlar» tabına keçin.</li>
+        <li>Baxın: <strong>hansı cihaz? pik dəyər nə qədər? nə vaxtdan davam edir?</strong></li>
+        <li>Zavodda həmin avadanlığı yoxlayın — mühərrik qızıbmı? Vibrasiya varmı?</li>
+        <li>Problemi aradan qaldırın. <strong>Xəbərdarlıq özü bağlanacaq.</strong></li>
+        <li>Nə edəcəyinizi bilmirsinizsə → AI Köməkçi → «Mən nə etməliyəm?»</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="ssen">
+    <div class="ssen-h"><span class="ik">📡</span><span class="t">Ssenari 4 — Bakı ilə əlaqə kəsildi</span></div>
+    <div class="ssen-b">
+      <div class="lbl">Ekranda</div>
+      «Bakı — ERP» qutusu <strong>qırmızı</strong>. «Növbədə gözləyir» rəqəmi <strong>artır</strong>.
+      <div class="lbl">Nə deməkdir</div>
+      <strong>MƏLUMAT İTMİR.</strong> Zavodda toplanır və gözləyir. Bu, təcili deyil.
+      <div class="lbl">Nə etməli</div>
+      <ol>
+        <li><strong>Sakit olun.</strong> Data təhlükəsizdir.</li>
+        <li>Wi-Fi qoşuludurmu? Yoxlayın.</li>
+        <li>Bakıdakı kompüter açıqdırmı? Məsul şəxsə zəng edin.</li>
+        <li>Əlaqə qayıdanda <strong>hər şey avtomatik göndəriləcək</strong>. Heç nə etməyə ehtiyac yoxdur.</li>
+        <li>Növbə minlərlə sətrə çatıbsa da — <strong>problem yoxdur</strong>. Sistem bunun üçün qurulub.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="ssen">
+    <div class="ssen-h"><span class="ik">⚙️</span><span class="t">Ssenari 5 — Emal proqramı cavab vermir</span></div>
+    <div class="ssen-b">
+      <div class="lbl">Ekranda</div>
+      «Emal proqramı» qutusu <strong>qırmızı</strong>, yazır «Cavab yoxdur». Sağdakı bütün qutular da qırmızıdır.
+      <div class="lbl">Nə deməkdir</div>
+      Zəncirin ortası qırılıb. Sensorlar göndərir, amma heç nə yazılmır.
+      <div class="lbl">Nə etməli</div>
+      <ol>
+        <li>«İdarəetmə» → <strong>«Emal proqramını başlat»</strong>.</li>
+        <li>20 saniyə gözləyin. Panel özü yenilənəcək.</li>
+        <li>Qalxmasa → «Loglar» → «Emal proqramı» seçin, sonuncu sətirlərə baxın.</li>
+        <li>Xəta mətnini <strong>AI Köməkçiyə göstərin</strong> — kopyalayıb yapışdırın.</li>
+        <li>Yenə alınmasa → mühəndisə zəng edin.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="ssen">
+    <div class="ssen-h"><span class="ik">🔧</span><span class="t">Ssenari 6 — Sensor təmir olundu</span></div>
+    <div class="ssen-b">
+      <div class="lbl">Vəziyyət</div>
+      Sensor xarab idi, «xarab» kimi işarələnmişdi. İndi təmir olunub.
+      <div class="lbl">Nə deməkdir</div>
+      Sistem hələ də ondan məlumat gözləmir. <strong>Statusu geri qaytarmaq lazımdır</strong> — yoxsa cihaz işləyəcək, amma panel onu görməyəcək.
+      <div class="lbl">Nə etməli</div>
+      <ol>
+        <li>Terminalı açın.</li>
+        <li>Aşağıdakı əmri yapışdırın — <code class="inl">S00X</code> yerinə cihazın kodunu yazın:</li>
+      </ol>
+      <div class="kod" style="margin-top:10px;">
+        <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>psql -p 5434 -d zavod_edge_db -c "UPDATE cihaz SET status='aktiv' WHERE kod='S00X';"</pre>
+      </div>
+      <ol start="3">
+        <li>Panel 20 saniyəyə cihazı yenidən izləməyə başlayacaq.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- 13 -->
+<section id="s13">
+  <p class="sec-num">13</p>
+  <h2>Nə vaxt mühəndisə zəng etməli</h2>
+
+  <div class="tehluke">
+    <h4>Bu hallarda özünüz çalışmayın — zəng edin</h4>
+    <ul style="margin:0;padding-left:20px;">
+      <li><strong>«Zavod bazası» qırmızıdır</strong> — bu, ən ciddi problemdir. Məlumat nə yazılır, nə oxunur.</li>
+      <li><strong>Panelin özü qırmızı xəta mətni göstərir</strong> («XƏTA (...): ...»).</li>
+      <li><strong>«Hər şeyi başlat» basdınız, amma boru xətti yaşıllaşmır.</strong></li>
+      <li><strong>Eyni problem hər gün təkrarlanır.</strong></li>
+      <li><strong>«Nə baş verir» bölməsindəki addımları yerinə yetirdiniz, kömək etmədi.</strong></li>
+    </ul>
+  </div>
+
+  <h3>Zəng etməzdən əvvəl — bu üçünü hazırlayın</h3>
+  <ul class="siyahi">
+    <li><strong>Sağlamlıq xalı</strong> neçədir?</li>
+    <li><strong>Hansı qutu</strong> qırmızıdır? (soldan sağa — ilk qırmızı hansıdır)</li>
+    <li><strong>«Nə baş verir»</strong> bölməsində hansı problem yazılıb? — mətni kopyalayın</li>
+  </ul>
+
+  <p>Bu üç məlumatla mühəndis problemi <strong>dəqiqələr içində</strong> tapacaq. Onlarsız — saatlarla axtaracaq.</p>
+
+  <div class="callout ai">
+    <span class="k">Zəng etməzdən əvvəl bir dəfə cəhd edin</span>
+    <strong>AI Köməkçi → «Mən nə etməliyəm?»</strong><br><br>
+    O, sistemin hazırkı vəziyyətini görür. Bəzən cavab bir kliklə tapılır.
+  </div>
+</section>
+
+<!-- 14 -->
+<section id="s14">
+  <p class="sec-num">14</p>
+  <h2>Axşam: sistemi söndürmək</h2>
+
+  <div class="callout warn">
+    <span class="k">Adətən söndürməyə EHTİYAC YOXDUR</span>
+    Sistem gecə-gündüz işləyə bilər — məhz bunun üçün qurulub.<br><br>
+    Söndürmək yalnız bu hallarda lazımdır: kompüteri bağlayacaqsınız, təmir olacaq, ya da mühəndis xahiş edib.
+  </div>
+
+  <h3>Səliqəli söndürmə</h3>
+  <div class="addim">
+    <div class="n">1</div>
+    <div class="m"><b>«İdarəetmə» tabına keçin</b></div>
+  </div>
+  <div class="addim">
+    <div class="n">2</div>
+    <div class="m"><b>«Səliqəli söndür» düyməsini basın</b>Qırmızı düymə, ən aşağıda.</div>
+  </div>
+  <div class="addim">
+    <div class="n">3</div>
+    <div class="m"><b>Təsdiq edin</b>Pəncərə açılacaq — «Bəli, söndür».</div>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Növbədə məlumat qalsa nə olacaq?</span>
+    <strong>Heç nə.</strong> O, zavod bazasında təhlükəsiz durur.<br><br>
+    Sabah sistemi başladanda göndərici onu <strong>avtomatik</strong> Bakıya aparacaq. Bir dənəsi də itməz.
+  </div>
+
+  <h3>Paneli də bağlamaq</h3>
+  <p>Panel işlədilən <strong>Terminal pəncərəsində</strong>: <code class="inl">Ctrl + C</code></p>
+  <p>Sonra pəncərəni bağlaya bilərsiniz.</p>
+</section>
+
+<!-- Xülasə -->
+<section>
+  <p class="sec-num">Xülasə</p>
+  <h2>Beş qayda — bunları bilsəniz kifayətdir</h2>
+
+  <ul class="siyahi">
+    <li><strong>Səhər:</strong> Terminalı aç → paneli başlat → «İdarəetmə» → «Hər şeyi başlat».</li>
+    <li><strong>Boru xəttinə bax.</strong> Soldan sağa. <strong>İlk qırmızı qutunu düzəlt</strong> — qalanı özü bərpa olunar.</li>
+    <li><strong>«Nə baş verir» bölməsini oxu.</strong> Cavab həmişə oradadır — nömrələnmiş addımlarla.</li>
+    <li><strong>Bilmirsənsə soruş:</strong> AI Köməkçi → «Mən nə etməliyəm?»</li>
+    <li><strong>Şəbəkə kəsilsə — sakit ol.</strong> Məlumat itmir, gözləyir. Əlaqə qayıdanda özü gedir.</li>
+  </ul>
+
+  <div class="callout ok" style="margin-top:26px;">
+    <span class="k">Son söz</span>
+    Bu sistem <strong>sizin üçün</strong> qurulub. O, çətin işi özü görür: səs-küyü udur, real problemi tanıyır, məlumatı itirmir.<br><br>
+    Sizdən tələb olunan tək şey: <strong>ekrana baxmaq və deyilənləri etmək.</strong>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Siyəzən yem zavodu</p>
+  <p>Nəzarət Paneli — Operator Təlimatı</p>
+</footer>
+
+<script>
+function kop(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>

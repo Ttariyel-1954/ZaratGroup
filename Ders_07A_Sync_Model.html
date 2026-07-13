@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 07-A — Mərkəzi Sinxronizasiya: Nəzəriyyə və Baza Modeli</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#0e1620; --steel:#17222f; --line:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488; --amber:#f5a524;
+    --blue:#5aa9e6; --blue-deep:#2c6b9e; --green:#5bd08a;
+    --violet:#a78bfa; --danger:#e5695f; --danger-deep:#c0453a;
+    --paper:#f6f4ef; --paper-2:#efece4; --ink:#1a222c;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.75;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;}
+
+  .hero{background:radial-gradient(1200px 400px at 78% -10%,rgba(90,169,230,.16),transparent 60%),
+    linear-gradient(180deg,var(--graphite),var(--steel));
+    color:#e8eef5;padding:66px 32px 54px;border-bottom:3px solid var(--blue);}
+  .wrap{max-width:980px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--blue);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",Arial,sans-serif;font-weight:700;
+    font-size:clamp(29px,4.8vw,48px);line-height:1.08;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:19px;color:#c6d3df;max-width:770px;margin:0;line-height:1.7;}
+  .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{font-family:"Oswald",Arial,sans-serif;font-size:13px;letter-spacing:.05em;
+    text-transform:uppercase;background:rgba(90,169,230,.12);
+    border:1px solid rgba(90,169,230,.35);color:#a8d2f0;padding:6px 13px;border-radius:2px;}
+
+  .toc{background:var(--paper-2);border-bottom:1px solid #ddd8cc;padding:22px 32px;}
+  .toc ol{max-width:980px;margin:0 auto;padding-left:20px;columns:2;column-gap:36px;font-size:15px;}
+  .toc li{margin-bottom:5px;} .toc a{color:var(--blue-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:980px;margin:0 auto;padding:0 32px;}
+  section{padding:46px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--blue-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",Arial,sans-serif;font-weight:600;
+    font-size:clamp(24px,3.3vw,32px);line-height:1.15;margin:0 0 20px;}
+  h3{font-family:"Oswald",Arial,sans-serif;font-weight:600;font-size:20px;margin:32px 0 10px;}
+  h4{font-family:"Oswald",Arial,sans-serif;font-weight:500;font-size:17px;margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--paper-2);border-left:4px solid var(--teal-deep);
+    padding:17px 22px;border-radius:0 4px 4px 0;margin:22px 0;font-size:16px;line-height:1.68;}
+  .callout.warn{border-left-color:var(--amber);background:#fbf3e2;}
+  .callout.why{border-left-color:var(--violet);background:#f1eefb;}
+  .callout.err{border-left-color:var(--danger);background:#fbeceb;}
+  .callout.ok{border-left-color:var(--green);background:#eaf7f0;}
+  .callout .k{font-family:"Oswald",Arial,sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:4px;}
+  .callout.warn .k{color:#b9781a;} .callout.why .k{color:#6d4fc4;}
+  .callout.err .k{color:var(--danger-deep);} .callout.ok .k{color:#2f8f5b;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15px;line-height:1.55;}
+  .tbl thead th{background:var(--steel);color:#dbe6f0;font-family:"Oswald",Arial,sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:11px 13px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--blue);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--paper-2);}
+  .tbl .code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--teal-deep);font-weight:bold;}
+
+  .codebox{position:relative;margin:20px 0;}
+  .codebox .cap{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:#6b7c8d;margin-bottom:5px;}
+  .codebox pre{background:var(--graphite);color:#d7e3ee;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.7;margin:0;border:1px solid var(--line);}
+  .cmt{color:#6f8598;} .kw{color:var(--teal);} .st{color:#e8c98a;} .fn{color:var(--blue);} .nm{color:#c3a6f0;}
+  .copybtn{position:absolute;top:32px;right:10px;background:rgba(90,169,230,.14);color:#a8d2f0;
+    border:1px solid rgba(90,169,230,.4);border-radius:3px;font-family:"Oswald",Arial,sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;}
+  .copybtn:hover{background:rgba(90,169,230,.28);}
+
+  .expl{margin:18px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;}
+  .expl .row{display:flex;border-bottom:1px solid #e8e3d8;}
+  .expl .row:last-child{border-bottom:none;}
+  .expl .row:nth-child(even){background:var(--paper-2);}
+  .expl .c{flex:0 0 40%;padding:11px 14px;font-family:ui-monospace,Menlo,monospace;
+    font-size:12.5px;color:#0b5f57;background:rgba(13,148,136,.05);
+    border-right:1px solid #e8e3d8;word-break:break-word;}
+  .expl .d{flex:1;padding:11px 14px;font-size:14.5px;line-height:1.55;}
+
+  .arch{background:var(--graphite);border-radius:10px;padding:30px 24px;margin:26px 0;}
+  .arch .lbl{font-family:"Oswald",Arial,sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--blue);margin-bottom:16px;text-align:center;}
+  .arch .rowf{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+  .bx{background:var(--steel);border:1px solid var(--line);border-radius:6px;padding:13px 14px;
+    text-align:center;min-width:118px;}
+  .bx .t{font-family:"Oswald",Arial,sans-serif;font-size:13px;color:#fff;text-transform:uppercase;}
+  .bx .s{font-family:ui-monospace,monospace;font-size:11px;color:#8fa6ba;display:block;margin-top:3px;}
+  .bx.hl{border-color:var(--blue);box-shadow:0 0 0 1px rgba(90,169,230,.3);}
+  .bx.bad{border-color:var(--danger);}
+  .ar{color:var(--blue);font-size:20px;}
+
+  .graf{background:var(--graphite);border-radius:10px;padding:24px;margin:24px 0;}
+  .graf svg{width:100%;height:auto;display:block;}
+
+  .check{list-style:none;padding:0;margin:20px 0;}
+  .check li{padding:12px 16px 12px 44px;position:relative;background:var(--paper-2);
+    border-radius:6px;margin-bottom:8px;font-size:15.5px;line-height:1.55;border-left:3px solid var(--green);}
+  .check li::before{content:"✓";position:absolute;left:15px;top:10px;color:var(--green);
+    font-weight:bold;font-size:18px;font-family:Arial,sans-serif;}
+
+  footer{background:var(--graphite);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",Arial,sans-serif;color:var(--blue);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+  @media (max-width:700px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .expl .row{flex-direction:column;} .expl .c{flex:1;border-right:none;border-bottom:1px solid #e8e3d8;}
+    .copybtn{position:static;margin-bottom:6px;display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması · Dərs 07 — Hissə A</p>
+    <h1>Mərkəzi Sinxronizasiya: Nəzəriyyə və Baza Modeli</h1>
+    <p class="lede">Sisteminiz altı dərsdir data toplayır, təmizləyir və düşünür — amma bütün bu bilik <strong>zavodda ilişib</strong>. Bakıdakı mərkəzi ERP ondan xəbərsizdir. İndi ən çətin problemə çatdıq: <em>iki baza arasında etibarlı körpü</em>. Şəbəkə kəsiləcək — bu, sual deyil, <strong>vaxt məsələsidir</strong>. Bu hissədə data itməyən model qururuq.</p>
+    <div class="meta">
+      <span class="chip">Outbox pattern</span>
+      <span class="chip">At-least-once</span>
+      <span class="chip">İdempotentlik</span>
+      <span class="chip">Şəbəkə bölünməsi</span>
+      <span class="chip">Sxem</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Problem: data zavodda ilişib</a></li>
+    <li><a href="#s2">Sadəlövh həll və onun ölümü</a></li>
+    <li><a href="#s3">İki generalın problemi</a></li>
+    <li><a href="#s4">At-least-once: yeganə real seçim</a></li>
+    <li><a href="#s5">İdempotentlik — xilasedici</a></li>
+    <li><a href="#s6">Outbox pattern</a></li>
+    <li><a href="#s7">Nə göndərilir: ölçmə, alert, hər ikisi</a></li>
+    <li><a href="#s8">Sxem: edge tərəfi</a></li>
+    <li><a href="#s9">Sxem: mərkəz tərəfi</a></li>
+    <li><a href="#s10">Sıra və "hot" sətir problemi</a></li>
+    <li><a href="#s11">Yedək təzyiqi və saxlama siyasəti</a></li>
+    <li><a href="#s12">Yoxlama və Hissə B</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <p class="sec-num">01 — Problem</p>
+  <h2>Data zavodda ilişib</h2>
+  <p>Baxın sisteminizin indiki vəziyyətinə:</p>
+
+  <div class="arch">
+    <div class="lbl">İndi — bir istiqamətli küçə, sonu divar</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">Sensorlar</span><span class="s">5 cihaz</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">MQTT</span><span class="s">:1883</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">FastAPI</span><span class="s">:8000</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">zavod_edge_db</span><span class="s">:5434 — Siyəzən</span></div>
+      <span class="ar" style="color:#e5695f;">✕</span>
+      <div class="bx bad"><span class="t">zarat_erp_2</span><span class="s">:5432 — Bakı</span></div>
+    </div>
+  </div>
+
+  <div class="callout err">
+    <span class="k">Nə itirilir</span>
+    <strong>①</strong> Mərkəzi ERP zavodun istehsalını görmür — planlaşdırma kordur.<br>
+    <strong>②</strong> Kritik alert Siyəzəndə yaranır, Bakıdakı rəhbərlik xəbərsizdir.<br>
+    <strong>③</strong> Tarixi analiz mümkün deyil — data bir maşında.<br>
+    <strong>④</strong> Edge maşın xarab olsa, <strong>hər şey itir</strong> — nüsxə yoxdur.<br><br>
+    Sistem texniki cəhətdən mükəmməldir, amma <strong>təcrid olunub</strong>.
+  </div>
+
+  <h3>Nə qurmalıyıq</h3>
+  <div class="arch">
+    <div class="lbl">Hədəf — etibarlı körpü</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">zavod_edge_db</span><span class="s">:5434 — Siyəzən</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">Sync işçisi</span><span class="s">outbox oxuyur</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">Şəbəkə</span><span class="s">kəsilə bilər!</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">zarat_erp_2</span><span class="s">:5432 — Bakı</span></div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Əsas fərz — bunu unutmayın</span>
+    <strong>Şəbəkə kəsiləcək.</strong> Bu, "ola bilər" deyil — <em>mütləq olacaq</em>. Siyəzəndə internet gedəcək, mərkəzi baza yenilənmə üçün dayanacaq, kabel qopacaq.<br><br>
+    Sual <em>"kəsilərsə nə olacaq?"</em> deyil. Sual: <strong>"kəsiləndə data itəcəkmi?"</strong><br><br>
+    Bütün bu dərsin məqsədi bir cümlədir: <strong>şəbəkə saatlarla kəsilsə də, bir dənə də ölçmə itməməlidir.</strong>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <p class="sec-num">02 — Sadəlövh həll</p>
+  <h2>"Sadəcə göndərək" — və niyə bu ölümcüldür</h2>
+  <p>İlk fikir həmişə budur: ölçməni yazanda dərhal mərkəzə də göndərək.</p>
+
+  <div class="codebox">
+    <div class="cap">SƏHV — sinxron ikili yazma (dual write)</div>
+<pre><span class="kw">async</span> <span class="kw">def</span> <span class="fn">deste_yaz</span>(deste):
+    <span class="cmt"># 1) Edge bazaya yaz</span>
+    <span class="kw">await</span> edge_conn.executemany(SQL_OLCME, setirler)
+
+    <span class="cmt"># 2) Mərkəzə də yaz — DƏRHAL</span>
+    <span class="kw">await</span> merkez_conn.executemany(SQL_OLCME, setirler)   <span class="cmt"># ← FƏLAKƏT</span></pre>
+  </div>
+
+  <h3>Bu kod nə vaxt sınır</h3>
+  <table class="tbl">
+    <thead><tr><th>Ssenari</th><th>Nə baş verir</th><th>Nəticə</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Şəbəkə kəsilib</td>
+        <td>2-ci sətir istisna atır</td>
+        <td><strong>Bütün dəstə itir</strong> — edge-ə də yazılmır (tranzaksiya geri qayıdır)</td>
+      </tr>
+      <tr>
+        <td>Mərkəz yavaşdır (2 san.)</td>
+        <td>Yazıcı hər dəstədə 2 saniyə gözləyir</td>
+        <td>Növbə dolur → <strong>yeni mesajlar atılır</strong></td>
+      </tr>
+      <tr>
+        <td>Edge yazıldı, mərkəz uğursuz</td>
+        <td>İki baza <strong>fərqli</strong> vəziyyətdədir</td>
+        <td>Nə vaxtsa fərq aşkarlanır — kimsə əl ilə düzəltməlidir</td>
+      </tr>
+      <tr>
+        <td>Mərkəz yazıldı, edge uğursuz</td>
+        <td>Mərkəzdə <strong>olmayan</strong> data var</td>
+        <td>Daha pisi — mənbədə olmayan "fakt"</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout err">
+    <span class="k">Kök səbəb: iki baza bir tranzaksiyada olmaz</span>
+    PostgreSQL tranzaksiyası <strong>bir baza daxilində</strong> atomikdir. İki ayrı baza arasında atomik yazma <em>mövcud deyil</em> — nə qədər çalışsanız da.<br><br>
+    (Texniki olaraq "iki fazalı commit" (2PC) var, amma o, hər iki bazanın <em>eyni anda əlçatan</em> olmasını tələb edir — yəni bizim problemimizi həll etmir, sadəcə başqa formaya salır.)<br><br>
+    <strong>Deməli: sinxron ikili yazmadan imtina edirik.</strong> Tamamilə.
+  </div>
+
+  <div class="callout why">
+    <span class="k">Nəyi qorumalıyıq — prioritet sırası</span>
+    <strong>1. Edge yazma heç vaxt dayanmamalıdır.</strong> Sensor datası ilkin faktdır — o itsə, heç nə qaytarmaz.<br>
+    <strong>2. Mərkəzə çatdırma gecikə bilər.</strong> 5 dəqiqə, 1 saat, hətta 1 gün — <em>data itməsə</em>, qəbul edilir.<br>
+    <strong>3. Mərkəzdə dublikat olmamalıdır.</strong> Eyni ölçmə iki dəfə yazılmamalıdır.<br><br>
+    Bu üç prioritet bütün dizaynı diktə edir.
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <p class="sec-num">03 — Fundamental limit</p>
+  <h2>İki generalın problemi</h2>
+  <p>Bu, kompüter elmində məşhur bir tapmacadır — və bizim problemimizin dəqiq təsviridir.</p>
+
+  <div class="callout">
+    <span class="k">Tapmaca</span>
+    İki general iki təpədə dayanıb, aralarında düşmən şəhəri var. Birlikdə hücum etsələr, qalib gələcəklər; təkbaşına hücum edən <strong>məğlub olur</strong>.<br><br>
+    Onlar yalnız <strong>elçi</strong> ilə əlaqə saxlaya bilər — və elçi düşmən ərazisindən keçir, tutula bilər.<br><br>
+    <strong>General A</strong> göndərir: "Səhər 6-da hücum."<br>
+    Amma A bilmir ki, mesaj çatdı. Ona görə <strong>təsdiq</strong> gözləyir.<br>
+    <strong>General B</strong> təsdiq göndərir: "Qəbul edildi."<br>
+    Amma B bilmir ki, təsdiq çatdı. Əgər çatmasa, A hücum etməyəcək və B tək qalacaq...<br>
+    Ona görə B <strong>təsdiqin təsdiqini</strong> gözləyir. Və beləcə <strong>sonsuza qədər</strong>.
+  </div>
+
+  <div class="callout err">
+    <span class="k">Riyazi nəticə</span>
+    <strong>Bu problem həll olunmazdır.</strong> Sübut edilib. Etibarsız kanal üzərində <em>tam əminlik</em> (exactly-once çatdırma) qazanmaq <strong>mümkün deyil</strong>.<br><br>
+    Bu, "hələ kimsə həll etməyib" demək deyil — <strong>həll YOXDUR</strong>.
+  </div>
+
+  <h3>Bizim halımızda</h3>
+  <div class="graf">
+    <svg viewBox="0 0 880 240" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a1" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <path d="M0,0 L10,4 L0,8 Z" fill="#5aa9e6"/>
+        </marker>
+        <marker id="a2" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <path d="M0,0 L10,4 L0,8 Z" fill="#e5695f"/>
+        </marker>
+      </defs>
+
+      <rect x="30" y="30" width="150" height="60" rx="8" fill="#17222f" stroke="#5aa9e6" stroke-width="2"/>
+      <text x="105" y="55" text-anchor="middle" fill="#fff" font-family="Oswald,sans-serif" font-size="14">EDGE</text>
+      <text x="105" y="74" text-anchor="middle" fill="#8fa6ba" font-family="monospace" font-size="11">Siyəzən</text>
+
+      <rect x="700" y="30" width="150" height="60" rx="8" fill="#17222f" stroke="#5bd08a" stroke-width="2"/>
+      <text x="775" y="55" text-anchor="middle" fill="#fff" font-family="Oswald,sans-serif" font-size="14">MƏRKƏZ</text>
+      <text x="775" y="74" text-anchor="middle" fill="#8fa6ba" font-family="monospace" font-size="11">Bakı</text>
+
+      <!-- send -->
+      <line x1="182" y1="50" x2="696" y2="50" stroke="#5aa9e6" stroke-width="2" marker-end="url(#a1)"/>
+      <text x="440" y="42" text-anchor="middle" fill="#5aa9e6" font-family="monospace" font-size="11">① 100 ölçmə göndərildi</text>
+
+      <!-- ack lost -->
+      <line x1="696" y1="105" x2="450" y2="105" stroke="#e5695f" stroke-width="2" stroke-dasharray="5,4"/>
+      <line x1="450" y1="105" x2="182" y2="105" stroke="#e5695f" stroke-width="2" stroke-dasharray="5,4" opacity="0.25" marker-end="url(#a2)"/>
+      <text x="560" y="98" text-anchor="middle" fill="#e5695f" font-family="monospace" font-size="11">② təsdiq: "yazıldı"</text>
+      <text x="450" y="128" text-anchor="middle" fill="#e5695f" font-family="Oswald,sans-serif" font-size="13">✕ ŞƏBƏKƏ KƏSİLDİ — təsdiq İTDİ</text>
+
+      <!-- dilemma -->
+      <rect x="60" y="160" width="330" height="60" rx="6" fill="#17222f" stroke="#f5a524" stroke-width="1.5"/>
+      <text x="225" y="182" text-anchor="middle" fill="#f5a524" font-family="Oswald,sans-serif" font-size="13">EDGE BİLMİR:</text>
+      <text x="225" y="203" text-anchor="middle" fill="#c6d3df" font-family="monospace" font-size="11">data yazıldı? yoxsa yolda itdi?</text>
+
+      <rect x="470" y="160" width="360" height="60" rx="6" fill="#17222f" stroke="#f5a524" stroke-width="1.5"/>
+      <text x="650" y="182" text-anchor="middle" fill="#f5a524" font-family="Oswald,sans-serif" font-size="13">İKİ SEÇİM — hər ikisi riskli:</text>
+      <text x="650" y="203" text-anchor="middle" fill="#c6d3df" font-family="monospace" font-size="11">TƏKRAR GÖNDƏR (dublikat?) / GÖNDƏRMƏ (itki?)</text>
+    </svg>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Praktik nəticə</span>
+    Madam ki <em>tam əminlik</em> mümkün deyil — <strong>seçim etməliyik</strong>:<br><br>
+    <strong>A) At-most-once</strong> — "bir dəfədən çox yox". Şübhə olsa, göndərmə. → <span class="mono">DATA İTİR</span><br>
+    <strong>B) At-least-once</strong> — "ən azı bir dəfə". Şübhə olsa, təkrar göndər. → <span class="mono">DUBLİKAT OLA BİLƏR</span><br><br>
+    Üçüncü variant (exactly-once) <strong>yoxdur</strong>.
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <p class="sec-num">04 — Seçim</p>
+  <h2>At-least-once: yeganə real seçim</h2>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>At-most-once</th><th>At-least-once</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Qayda</strong></td><td>Şübhə olsa — göndərmə</td><td>Şübhə olsa — <strong>təkrar göndər</strong></td></tr>
+      <tr><td><strong>Risk</strong></td><td class="mono">Data İTİR</td><td class="mono">Dublikat ola bilər</td></tr>
+      <tr><td><strong>Bərpa olunurmu?</strong></td><td><strong>XEYR</strong> — itən ölçmə geri qayıtmaz</td><td><strong>BƏLİ</strong> — dublikatı bazada tuta bilərik</td></tr>
+      <tr><td><strong>Bizim seçim</strong></td><td>—</td><td class="yes"><strong>BU</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout ok">
+    <span class="k">Niyə at-least-once</span>
+    Çünki iki riskdən biri <strong>düzəldilə bilər</strong>, digəri yox.<br><br>
+    <strong>İtən ölçmə</strong> — geri qaytarmaq mümkün deyil. Sensor o anı bir daha ölçməyəcək. Fakt yoxa çıxıb.<br><br>
+    <strong>Dublikat</strong> — mərkəzdə <span class="mono">ON CONFLICT DO NOTHING</span> ilə <em>səssizcə</em> atılır. Heç kim bilmir belə.<br><br>
+    Deməli: <strong>təkrar göndərməkdən qorxmuruq</strong> — mərkəzi dublikata dözümlü edirik.
+  </div>
+
+  <h3>Bu, artıq tanış olduğunuz məntiqdir</h3>
+  <div class="expl">
+    <div class="row">
+      <div class="c">Dərs 04 — MQTT QoS 1</div>
+      <div class="d">Broker mesajı təsdiq alana qədər təkrar göndərir. <strong>At-least-once</strong> — və dublikat ola bilər.</div>
+    </div>
+    <div class="row">
+      <div class="c">Dərs 05 — UNIQUE(cihaz_kod, olcme_vaxti)</div>
+      <div class="d">Retain dublikatları məhz bu indekslə tutuldu. <strong>İdempotentlik</strong> problemi həll etdi.</div>
+    </div>
+    <div class="row">
+      <div class="c">Dərs 06 — qismən unikal indeks</div>
+      <div class="d">Alert dublikatı bazada məcburi qadağan olundu.</div>
+    </div>
+    <div class="row">
+      <div class="c">Dərs 07 — mərkəzi sync</div>
+      <div class="d"><strong>Eyni fəlsəfə, daha böyük miqyasda:</strong> cəsarətlə təkrar göndər, dublikatı bazada tut.</div>
+    </div>
+  </div>
+
+  <p>Yəni bu, yeni bir prinsip deyil — <strong>bütün sistemin əsasında duran prinsipin təkrarıdır</strong>.</p>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <p class="sec-num">05 — İdempotentlik</p>
+  <h2>Xilasedici anlayış</h2>
+  <p><strong>İdempotent əməliyyat</strong> — bir dəfə və ya yüz dəfə icra olunanda <em>eyni nəticəni</em> verən əməliyyat.</p>
+
+  <div class="codebox">
+<pre><span class="cmt"># İDEMPOTENT DEYİL — hər çağırışda nəticə dəyişir</span>
+balans = balans + <span class="nm">100</span>
+
+<span class="cmt"># İDEMPOTENT — nə qədər çağırsan, nəticə eynidir</span>
+balans = <span class="nm">500</span>
+
+<span class="cmt"># Bizim halımız — İDEMPOTENT</span>
+INSERT INTO olcme (...) VALUES (...)
+ON CONFLICT (cihaz_kod, olcme_vaxti) DO NOTHING;
+<span class="cmt"># 1-ci dəfə: yazır. 2-ci, 3-cü, 100-cü dəfə: SƏSSİZCƏ atır.</span></pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə bu, hər şeyi dəyişir</span>
+    İdempotentlik olmasa, sync işçisi <strong>hər addımda əmin olmalı</strong> idi: "bu sətri göndərmişəmmi? təsdiq gəlibmi? təkrar göndərsəm dublikat olarmı?"<br><br>
+    İdempotentliklə isə işçi <strong>sadələşir</strong>: <em>"şübhə varsa, göndər. Mərkəz özü həll edər."</em><br><br>
+    Mürəkkəb koordinasiya problemi → sadə bir baza məhdudiyyəti. <strong>Bu, mühəndislikdə ən dəyərli mübadilədir.</strong>
+  </div>
+
+  <h3>Təbii açar — ölçmənin şəxsiyyəti</h3>
+  <p>İdempotentlik üçün hər ölçmənin <strong>unikal kimliyi</strong> olmalıdır. İki namizəd var:</p>
+
+  <table class="tbl">
+    <thead><tr><th>Namizəd</th><th>Üstünlük</th><th>Problem</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="mono">id</span> (bigint, edge-dən)</td>
+        <td>Sadə</td>
+        <td><strong>Təhlükəli.</strong> İkinci zavod əlavə olunsa, id-lər toqquşar. Edge bazası bərpa olunsa, id-lər sıfırlanar.</td>
+      </tr>
+      <tr>
+        <td><span class="mono">(cihaz_kod, olcme_vaxti)</span></td>
+        <td><strong>Təbii açar.</strong> Fiziki reallıqdan gəlir: bir sensor, bir anda, bir dəyər.</td>
+        <td>Yoxdur — bu, artıq Dərs 05-də qurduğumuz açardır</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout ok">
+    <span class="k">Seçim: təbii açar</span>
+    <span class="mono">(cihaz_kod, olcme_vaxti)</span> — və bu, <strong>artıq mövcuddur</strong>. Dərs 05-də retain dublikatlarını tutmaq üçün qurduğumuz <span class="mono">UNIQUE</span> indeks indi mərkəzi sinxronizasiyanı da qoruyur.<br><br>
+    Yaxşı dizayn belə olur: bir qərar <strong>iki problemi</strong> həll edir.
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <p class="sec-num">06 — Outbox</p>
+  <h2>Outbox pattern — göndərilməli poçt qutusu</h2>
+  <p>Sinxron ikili yazmadan imtina etdik. Onda necə göndərək?</p>
+
+  <div class="callout why">
+    <span class="k">Əsas ideya</span>
+    <strong>Göndərməyi yazmaqdan ayır.</strong><br><br>
+    Yazıcı <em>yalnız edge bazaya</em> yazır — sürətli, etibarlı, şəbəkədən asılı deyil.<br>
+    Ayrı bir <strong>sync işçisi</strong> isə "hələ göndərilməmiş" sətirləri tapıб mərkəzə aparır.<br><br>
+    İki proses bir-birindən <strong>tamamilə asılısızdır</strong>. Şəbəkə kəsilsə — yazıcı xəbər tutmur belə.
+  </div>
+
+  <div class="arch">
+    <div class="lbl">Outbox pattern — ayrılmış məsuliyyətlər</div>
+    <div class="rowf">
+      <div class="bx"><span class="t">Yazıcı</span><span class="s">yazır, unudur</span></div>
+      <span class="ar">►</span>
+      <div class="bx hl"><span class="t">olcme cədvəli</span><span class="s">sync_status = 0</span></div>
+      <span class="ar">◄</span>
+      <div class="bx hl"><span class="t">Sync işçisi</span><span class="s">tapır, göndərir</span></div>
+      <span class="ar">►</span>
+      <div class="bx"><span class="t">Mərkəz</span><span class="s">ON CONFLICT</span></div>
+    </div>
+  </div>
+
+  <h3>Ayrıca cədvəl yoxsa mövcud cədvəldə bayraq?</h3>
+  <table class="tbl">
+    <thead><tr><th></th><th>Ayrıca <span class="mono">outbox</span> cədvəli</th><th><span class="mono">olcme</span>-də <span class="mono">sync_status</span> sütunu</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Necə işləyir</strong></td><td>Hər yazmada ikinci cədvələ də sətir</td><td>Mövcud sətirdə bayraq: 0 = göndərilməyib</td></tr>
+      <tr><td><strong>Yazma yükü</strong></td><td>İki dəfə artıq</td><td><strong>Sıfır əlavə yük</strong></td></tr>
+      <tr><td><strong>Təmizlik</strong></td><td>Göndərilən sətir silinməlidir</td><td>Sadəcə bayraq dəyişir</td></tr>
+      <tr><td><strong>Nə vaxt lazımdır</strong></td><td>Mürəkkəb hadisələr, birdən çox alıcı</td><td><strong>Bizim hal</strong> — sadə, birbaşa</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout ok">
+    <span class="k">Seçim: <span class="mono">sync_status</span> sütunu</span>
+    Və <strong>o, artıq bazadadır</strong>. Dərs 02-də <span class="mono">olcme</span> cədvəlinə <span class="mono">sync_status</span> sütunu və <span class="mono">idx_olcme_sync</span> indeksi qoymuşduq — <em>məhz bu gün üçün</em>.<br><br>
+    Yoxlayın:<br>
+    <code class="inl">psql -p 5434 -d zavod_edge_db -c "\d olcme"</code>
+  </div>
+
+  <h3>Sync işçisinin dövrü</h3>
+  <div class="codebox">
+    <div class="cap">Məntiq — psevdokod</div>
+<pre><span class="kw">while</span> <span class="kw">True</span>:
+    <span class="cmt"># 1) Göndərilməmiş sətirləri tap (indeks sayəsində sürətli)</span>
+    setirler = SELECT ... FROM olcme
+               WHERE sync_status = <span class="nm">0</span>
+               ORDER BY olcme_vaxti
+               LIMIT <span class="nm">500</span>
+
+    <span class="kw">if</span> <span class="kw">not</span> setirler:
+        sleep(<span class="nm">10</span>)          <span class="cmt"># göndəriləsi yoxdur</span>
+        <span class="kw">continue</span>
+
+    <span class="kw">try</span>:
+        <span class="cmt"># 2) Mərkəzə göndər — İDEMPOTENT</span>
+        merkez.executemany(<span class="st">"INSERT ... ON CONFLICT DO NOTHING"</span>, setirler)
+        merkez.commit()
+
+        <span class="cmt"># 3) YALNIZ commit-dən SONRA bayrağı dəyiş</span>
+        edge.execute(<span class="st">"UPDATE olcme SET sync_status=1 WHERE id = ANY(...)"</span>)
+        edge.commit()
+
+    <span class="kw">except</span> ShebekeXetasi:
+        <span class="cmt"># 4) Bayraq DƏYİŞMƏYİB → növbəti dövrdə TƏKRAR göndəriləcək</span>
+        sleep(gozleme_muddeti)   <span class="cmt"># eksponensial backoff</span></pre>
+  </div>
+
+  <div class="expl">
+    <div class="row">
+      <div class="c">Sıra: əvvəlcə mərkəz, sonra bayraq</div>
+      <div class="d"><strong>Bu sıra müqəddəsdir.</strong><br>
+        Əgər əvvəlcə <span class="mono">sync_status = 1</span> etsək və sonra göndərmə uğursuz olsa — sətir <strong>əbədi itər</strong>: bayraq "göndərilib" deyir, amma mərkəzdə yoxdur. Heç kim bunu tapmaz.<br><br>
+        Düzgün sıra ilə isə ən pis hal: <em>təkrar göndərmə</em>. Və o, idempotentlik sayəsində zərərsizdir.</div>
+    </div>
+    <div class="row">
+      <div class="c">İstisna tutulur, bayraq toxunulmur</div>
+      <div class="d">Şəbəkə kəsilsə, <span class="mono">sync_status</span> <strong>0 qalır</strong>. Növbəti dövrdə eyni sətirlər yenidən tapılacaq. <strong>Data itmir</strong> — sadəcə gecikir.</div>
+    </div>
+    <div class="row">
+      <div class="c">LIMIT 500</div>
+      <div class="d">Bir dəfəyə hamısını göndərmək istəməzsiniz. Şəbəkə 6 saat kəsilsə, 4000+ sətir yığılar — hamısını bir tranzaksiyada göndərmək həm yaddaş, həm timeout riskidir. Dəstələrlə gedirik.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <p class="sec-num">07 — Əhatə</p>
+  <h2>Nə göndərilir?</h2>
+  <p>Edge bazada üç növ data var. Hamısı mərkəzə lazımdırmı?</p>
+
+  <table class="tbl">
+    <thead><tr><th>Cədvəl</th><th>Həcm</th><th>Mərkəzə lazımdır?</th><th>Niyə</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="mono">olcme</span></td>
+        <td>Böyük — gündə ~86 000</td>
+        <td><strong>Bəli</strong></td>
+        <td>Tarixi analiz, hesabatlar, planlaşdırma</td>
+      </tr>
+      <tr>
+        <td><span class="mono">xeberdarliq</span></td>
+        <td>Kiçik — gündə onlarla</td>
+        <td><strong>Bəli — prioritetlə</strong></td>
+        <td>Rəhbərlik kritik alerti <em>dərhal</em> görməlidir</td>
+      </tr>
+      <tr>
+        <td><span class="mono">cihaz</span>, <span class="mono">sensor_tipi</span></td>
+        <td>Çox kiçik — 5-10 sətir</td>
+        <td>Xeyr (hələlik)</td>
+        <td>Nadir dəyişir. Əl ilə sinxronlaşdırmaq kifayətdir</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">Alert ölçmədən ÖNCƏ göndərilməlidir</span>
+    Şəbəkə 3 saat kəsilib. Bərpa olanda 2000 ölçmə və 3 alert gözləyir.<br><br>
+    <strong>Səhv:</strong> əvvəlcə 2000 ölçməni göndər (10 dəqiqə çəkir), sonra alertləri. → <em>Kritik alert 10 dəqiqə gecikir.</em><br><br>
+    <strong>Düzgün:</strong> hər dövrdə <strong>əvvəlcə alertləri</strong>, sonra ölçmələri göndər. Alertlər azdır — saniyələr çəkir.<br><br>
+    Bu, sadə bir sıra qərarıdır, amma operatorun kritik məlumatı nə vaxt görəcəyini müəyyən edir.
+  </div>
+
+  <h3>Alertin xüsusiyyəti — o, YENİLƏNİR</h3>
+  <div class="callout err">
+    <span class="k">Diqqət: alert ölçmə kimi deyil</span>
+    Ölçmə <strong>dəyişməz</strong>: bir dəfə yazılıб, bir daha toxunulmur. Göndərdin — bitdi.<br><br>
+    Alert isə <strong>yaşayır</strong>: <span class="mono">tetik_sayi</span> artır, <span class="mono">seviyye</span> yüksəlir, sonda <span class="mono">hell_olundu</span> dəyişir.<br><br>
+    Deməli alerti <em>bir dəfə</em> göndərmək kifayət deyil — <strong>hər dəyişiklikdə</strong> yenidən göndərilməlidir. Və mərkəzdə <span class="mono">DO NOTHING</span> yox, <strong><span class="mono">DO UPDATE</span></strong> olmalıdır.
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th></th><th><span class="mono">olcme</span></th><th><span class="mono">xeberdarliq</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>Təbiəti</strong></td><td>Dəyişməz fakt</td><td>Yaşayan vəziyyət</td></tr>
+      <tr><td><strong>Neçə dəfə göndərilir</strong></td><td>Bir dəfə</td><td>Hər dəyişiklikdə</td></tr>
+      <tr><td><strong>Mərkəzdə</strong></td><td><span class="mono">ON CONFLICT DO NOTHING</span></td><td><span class="mono">ON CONFLICT DO UPDATE</span></td></tr>
+      <tr><td><strong>Bayraq necə sıfırlanır</strong></td><td>Sıfırlanmır</td><td>Alert yenilənəndə <span class="mono">sync_status = 0</span> olur (trigger)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <p class="sec-num">08 — Sxem: Edge</p>
+  <h2>Edge tərəfində nə lazımdır</h2>
+
+  <h3>Addım 1 — Mövcud vəziyyəti yoxlayaq</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>psql -p 5434 -d zavod_edge_db -c <span class="st">"\d olcme"</span>
+
+<span class="cmt"># sync_status sütunu və idx_olcme_sync indeksi VAR olmalıdır (Dərs 02-dən)</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT sync_status, count(*)
+FROM olcme GROUP BY sync_status;"</span>
+<span class="cmt"># Gözlənilən: sync_status=0, count=BÜTÜN sətirlər (heç nə göndərilməyib)</span></pre>
+  </div>
+
+  <h3>Addım 2 — Xəbərdarlıq cədvəlinə də sync bayrağı</h3>
+  <div class="codebox">
+    <div class="cap">02_db/edge/08_sync_sxem.sql</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- ============================================================
+-- Dərs 07-A: Mərkəzi sinxronizasiya — EDGE tərəfi
+-- ============================================================</span>
+
+<span class="cmt">-- 1. xeberdarliq-a sync bayrağı</span>
+ALTER TABLE xeberdarliq
+    ADD COLUMN IF NOT EXISTS sync_status SMALLINT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS sync_vaxti  TIMESTAMPTZ;
+
+<span class="cmt">-- 2. Göndəriləcəkləri sürətlə tapmaq üçün QİSMƏN indeks
+--    Yalnız sync_status=0 olan sətirləri əhatə edir — kiçik və sürətli</span>
+CREATE INDEX IF NOT EXISTS idx_xeber_sync
+    ON xeberdarliq (id)
+    WHERE sync_status = 0;
+
+<span class="cmt">-- 3. TRIGGER: alert DƏYİŞƏNDƏ bayrağı SIFIRLA
+--    Cunki alert yasayir - tetik_sayi artir, seviyye yukselir,
+--    hell_olundu deyisir. Her deyisiklik merkeze catmalidir.</span>
+CREATE OR REPLACE FUNCTION xeber_sync_sifirla()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.sync_status := 0;
+    NEW.sync_vaxti  := NULL;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_xeber_sync ON xeberdarliq;
+
+CREATE TRIGGER trg_xeber_sync
+    BEFORE UPDATE ON xeberdarliq
+    FOR EACH ROW
+    WHEN (
+        OLD.tetik_sayi   IS DISTINCT FROM NEW.tetik_sayi   OR
+        OLD.seviyye      IS DISTINCT FROM NEW.seviyye      OR
+        OLD.hell_olundu  IS DISTINCT FROM NEW.hell_olundu  OR
+        OLD.pik_qiymet   IS DISTINCT FROM NEW.pik_qiymet
+    )
+    EXECUTE FUNCTION xeber_sync_sifirla();
+
+<span class="cmt">-- 4. Sync metrikaları üçün görünüş (view)</span>
+CREATE OR REPLACE VIEW sync_veziyyet AS
+SELECT
+    'olcme' AS cedvel,
+    count(*) FILTER (WHERE sync_status = 0) AS gozleyen,
+    count(*) FILTER (WHERE sync_status = 1) AS gonderilen,
+    min(olcme_vaxti) FILTER (WHERE sync_status = 0) AS en_kohne_gozleyen
+FROM olcme
+UNION ALL
+SELECT
+    'xeberdarliq',
+    count(*) FILTER (WHERE sync_status = 0),
+    count(*) FILTER (WHERE sync_status = 1),
+    min(acilma_vaxti) FILTER (WHERE sync_status = 0)
+FROM xeberdarliq;
+
+SELECT * FROM sync_veziyyet;</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Trigger niyə vacibdir</span>
+    Onsuz belə olardı: alert göndərilir (<span class="mono">sync_status = 1</span>), sonra <span class="mono">tetik_sayi</span> 5-dən 500-ə çatır, səviyyə kritikə yüksəlir, alert bağlanır — və <strong>mərkəz heç nə bilmir</strong>, çünki bayraq hələ "göndərilib" deyir.<br><br>
+    Trigger bunu <strong>bazada</strong> həll edir. Kod unutsa belə, baza unutmaz.<br><br>
+    <span class="mono">IS DISTINCT FROM</span> — <span class="mono">NULL</span>-larla da düzgün müqayisə edir (<span class="mono">!=</span> bunu bacarmır).
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Trigger-in gizli faydası</span>
+    <span class="mono">WHEN</span> şərtinə diqqət edin: bayraq <strong>yalnız mənalı sahələr dəyişəndə</strong> sıfırlanır.<br><br>
+    Əgər hər <span class="mono">UPDATE</span>-də sıfırlasaq, sync işçisinin öz <span class="mono">UPDATE ... SET sync_status=1</span> əmri triggeri işə salardı → bayraq dərhal 0-a qayıdardı → <strong>sonsuz dövr</strong>.<br><br>
+    Bu, klassik tələdir. <span class="mono">WHEN</span> şərti ondan qoruyur.
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <p class="sec-num">09 — Sxem: Mərkəz</p>
+  <h2>Mərkəz tərəfində nə lazımdır</h2>
+  <p>Mərkəzi baza (<span class="mono">zarat_erp_2</span>, port 5432) zavod datasını qəbul etməyə hazır olmalıdır.</p>
+
+  <div class="callout">
+    <span class="k">Ayrı sxem — təmizlik üçün</span>
+    Zavod datasını ERP-nin mövcud 14 sxeminə qarışdırmırıq. Ona ayrıca <span class="mono">zavod</span> sxemi veririk.<br><br>
+    <strong>Fayda:</strong> icazələri ayrıca idarə etmək, yedəkləmək, silmək olar. Və <em>hansı datanın haradan gəldiyi</em> həmişə aydındır.
+  </div>
+
+  <div class="codebox">
+    <div class="cap">02_db/merkez/01_zavod_sxem.sql</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- ============================================================
+-- Dərs 07-A: Mərkəzi baza — zavod datasını qəbul edir
+-- İşlədilir: psql -p 5432 -d zarat_erp_2 -f bu_fayl
+-- ============================================================</span>
+
+CREATE SCHEMA IF NOT EXISTS zavod;
+
+<span class="cmt">-- ---------- Ölçmə ----------</span>
+CREATE TABLE IF NOT EXISTS zavod.olcme (
+    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    zavod_kod    VARCHAR(20)   NOT NULL DEFAULT 'SIYEZEN',
+    cihaz_kod    VARCHAR(20)   NOT NULL,
+    olcme_vaxti  TIMESTAMPTZ   NOT NULL,
+    qiymet       NUMERIC(12,4) NOT NULL,
+    keyfiyyet    SMALLINT      NOT NULL DEFAULT 1,
+    qebul_vaxti  TIMESTAMPTZ   NOT NULL DEFAULT now(),
+
+    <span class="cmt">-- İDEMPOTENTLİYİN ÜRƏYİ:
+    -- Eyni zavod + eyni cihaz + eyni an = eyni ölçmə.
+    -- Təkrar göndərilsə, ON CONFLICT onu səssizcə atacaq.</span>
+    CONSTRAINT olcme_tebii_acar UNIQUE (zavod_kod, cihaz_kod, olcme_vaxti)
+);
+
+CREATE INDEX IF NOT EXISTS idx_zavod_olcme_vaxt
+    ON zavod.olcme (olcme_vaxti DESC);
+CREATE INDEX IF NOT EXISTS idx_zavod_olcme_cihaz
+    ON zavod.olcme (cihaz_kod, olcme_vaxti DESC);
+
+<span class="cmt">-- ---------- Xəbərdarlıq ----------</span>
+CREATE TABLE IF NOT EXISTS zavod.xeberdarliq (
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    zavod_kod      VARCHAR(20)  NOT NULL DEFAULT 'SIYEZEN',
+    edge_id        BIGINT       NOT NULL,   <span class="cmt">-- edge-dəki id</span>
+    cihaz_kod      VARCHAR(20)  NOT NULL,
+    novu           VARCHAR(20)  NOT NULL,
+    seviyye        VARCHAR(15)  NOT NULL,
+    mesaj          TEXT,
+    acilma_vaxti   TIMESTAMPTZ,
+    baglanma_vaxti TIMESTAMPTZ,
+    tetik_sayi     INTEGER      NOT NULL DEFAULT 1,
+    ilk_qiymet     NUMERIC(12,4),
+    son_qiymet     NUMERIC(12,4),
+    pik_qiymet     NUMERIC(12,4),
+    hell_olundu    BOOLEAN      NOT NULL DEFAULT FALSE,
+    qebul_vaxti    TIMESTAMPTZ  NOT NULL DEFAULT now(),
+
+    <span class="cmt">-- Alert üçün təbii açar: zavod + edge-dəki id
+    -- (alert YENİLƏNİR, ona görə DO UPDATE lazım olacaq)</span>
+    CONSTRAINT xeber_tebii_acar UNIQUE (zavod_kod, edge_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_zavod_xeber_aktiv
+    ON zavod.xeberdarliq (acilma_vaxti DESC)
+    WHERE hell_olundu = FALSE;
+
+<span class="cmt">-- ---------- Sync jurnalı — monitorinq üçün ----------</span>
+CREATE TABLE IF NOT EXISTS zavod.sync_jurnal (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    zavod_kod     VARCHAR(20) NOT NULL,
+    cedvel        VARCHAR(30) NOT NULL,
+    setir_sayi    INTEGER     NOT NULL,
+    yeni_setir    INTEGER     NOT NULL,   <span class="cmt">-- dublikat olmayan</span>
+    muddet_ms     INTEGER,
+    vaxt          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sync_jurnal_vaxt
+    ON zavod.sync_jurnal (vaxt DESC);
+
+<span class="cmt">-- ---------- Yoxlama ----------</span>
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'zavod' ORDER BY table_name;</pre>
+  </div>
+
+  <div class="expl">
+    <div class="row">
+      <div class="c">zavod_kod DEFAULT 'SIYEZEN'</div>
+      <div class="d"><strong>Gələcəyə hazırlıq.</strong> İkinci zavod (məsələn, Gəncə) əlavə olunsa, təbii açar toqquşmayacaq. İndi bir sütun əlavə etmək asandır; sonra milyonlarla sətrə əlavə etmək — ağrılıdır.</div>
+    </div>
+    <div class="row">
+      <div class="c">edge_id — alert üçün</div>
+      <div class="d">Alert <em>yenilənir</em>, ona görə mərkəzin onu tanıması lazımdır. Edge-dəki <span class="mono">id</span> + <span class="mono">zavod_kod</span> = unikal kimlik.<br>
+        Ölçmə üçün bu lazım deyil — orada təbii açar <span class="mono">(cihaz, vaxt)</span> kifayətdir.</div>
+    </div>
+    <div class="row">
+      <div class="c">qebul_vaxti</div>
+      <div class="d"><span class="mono">olcme_vaxti</span> — sensor <em>nə vaxt ölçdü</em>. <span class="mono">qebul_vaxti</span> — mərkəz <em>nə vaxt aldı</em>.<br>
+        Fərq = <strong>sinxronizasiya gecikməsi</strong>. Şəbəkə 3 saat kəsilibsə, bu fərq 3 saat olacaq — və bunu görmək istəyirsiniz.</div>
+    </div>
+    <div class="row">
+      <div class="c">sync_jurnal</div>
+      <div class="d">Hər sync dövrü qeyd olunur. <span class="mono">yeni_setir &lt; setir_sayi</span> olsa — dublikat göndərilib (təkrar cəhd olub). Bu, normaldır, amma <em>görünməlidir</em>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <p class="sec-num">10 — İncəliklər</p>
+  <h2>Sıra və "hot" sətir problemi</h2>
+
+  <h3>Sıra: köhnədən yeniyə</h3>
+  <div class="codebox">
+<pre>SELECT ... FROM olcme
+WHERE sync_status = <span class="nm">0</span>
+ORDER BY olcme_vaxti     <span class="cmt">-- ← KÖHNƏDƏN başla</span>
+LIMIT <span class="nm">500</span>;</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə köhnədən?</span>
+    Şəbəkə 6 saat kəsilib, 4300 ölçmə yığılıб. Bərpa olanda:<br><br>
+    <strong>Yenidən başlasaq:</strong> son ölçmələr gedir, köhnələr növbədə qalır. Əgər şəbəkə yenidən kəsilsə — köhnə data <em>daha da gecikir</em>. Ən pis halda hеç vaxt getmir.<br><br>
+    <strong>Köhnədən başlasaq:</strong> növbə <em>ardıcıl</em> boşalır. Data mərkəzə <strong>xronoloji sırada</strong> çatır — analiz üçün də bu, daha təmizdir.<br><br>
+    <strong>FIFO həmişə üstündür</strong> — ədalətlidir və "ac qalan sətir" (starvation) yaratmır.
+  </div>
+
+  <h3>"Hot" sətir problemi — alert</h3>
+  <div class="callout err">
+    <span class="k">Gizli tələ</span>
+    Aktiv alert <strong>hər 5 saniyədə yenilənir</strong> (<span class="mono">tetik_sayi</span> artır). Trigger hər dəfə <span class="mono">sync_status = 0</span> edir.<br><br>
+    Nəticə: sync işçisi <strong>hər dövrdə eyni alerti</strong> yenidən göndərir. Saatda 720 dəfə. Bir alert üçün!<br><br>
+    Bu, <em>yanlış deyil</em> (data düzgündür), amma <strong>israfdır</strong>.
+  </div>
+
+  <h4>Həll: yenidən göndərmə intervalı</h4>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- Alert seçimində əlavə şərt:
+-- ya heç göndərilməyib, ya da son göndərmədən 60 saniyə keçib</span>
+
+SELECT id, cihaz_kod, novu, seviyye, ...
+FROM xeberdarliq
+WHERE sync_status = 0
+  AND (
+      sync_vaxti IS NULL                          <span class="cmt">-- heç göndərilməyib</span>
+      OR sync_vaxti &lt; now() - interval '60 seconds'  <span class="cmt">-- 60 san. keçib</span>
+  )
+ORDER BY
+    (seviyye = 'kritik') DESC,   <span class="cmt">-- KRİTİKLƏR ÖNDƏ</span>
+    acilma_vaxti
+LIMIT 100;</pre>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Nəticə</span>
+    <strong>Yeni</strong> alert dərhal gedir (<span class="mono">sync_vaxti IS NULL</span>).<br>
+    <strong>Mövcud</strong> alert isə ən çox dəqiqədə bir yenilənir — <span class="mono">tetik_sayi</span> 720 dəfə yox, 60 dəfə göndərilir.<br>
+    <strong>Kritik</strong> alert həmişə növbənin başındadır.<br><br>
+    Şəbəkə trafiki 12 dəfə azaldı, kritik məlumatın sürəti isə qorundu.
+  </div>
+
+  <h3>Batch ölçüsü — kompromis</h3>
+  <table class="tbl">
+    <thead><tr><th>LIMIT</th><th>Üstünlük</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td><strong>50</strong></td><td>Kiçik tranzaksiya, tez commit</td><td>Yığılmış 4000 sətir üçün 80 dövr — yavaş bərpa</td></tr>
+      <tr><td><strong>500</strong></td><td><strong>Balanslı</strong> — bizim seçim</td><td>—</td></tr>
+      <tr><td><strong>5000</strong></td><td>Tez bərpa</td><td>Böyük tranzaksiya, timeout riski, yaddaş</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <p class="sec-num">11 — Saxlama</p>
+  <h2>Yedək təzyiqi və saxlama siyasəti</h2>
+
+  <div class="callout warn">
+    <span class="k">Sual: göndərilən data edge-də nə qədər qalmalıdır?</span>
+    Edge maşın (bu Intel MacBook) məhdud diskə malikdir. Gündə 86 400 ölçmə → ayda <strong>2,6 milyon sətir</strong>.<br><br>
+    Data mərkəzə göndərilib. Edge-də saxlamağa davam etməkmi?
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Siyasət</th><th>Nə edir</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Heç nə silmə</strong></td>
+        <td>Bütün data edge-də qalır</td>
+        <td>Disk dolur, sorğular yavaşlayır</td>
+      </tr>
+      <tr>
+        <td><strong>Göndərən kimi sil</strong></td>
+        <td><span class="mono">sync_status=1</span> → DELETE</td>
+        <td><strong>Təhlükəli.</strong> Mərkəz datanı itirsə (yedək xətası), <em>heç yerdə</em> nüsxə qalmır</td>
+      </tr>
+      <tr>
+        <td><strong>N gün saxla</strong></td>
+        <td>Göndərilib <em>və</em> 30 gündən köhnədirsə — sil</td>
+        <td class="yes"><strong>Tövsiyə</strong> — təhlükəsizlik payı ilə</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="codebox">
+    <div class="cap">02_db/edge/09_temizlik.sql — həftədə bir işlədilir</div>
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre><span class="cmt">-- ============================================================
+-- Saxlama siyasəti: göndərilib VƏ 30 gündən köhnədirsə — sil
+-- İKİ şərt də vacibdir. Yalnız birinə güvənmək təhlükəlidir.
+-- ============================================================</span>
+
+<span class="cmt">-- Əvvəlcə: nə qədər silinəcək? (check before changing)</span>
+SELECT count(*) AS silinecek,
+       min(olcme_vaxti) AS en_kohne,
+       max(olcme_vaxti) AS en_yeni
+FROM olcme
+WHERE sync_status = 1
+  AND olcme_vaxti &lt; now() - interval '30 days';
+
+<span class="cmt">-- Rəqəm məqbuldursa — sil</span>
+DELETE FROM olcme
+WHERE sync_status = 1
+  AND olcme_vaxti &lt; now() - interval '30 days';
+
+<span class="cmt">-- Diski geri qaytar</span>
+VACUUM ANALYZE olcme;
+
+<span class="cmt">-- Alertlər: bağlanıb, göndərilib və 90 gündən köhnə</span>
+DELETE FROM xeberdarliq
+WHERE hell_olundu = TRUE
+  AND sync_status = 1
+  AND baglanma_vaxti &lt; now() - interval '90 days';
+
+VACUUM ANALYZE xeberdarliq;</pre>
+  </div>
+
+  <div class="callout why">
+    <span class="k">Niyə İKİ şərt (<span class="mono">sync_status = 1</span> VƏ 30 gün)</span>
+    <strong>Yalnız <span class="mono">sync_status = 1</span> olsa:</strong> data mərkəzə çatan kimi silinər. Mərkəzdə yedək xətası olsa — <em>hər şey itdi</em>.<br><br>
+    <strong>Yalnız 30 gün olsa:</strong> göndərilməmiş köhnə data silinər — <em>heç vaxt mərkəzə çatmaz</em>.<br><br>
+    <strong>Hər ikisi birlikdə:</strong> data mərkəzdədir <em>və</em> 30 gündür orada durur. Bu müddətdə problem aşkarlanıб düzəldilə bilər. <strong>Təhlükəsizlik payı.</strong>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <p class="sec-num">12 — Yekun</p>
+  <h2>Yoxlama və Hissə B</h2>
+
+  <h3>Bu hissədə nə qurduq</h3>
+  <ul class="check">
+    <li>Sinxron ikili yazmanın <strong>niyə ölümcül</strong> olduğunu anladıq — iki baza bir tranzaksiyada olmaz.</li>
+    <li>İki generalın problemi: <strong>exactly-once mümkün deyil</strong> — riyazi olaraq sübut edilib.</li>
+    <li><strong>At-least-once</strong> seçdik: cəsarətlə təkrar göndər, dublikatı bazada tut.</li>
+    <li><strong>Outbox pattern</strong>: yazma və göndərmə tam ayrıldı — şəbəkə kəsilsə, yazıcı xəbər tutmur.</li>
+    <li>Alert üçün <strong>trigger</strong>: dəyişəndə bayraq avtomatik sıfırlanır (sonsuz dövr tələsindən qaçaraq).</li>
+    <li>Mərkəzdə <span class="mono">zavod</span> sxemi, təbii açarlar, sync jurnalı.</li>
+    <li><strong>Hot sətir</strong> problemi: alert dəqiqədə bir dəfədən çox göndərilmir.</li>
+    <li><strong>Saxlama siyasəti</strong>: iki şərtli təmizlik — təhlükəsizlik payı ilə.</li>
+  </ul>
+
+  <h3>Yoxlama siyahısı</h3>
+  <div class="codebox">
+    <button class="copybtn" onclick="cp(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+
+<span class="cmt"># 1) Edge: sync sütunları var?</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"\d xeberdarliq"</span> | grep sync
+
+<span class="cmt"># 2) Edge: trigger quruldu?</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+SELECT tgname FROM pg_trigger
+WHERE tgrelid = 'xeberdarliq'::regclass AND NOT tgisinternal;"</span>
+
+<span class="cmt"># 3) Edge: sync vəziyyəti</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"SELECT * FROM sync_veziyyet;"</span>
+
+<span class="cmt"># 4) Mərkəz: zavod sxemi yaradıldı?</span>
+psql -p 5432 -d zarat_erp_2 -c <span class="st">"
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'zavod';"</span>
+
+<span class="cmt"># 5) Trigger işləyirmi? (alert yeniləyib bayrağa bax)</span>
+psql -p 5434 -d zavod_edge_db -c <span class="st">"
+UPDATE xeberdarliq SET sync_status = 1 WHERE id = (SELECT min(id) FROM xeberdarliq);
+UPDATE xeberdarliq SET tetik_sayi = tetik_sayi + 1 WHERE id = (SELECT min(id) FROM xeberdarliq);
+SELECT id, tetik_sayi, sync_status FROM xeberdarliq ORDER BY id LIMIT 1;"</span>
+<span class="cmt"># → sync_status 1-dən 0-a QAYITMALIDIR (trigger işlədi!)</span></pre>
+  </div>
+
+  <div class="callout">
+    <span class="k">Hissə B-də nə edəcəyik</span>
+    Baza hazırdır — indi <strong>kod</strong>:<br><br>
+    <strong>①</strong> <span class="mono">03_src/sync/</span> paketi — ayrıca proses (FastAPI-dən müstəqil);<br>
+    <strong>②</strong> İki bazaya eyni anda qoşulma — edge hovuzu + mərkəz hovuzu;<br>
+    <strong>③</strong> <strong>Eksponensial backoff</strong> — şəbəkə kəsiləndə ağıllı gözləmə (1s → 2s → 4s → ... → 5 dəq.);<br>
+    <strong>④</strong> Alert prioriteti və ölçmə dəstələri;<br>
+    <strong>⑤</strong> <strong>İki maşınlı qurulum</strong> — <em>sizin real ssenariniz</em>: edge bu Intel Mac-də, mərkəz digər Mac-də. <span class="mono">pg_hba.conf</span>, <span class="mono">listen_addresses</span>, firewall;<br>
+    <strong>⑥</strong> <strong>Xaos testi</strong>: şəbəkəni qəsdən kəsib data itmədiyini sübut etmək.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Faza 2 · Zavod Rəqəmsallaşdırılması</p>
+  <p>Dərs 07-A — Mərkəzi Sinxronizasiya: Nəzəriyyə və Baza Modeli</p>
+</footer>
+
+<script>
+function cp(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent; btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1500);
+  });
+}
+</script>
+</body>
+</html>

@@ -20,6 +20,7 @@ from . import alert as alert_modul
 from . import nezaretci as nezaret_modul
 from .yazici import yazici_dovru, YAZICI_METRIKA
 from .bildiris import BILDIRIS_METRIKA
+from .senedler import router as sened_router
 
 log = logging.getLogger("zarat.api")
 
@@ -68,6 +69,9 @@ app = FastAPI(
     version=VERSIYA,
     lifespan=lifespan,
 )
+
+# Faza 3 — Sənəd endpointləri
+app.include_router(sened_router)
 
 
 @app.get("/health", response_model=SaglamliqCavabi, tags=["Sistem"])
