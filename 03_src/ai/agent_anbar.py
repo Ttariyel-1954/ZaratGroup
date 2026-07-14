@@ -1,93 +1,88 @@
 """
-Agent 2: ANBAR_MUQAYISE — Qaiməni anbar qalığı ilə müqayisə edir.
+Agent 2: ANBAR_MUQAYISE — SQL tapıntıları üçün LLM izahı yazır.
 
-Məntiq:
-  - Riyaziyyat SQL-də edilir (LLM buna toxunmur)
-  - LLM yalnız izahat mətni yazır
+Dizayn qaydası:
+  - Bütün hesablamalar SQL-də edilir (agent_server.py-da)
+  - Bu agent YALNIZ izah_yaz() ilə çağırılır
+  - LLM rəqəm hesablamır, yalnız operatora sadə dildə izah edir
+  - Nəticə zavod_ai.qerar-a yazılır (cixaris-ə YOX)
 
-Kontekstdə gözlənilir (giris.kontekst):
-  {
-    "sened_netice":    {...},   # OCR_QAIME çıxarışı
-    "anbar_qaliq":     [{kod, ad, qaliq, vahid, min_qaliq}],
-    "uygunlasma":      [{material_ad, tapildi, material_kod, ferq}]
-  }
+§0 → Bu agent yalnız TƏKLİF edir. İnsan qərar verir.
 """
 from __future__ import annotations
 
 import asyncio
 import json
+import logging
 
-from .base import AgentCixisi, AgentGirisi, BaseAgent
+from .base import AgentGirisi, AgentCixisi, BaseAgent
+
+log = logging.getLogger("ai.anbar_muqayise")
 
 SISTEM = """
 Sən Azərbaycan yem zavodunun anbar analitikisən.
-Sənə qaiməni anbar qalığı ilə müqayisə nəticəsi veriləcək.
-Sadə, konkret Azərbaycan dilindəki xülasə yaz (max 5 cümlə).
-Potensial problemi — çatışmazlığı, uyğunsuzluğu vurğula.
-Cavabın YALNIZ JSON olsun:
+Sənə anbar yoxlamasının rəqəmsal nəticəsi veriləcək.
+Operatora Azərbaycan dilində, SADƏ VƏ KONKRET izah yaz.
+Texniki jarqon, formula, faiz hesabı YOX — adi insan dili.
+
+YALNIZ JSON qaytarmalısan. Markdown çərçivəsi YOX.
+
 {
-  "xulase": "...",
-  "qeyri_uygun_say": number,
-  "kritik_catismazliq": ["material_ad", ...]
+  "izah":     "Nə olduğunu 2-3 cümlə ilə izah et.",
+  "tovsiyye": ["Birinci addım", "İkinci addım"]
 }
 """.strip()
 
 
 class ANBAR_MUQAYISE(BaseAgent):
-    """Qaiməni anbar qalığı ilə müqayisə edən agent."""
+    """SQL tapıntılarını LLM ilə izah edən agent."""
 
     AGENT_KOD = "ANBAR_MUQAYISE"
 
-    async def icra(self, giris: AgentGirisi) -> AgentCixisi:
-        ctx = giris.kontekst
-
-        if not ctx.get("uygunlasma"):
-            return AgentCixisi(
-                agent_kod=self.AGENT_KOD, model="",
-                netice={"xulase": "Kontekst verilmədi"},
-                eminlik={}, ugurlu=False,
-                xeta="uygunlasma konteksti tapılmadı",
-            )
-
-        # Riyaziyyat artıq SQL-də edilib, yalnız izahat lazımdır
-        prompt_metn = (
-            f"Qaimə nəticəsi:\n"
-            f"```json\n{json.dumps(ctx.get('sened_netice', {}), ensure_ascii=False)}\n```\n\n"
-            f"Anbar uyğunlaşması:\n"
-            f"```json\n{json.dumps(ctx['uygunlasma'], ensure_ascii=False, indent=2)}\n```\n\n"
-            f"Xülasə yaz."
+    async def izahla(
+        self, basliq: str, delil: dict
+    ) -> tuple[str, list, int, int, int]:
+        """
+        Bir tapıntı üçün LLM izahı.
+        Returns: (izah, tovsiyye_list, giris_token, cixis_token, muddet_ms)
+        """
+        prompt = (
+            f"Mövzu: {basliq}\n"
+            f"Rəqəmlər: {json.dumps(delil, ensure_ascii=False)}\n\n"
+            f"Operatora sadə dildə izah et: nə olub, niyə problemdir, nə etməli."
         )
-
-        mesajlar = [{"role": "user", "content": prompt_metn}]
+        mesajlar = [{"role": "user", "content": prompt}]
 
         try:
             cavab, g, c, ms = await asyncio.to_thread(
                 self._mesaj_gonder, SISTEM, mesajlar
             )
         except Exception as e:
-            return AgentCixisi(
-                agent_kod=self.AGENT_KOD, model="",
-                netice={}, eminlik={},
-                ugurlu=False, xeta=str(e)[:500],
-            )
+            log.error("LLM xətası (%s): %s", basliq, e)
+            return f"İzah əldə edilə bilmədi: {e}", [], 0, 0, 0
 
-        netice = {}
+        # Markdown çərçivəsini soy
         cavab = cavab.strip()
-        if cavab.startswith("{"):
-            try:
-                netice = json.loads(cavab)
-            except json.JSONDecodeError:
-                netice = {"xulase": cavab}
-        else:
-            netice = {"xulase": cavab}
+        if cavab.startswith("```"):
+            cavab = "\n".join(
+                x for x in cavab.splitlines()
+                if not x.startswith("```")
+            ).strip()
 
+        try:
+            parsed = json.loads(cavab)
+            return (
+                parsed.get("izah", cavab),
+                parsed.get("tovsiyye", []),
+                g, c, ms,
+            )
+        except json.JSONDecodeError:
+            log.warning("JSON parse uğursuz, mətn kimi qaytar")
+            return cavab, [], g, c, ms
+
+    async def icra(self, giris: AgentGirisi) -> AgentCixisi:
+        """Köhnə interfeys — istifadə edilmir, endpoint birbaşa izahla() çağırır."""
         return AgentCixisi(
-            agent_kod   = self.AGENT_KOD,
-            model       = "claude-opus-4-6",
-            netice      = netice,
-            eminlik     = {"xulase": 0.85},
-            giris_token = g,
-            cixis_token = c,
-            muddet_ms   = ms,
-            ugurlu      = True,
+            agent_kod=self.AGENT_KOD, model="",
+            netice={}, eminlik={}, ugurlu=True,
         )

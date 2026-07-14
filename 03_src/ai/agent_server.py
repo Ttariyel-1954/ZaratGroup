@@ -172,6 +172,23 @@ def _json_str(v: Any) -> str:
     return json.dumps(v, ensure_ascii=False)
 
 
+async def _jurnal_yazdir(agent_kod: str, model: str, sened_id: int,
+                          g: int, c: int, ms: int, ugurlu: bool = True) -> None:
+    """Sadə jurnal yazısı — AgentCixisi olmadan."""
+    conn = await _merkez()
+    async with conn.cursor() as cur:
+        await cur.execute(
+            """
+            INSERT INTO zavod_ai.jurnal
+                (agent_kod, model, sened_id, giris_token, cixis_token,
+                 muddet_ms, ugurlu)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (agent_kod, model, sened_id, g, c, ms, ugurlu),
+        )
+    METRIKA["jurnal_yazilan"] += 1
+
+
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 
 @asynccontextmanager
@@ -424,19 +441,18 @@ async def cixaris_tesdiq(cixaris_id: int, sorgu: Tesdiq_Sorgu):
 @app.post("/agent/anbar", status_code=201)
 async def anbar_icra(sorgu: Anbar_Sorgu):
     """
-    Təsdiqlənmiş qaiməni anbar qalığı ilə müqayisə edir.
-    Bütün rəqəmlər SQL-dən; LLM yalnız izah yazır.
+    Təsdiqlənmiş qaimə üçün anbar yoxlaması.
+    Bütün hesablamalar SQL-də; tapıntı varsa LLM hər biri üçün izah yazır.
+    Nəticə zavod_ai.qerar-a yazılır (cixaris-ə YOX).
+    Tapıntı yoxdursa LLM çağırılmır.
     """
-    if not await _gunluk_token_yoxla():
-        raise HTTPException(status_code=429, detail="Günlük token limiti aşıldı.")
-
     conn = await _merkez()
 
-    # 1. Sənəd yoxla — tesdiqlendi olmalı
+    # ── 1. Sənəd yoxla ───────────────────────────────────────────────────────
     async with conn.cursor() as cur:
         await cur.execute(
             """
-            SELECT novu, nomre, sened_tarixi, metadata
+            SELECT novu, nomre, qarsi_teref, metadata
             FROM zavod_sened.sened
             WHERE id = %s AND status = 'tesdiqlendi'
             """,
@@ -445,111 +461,185 @@ async def anbar_icra(sorgu: Anbar_Sorgu):
         sened_row = await cur.fetchone()
     if sened_row is None:
         raise HTTPException(status_code=404,
-                            detail="Sənəd tapılmadı və ya hələ təsdiqlənməmişdir.")
+                            detail="Sənəd tapılmadı və ya təsdiqlənməmişdir.")
 
-    sened_novu, nomre, sened_tarixi, metadata = sened_row
-    setirler = metadata.get("setirler", [])
+    sened_novu, nomre, qarsi_teref, metadata = sened_row
+    setirler   = metadata.get("setirler", [])
+    cemi_mebleg = metadata.get("cemi_mebleg")
 
-    # 2. Hər setir üçün: material uzlaşması + anomaliya
-    uygunlasma   = []
-    qaliq_cache: dict = {}   # kod → dict (LLM-ə ötürmək üçün)
+    tapintilar: list[dict] = []   # {seviyye, basliq, material_kod, delil}
 
-    for setir in setirler:
-        mat_ad  = setir.get("material", "")
-        vahid_q = setir.get("vahid_qiymet")
+    # ── 2a. Mənfi qalıq — KRİTİK ────────────────────────────────────────────
+    async with conn.cursor() as cur:
+        await cur.execute(
+            "SELECT kod, ad, qaliq FROM zavod_anbar.qaliq WHERE qaliq < 0"
+        )
+        for kod, ad, qaliq in await cur.fetchall():
+            tapintilar.append({
+                "seviyye":      "kritik",
+                "basliq":       "Anbar qalığı mənfidir",
+                "material_kod": kod,
+                "delil":        {"material": ad, "kod": kod,
+                                 "qaliq": float(qaliq)},
+            })
 
-        async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                SELECT m.kod, m.ad,
-                       greatest(
-                           similarity(lower(m.ad),  lower(%s)),
-                           similarity(lower(m.kod), lower(%s))
-                       ) AS oxsarliq,
-                       q.qaliq, q.min_qaliq, q.vahid, q.orta_qiymet_30g
-                FROM zavod_anbar.material m
-                LEFT JOIN zavod_anbar.qaliq q ON q.kod = m.kod
-                WHERE m.aktiv
-                ORDER BY oxsarliq DESC
-                LIMIT 1
-                """,
-                (mat_ad, mat_ad),
-            )
-            m = await cur.fetchone()
+    # ── 2b. Min qalıqdan aşağı — XƏBƏRDARLIQ ────────────────────────────────
+    async with conn.cursor() as cur:
+        await cur.execute(
+            """
+            SELECT kod, ad, qaliq, min_qaliq
+            FROM zavod_anbar.qaliq
+            WHERE min_qaliq IS NOT NULL AND qaliq < min_qaliq AND qaliq >= 0
+            """
+        )
+        for kod, ad, qaliq, min_q in await cur.fetchall():
+            tapintilar.append({
+                "seviyye":      "xeberdarliq",
+                "basliq":       "Minimum qalıq həddindən aşağıdır",
+                "material_kod": kod,
+                "delil":        {"material": ad, "kod": kod,
+                                 "qaliq": float(qaliq),
+                                 "min_qaliq": float(min_q)},
+            })
 
-        problemler: list[str] = []
-        if m is None or m[2] < 0.4:
-            problemler.append("material_tapilmadi")
-            uygunlasma.append({"material_ad": mat_ad, "tapildi": False,
-                               "material_kod": None, "problemler": problemler})
-            continue
+    # ── 2c. Anbarda yoxdur, amma çıxarılır — KRİTİK (yalnız məxaric) ────────
+    if sened_novu == "QAIME_MEXARIC":
+        for setir in setirler:
+            mat_ad = setir.get("material", "")
+            miqdar = setir.get("miqdar") or 0
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    """
+                    SELECT m.kod, m.ad, coalesce(q.qaliq, 0)
+                    FROM zavod_anbar.material m
+                    LEFT JOIN zavod_anbar.qaliq q ON q.kod = m.kod
+                    WHERE greatest(similarity(lower(m.ad),  lower(%s)),
+                                   similarity(lower(m.kod), lower(%s))) >= 0.4
+                    ORDER BY greatest(similarity(lower(m.ad),  lower(%s)),
+                                      similarity(lower(m.kod), lower(%s))) DESC
+                    LIMIT 1
+                    """,
+                    (mat_ad, mat_ad, mat_ad, mat_ad),
+                )
+                m = await cur.fetchone()
+            if m and float(miqdar) > float(m[2]):
+                tapintilar.append({
+                    "seviyye":      "kritik",
+                    "basliq":       "Çatışmayan material çıxarılır",
+                    "material_kod": m[0],
+                    "delil":        {"material": m[1], "kod": m[0],
+                                     "qaliq": float(m[2]),
+                                     "cixarilan": float(miqdar)},
+                })
 
-        kod, ad_db, oxs, qaliq_val, min_q, vahid, orta_q = m
-        qaliq_cache[kod] = {
-            "kod": kod, "ad": ad_db, "vahid": vahid,
-            "qaliq":     float(qaliq_val or 0),
-            "min_qaliq": float(min_q) if min_q else None,
-        }
-
-        # Qalıq xəbərdarlığı
-        if min_q is not None and float(qaliq_val or 0) < float(min_q):
-            problemler.append("min_qaliq_asagi")
-
-        # Qiymət anomaliyası (>25%)
-        if vahid_q and orta_q and float(orta_q) > 0:
-            if abs(float(vahid_q) - float(orta_q)) / float(orta_q) > 0.25:
-                problemler.append("qiymet_anomaliya")
-
-        uygunlasma.append({
-            "material_ad":  mat_ad,
-            "tapildi":      True,
-            "material_kod": kod,
-            "oxsarliq":     round(float(oxs), 2),
-            "miqdar":       setir.get("miqdar"),
-            "qaliq":        float(qaliq_val or 0),
-            "problemler":   problemler,
-        })
-
-    # 3. Təkrar qaimə yoxlaması (eyni nomre + tarix + cemi_mebleg)
-    cemi = metadata.get("cemi_mebleg")
+    # ── 2d. Təkrar qaimə — KRİTİK ────────────────────────────────────────────
     async with conn.cursor() as cur:
         await cur.execute(
             """
             SELECT count(*) FROM zavod_sened.sened
-            WHERE nomre = %s
-              AND sened_tarixi = %s
+            WHERE qarsi_teref = %s
+              AND nomre = %s
               AND (metadata->>'cemi_mebleg')::numeric
                     IS NOT DISTINCT FROM %s::numeric
               AND id != %s
               AND status = 'tesdiqlendi'
             """,
-            (nomre, sened_tarixi, cemi, sorgu.sened_id),
+            (qarsi_teref, nomre, cemi_mebleg, sorgu.sened_id),
         )
         tekrar = (await cur.fetchone())[0]
-
     if tekrar > 0:
-        for u in uygunlasma:
-            u["problemler"].append("tekrar_qaime")
+        tapintilar.append({
+            "seviyye":      "kritik",
+            "basliq":       "Eyni qaimə təkrar qeydə alınmışdır",
+            "material_kod": None,
+            "delil":        {"qarsi_teref": qarsi_teref, "nomre": nomre,
+                             "cemi_mebleg": float(cemi_mebleg) if cemi_mebleg else None,
+                             "tekrar_say": int(tekrar)},
+        })
 
-    kontekst = {
-        "sened_netice": metadata,
-        "anbar_qaliq":  list(qaliq_cache.values()),
-        "uygunlasma":   uygunlasma,
+    # ── 2e. Qiymət anomaliyası >25% — XƏBƏRDARLIQ ───────────────────────────
+    for setir in setirler:
+        mat_ad  = setir.get("material", "")
+        vahid_q = setir.get("vahid_qiymet")
+        if not vahid_q:
+            continue
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT m.kod, m.ad, q.orta_qiymet_30g
+                FROM zavod_anbar.material m
+                LEFT JOIN zavod_anbar.qaliq q ON q.kod = m.kod
+                WHERE greatest(similarity(lower(m.ad),  lower(%s)),
+                               similarity(lower(m.kod), lower(%s))) >= 0.4
+                  AND q.orta_qiymet_30g IS NOT NULL
+                ORDER BY greatest(similarity(lower(m.ad),  lower(%s)),
+                                  similarity(lower(m.kod), lower(%s))) DESC
+                LIMIT 1
+                """,
+                (mat_ad, mat_ad, mat_ad, mat_ad),
+            )
+            m = await cur.fetchone()
+        if m:
+            orta = float(m[2])
+            if orta > 0 and abs(float(vahid_q) - orta) / orta > 0.25:
+                tapintilar.append({
+                    "seviyye":      "xeberdarliq",
+                    "basliq":       "Vahid qiymət anomaliyası",
+                    "material_kod": m[0],
+                    "delil":        {"material": m[1], "kod": m[0],
+                                     "vahid_qiymet": float(vahid_q),
+                                     "orta_qiymet_30g": orta,
+                                     "ferq_faiz": round(
+                                         abs(float(vahid_q) - orta) / orta * 100, 1
+                                     )},
+                })
+
+    # ── 3. Tapıntı yoxdursa — LLM çağırma, qaytar ───────────────────────────
+    if not tapintilar:
+        log.info("Anbar: sened_id=%d — tapıntı yoxdur", sorgu.sened_id)
+        return {"qerar_say": 0, "tapintilar": []}
+
+    # ── 4. Token limiti yoxla ─────────────────────────────────────────────────
+    if not await _gunluk_token_yoxla():
+        raise HTTPException(status_code=429, detail="Günlük token limiti aşıldı.")
+
+    # ── 5. Hər tapıntı üçün LLM izahı + qerar-a yaz ─────────────────────────
+    agent = AGENTLER["ANBAR_MUQAYISE"]
+    qerar_idler: list[int] = []
+    cem_g = cem_c = 0
+
+    for t in tapintilar:
+        izah, tovsiyye, g, c, ms = await agent.izahla(t["basliq"], t["delil"])
+        cem_g += g
+        cem_c += c
+
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                INSERT INTO zavod_ai.qerar
+                    (agent_kod, sened_id, material_kod,
+                     seviyye, basliq, izah, delil, tovsiyye)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb)
+                RETURNING id
+                """,
+                ("ANBAR_MUQAYISE", sorgu.sened_id, t["material_kod"],
+                 t["seviyye"], t["basliq"], izah,
+                 _json_str(t["delil"]), _json_str(tovsiyye)),
+            )
+            qerar_idler.append((await cur.fetchone())[0])
+
+        await _jurnal_yazdir("ANBAR_MUQAYISE", "claude-opus-4-6",
+                              sorgu.sened_id, g, c, ms)
+
+    METRIKA["cixaris_yazilan"] += len(tapintilar)
+    log.info("Anbar: sened_id=%d — %d tapıntı, %d token",
+             sorgu.sened_id, len(tapintilar), cem_g + cem_c)
+
+    return {
+        "qerar_say":   len(tapintilar),
+        "qerar_idler": qerar_idler,
+        "token":       cem_g + cem_c,
     }
-
-    giris = AgentGirisi(sened_id=sorgu.sened_id, fayl_id=None, kontekst=kontekst)
-    cixis = await AGENTLER["ANBAR_MUQAYISE"].icra(giris)
-
-    await _jurnal_yaz(cixis, sorgu.sened_id)
-    if not cixis.ugurlu:
-        METRIKA["xeta"] += 1
-        raise HTTPException(status_code=500, detail=cixis.xeta)
-
-    cixaris_id = await _cixaris_yaz(cixis, sorgu.sened_id, None)
-    METRIKA["cixaris_yazilan"] += 1
-
-    return {"cixaris_id": cixaris_id, "netice": cixis.netice,
-            "token": cixis.giris_token + cixis.cixis_token}
 
 
 @app.post("/agent/resept", status_code=201)
