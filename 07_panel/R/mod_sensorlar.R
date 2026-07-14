@@ -391,6 +391,19 @@ mod_sensorlar_panel_UI <- function(id) {
   )
 }
 
+mod_sensorlar_sync_UI <- function(id) {
+  ns <- NS(id)
+  tagList(
+    layout_columns(
+      col_widths = c(6, 6),
+      card(card_header("Növbənin dərinliyi"), plotlyOutput(ns("sync_qrafik"), height = "290px")),
+      card(card_header("Vəziyyət"),           uiOutput(ns("sync_veziyyet")))
+    ),
+    card(card_header("Göndərmə jurnalı — mərkəzdən"),
+         DTOutput(ns("sync_jurnal")))
+  )
+}
+
 mod_sensorlar_cihazlar_UI <- function(id) {
   ns <- NS(id)
   layout_columns(
@@ -430,17 +443,6 @@ mod_sensorlar_alertler_UI <- function(id) {
     card(card_header("Tarixçə — son 100"),
          DTOutput(ns("alert_tarixce")))
   )
-}
-
-mod_sensorlar_sync_UI <- function(id) {
-  ns <- NS(id)
-  layout_columns(
-    col_widths = c(6, 6),
-    card(card_header("Növbənin dərinliyi"), plotlyOutput(ns("sync_qrafik"), height = "290px")),
-    card(card_header("Vəziyyət"),           uiOutput(ns("sync_veziyyet")))
-  ),
-  card(card_header("Göndərmə jurnalı — mərkəzdən"),
-       DTOutput(ns("sync_jurnal")))
 }
 
 # ------------------------------------------------------------------------------
