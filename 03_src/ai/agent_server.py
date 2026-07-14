@@ -348,10 +348,14 @@ async def cixaris_tesdiq(cixaris_id: int, sorgu: Tesdiq_Sorgu):
                     mat_ad = setir.get("material", "")
                     await cur.execute(
                         """
-                        SELECT kod, similarity(ad, %s)
+                        SELECT kod,
+                               greatest(
+                                   similarity(lower(ad),  lower(%s)),
+                                   similarity(lower(kod), lower(%s))
+                               ) AS oxsarliq
                         FROM zavod_anbar.material
                         WHERE aktiv
-                        ORDER BY similarity(ad, %s) DESC
+                        ORDER BY oxsarliq DESC
                         LIMIT 1
                         """,
                         (mat_ad, mat_ad),
@@ -457,12 +461,16 @@ async def anbar_icra(sorgu: Anbar_Sorgu):
         async with conn.cursor() as cur:
             await cur.execute(
                 """
-                SELECT m.kod, m.ad, similarity(m.ad, %s) AS oxs,
+                SELECT m.kod, m.ad,
+                       greatest(
+                           similarity(lower(m.ad),  lower(%s)),
+                           similarity(lower(m.kod), lower(%s))
+                       ) AS oxsarliq,
                        q.qaliq, q.min_qaliq, q.vahid, q.orta_qiymet_30g
                 FROM zavod_anbar.material m
                 LEFT JOIN zavod_anbar.qaliq q ON q.kod = m.kod
                 WHERE m.aktiv
-                ORDER BY similarity(m.ad, %s) DESC
+                ORDER BY oxsarliq DESC
                 LIMIT 1
                 """,
                 (mat_ad, mat_ad),

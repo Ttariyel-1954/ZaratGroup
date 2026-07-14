@@ -605,7 +605,22 @@ CREATE INDEX IF NOT EXISTS idx_zs_sync_vaxt
 
 
 -- =============================================================================
--- 6. İCAZƏLƏR — sync istifadəçisi
+-- 6. NORMALIZASIYA — Azərbaycan → ASCII, fuzzy axtarış üçün
+-- =============================================================================
+
+CREATE OR REPLACE FUNCTION zavod_anbar.normalize(t TEXT)
+RETURNS TEXT AS $$
+    SELECT lower(translate(t,
+        'əıığĞŞşÇçÖöÜüİ',
+        'eiiggSsCcOoUuI'));
+$$ LANGUAGE SQL IMMUTABLE;
+
+COMMENT ON FUNCTION zavod_anbar.normalize(TEXT) IS
+  'Azərbaycan hərflərini ASCII-yə çevirir: ə→e, ı→i, ğ→g, ş→s, ç→c, ö→o, ü→u, İ→I';
+
+
+-- =============================================================================
+-- 7. İCAZƏLƏR — sync istifadəçisi
 -- =============================================================================
 
 DO $$

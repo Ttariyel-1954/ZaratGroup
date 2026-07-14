@@ -29,6 +29,8 @@ Faylı diqqətlə oxuyub aşağıdaki JSON-u qaytarmalısan.
 Cavabın YALNIZ JSON olmalıdır — başqa heç bir mətn olmadan.
 Əgər bir sahə görünmürsə — null yaz.
 Rəqəmlərdə vergül (1.234,56) formatı varsa — nöqtəyə (1234.56) çevir.
+Azərbaycan hərflərini QORU: sənəddə "Qarğıdalı" yazılıbsa "Qargidali" YOX, "Qarğıdalı" qaytar.
+Hərfləri dəyişdirmə: ə, ı, ğ, ş, ç, ö, ü.
 
 {
   "qarsi_teref":  "string|null",
