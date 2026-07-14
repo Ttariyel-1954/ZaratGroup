@@ -620,22 +620,18 @@ async def anbar_icra(sorgu: Anbar_Sorgu):
                                      )},
                 })
 
-    # ── 3. Tapıntı yoxdursa — LLM çağırma, qaytar ───────────────────────────
+    # ── 3. SQL tapıntısı yoxdursa — qaytar (LLM yoxdur) ────────────────────
     if not tapintilar:
         log.info("Anbar: sened_id=%d — tapıntı yoxdur", sorgu.sened_id)
-        return {"qerar_say": 0, "tapintilar": []}
+        return {"qerar_say": 0, "yeni": 0, "token": 0}
 
-    # ── 4. Token limiti yoxla ─────────────────────────────────────────────────
-    if not await _gunluk_token_yoxla():
-        raise HTTPException(status_code=429, detail="Günlük token limiti aşıldı.")
-
-    # ── 5. Hər tapıntı üçün: mövcuddursa delil yenilə, yoxdursa LLM + yarat ──
-    agent = AGENTLER["ANBAR_MUQAYISE"]
-    qerar_idler: list[int] = []
-    cem_g = cem_c = 0
+    # ── 4. Tapıntıları mövcud/yeni kimi ayır ─────────────────────────────────
+    #   mövcud: status='yeni' açıq qərar var → LLM çağırılmaz
+    #   yeni:   qərar yoxdur (və ya status='hell_olundu') → LLM lazımdır
+    movcud_idler: list[int] = []
+    yeni_tapintilar: list[dict] = []
 
     for t in tapintilar:
-        # Açıq qərar artıq varmı? (status='yeni')
         async with conn.cursor() as cur:
             await cur.execute(
                 """
@@ -651,13 +647,41 @@ async def anbar_icra(sorgu: Anbar_Sorgu):
             existing = await cur.fetchone()
 
         if existing:
-            # Mövcud qərar — LLM çağırılmır, yeni sətir yaradılmır
-            qerar_idler.append(existing[0])
-            log.info("Anbar: mövcud qərar saxlanıldı id=%d (%s)",
-                     existing[0], t["basliq"])
-            continue
+            # Mövcud açıq qərar — delil yenilə (icazə varsa), LLM çağırma
+            try:
+                async with conn.cursor() as cur:
+                    await cur.execute(
+                        "UPDATE zavod_ai.qerar SET delil = %s::jsonb WHERE id = %s",
+                        (_json_str(t["delil"]), existing[0]),
+                    )
+            except Exception:
+                pass  # UPDATE icazəsi yoxdursa (miqrasiya gözləyir) keç
+            movcud_idler.append(existing[0])
+        else:
+            # Yeni tapıntı: qərar yoxdur və ya həll olunub, yenidən baş verib
+            yeni_tapintilar.append(t)
 
-        # Yeni tapıntı — LLM ilə izah al, qerar-a yaz
+    # ── 5. Yeni tapıntı yoxdursa — LLM ÜMUMİYYƏTLƏ çağırılmır ──────────────
+    if not yeni_tapintilar:
+        log.info("Anbar: sened_id=%d — %d tapıntı, hamısı mövcud, LLM yoxdur",
+                 sorgu.sened_id, len(tapintilar))
+        return {
+            "qerar_say":   len(tapintilar),
+            "yeni":        0,
+            "token":       0,
+            "qerar_idler": movcud_idler,
+        }
+
+    # ── 6. Token limiti (yalnız yeni tapıntı üçün) ───────────────────────────
+    if not await _gunluk_token_yoxla():
+        raise HTTPException(status_code=429, detail="Günlük token limiti aşıldı.")
+
+    # ── 7. Yalnız yeni tapıntılar üçün LLM + qerar INSERT ────────────────────
+    agent = AGENTLER["ANBAR_MUQAYISE"]
+    yeni_idler: list[int] = []
+    cem_g = cem_c = 0
+
+    for t in yeni_tapintilar:
         izah, tovsiyye, g, c, ms = await agent.izahla(t["basliq"], t["delil"])
         cem_g += g
         cem_c += c
@@ -675,19 +699,21 @@ async def anbar_icra(sorgu: Anbar_Sorgu):
                  t["seviyye"], t["basliq"], izah,
                  _json_str(t["delil"]), _json_str(tovsiyye)),
             )
-            qerar_idler.append((await cur.fetchone())[0])
+            yeni_idler.append((await cur.fetchone())[0])
 
         await _jurnal_yazdir("ANBAR_MUQAYISE", "claude-opus-4-6",
                               sorgu.sened_id, g, c, ms)
 
-    METRIKA["cixaris_yazilan"] += len(tapintilar)
-    log.info("Anbar: sened_id=%d — %d tapıntı, %d token",
-             sorgu.sened_id, len(tapintilar), cem_g + cem_c)
+    METRIKA["cixaris_yazilan"] += len(yeni_tapintilar)
+    log.info("Anbar: sened_id=%d — %d tapıntı (%d yeni, %d mövcud), %d token",
+             sorgu.sened_id, len(tapintilar),
+             len(yeni_tapintilar), len(movcud_idler), cem_g + cem_c)
 
     return {
         "qerar_say":   len(tapintilar),
-        "qerar_idler": qerar_idler,
+        "yeni":        len(yeni_tapintilar),
         "token":       cem_g + cem_c,
+        "qerar_idler": movcud_idler + yeni_idler,
     }
 
 
