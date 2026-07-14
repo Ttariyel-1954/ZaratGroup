@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 08 — Telemetriyadan sənədə</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --grafit:#0e1620; --polad:#17222f; --xett:#2a3b4d;
+    --teal:#2dd4bf; --teal-deep:#0d9488;
+    --kehreba:#f5a524; --amber-deep:#b9781a;
+    --mavi:#5aa9e6; --mavi-deep:#2c6b9e;
+    --yasil:#5bd08a; --yasil-deep:#2f8f5b;
+    --qirmizi:#e5695f; --qirmizi-deep:#c0453a;
+    --bnovsheyi:#a78bfa; --bnov-deep:#6d4fc4;
+    --kagiz:#f7f5f0; --kagiz2:#efece4; --murekkeb:#1a222c;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--kagiz);color:var(--murekkeb);
+    font-family:Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.8;}
+
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;
+    white-space:nowrap;}
+
+  /* --- HERO --- */
+  .hero{background:radial-gradient(1200px 400px at 75% -15%,rgba(45,212,191,.18),transparent 62%),
+    linear-gradient(180deg,var(--grafit),var(--polad));
+    color:#e8eef5;padding:64px 32px 52px;border-bottom:3px solid var(--teal);}
+  .wrap{max-width:1000px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--teal);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",sans-serif;font-weight:700;
+    font-size:clamp(30px,4.8vw,50px);line-height:1.06;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:20px;color:#c6d3df;max-width:780px;margin:0;line-height:1.7;}
+  .hero .meta{margin-top:26px;display:flex;gap:26px;flex-wrap:wrap;
+    font-family:"Oswald",sans-serif;font-size:13px;letter-spacing:.1em;
+    text-transform:uppercase;color:#7d93a8;}
+
+  /* --- TOC --- */
+  .toc{background:var(--kagiz2);border-bottom:1px solid #ddd8cc;padding:24px 32px;}
+  .toc ol{max-width:1000px;margin:0 auto;padding-left:22px;columns:2;column-gap:40px;font-size:15.5px;}
+  .toc li{margin-bottom:6px;break-inside:avoid;}
+  .toc a{color:var(--teal-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:1000px;margin:0 auto;padding:0 32px;}
+  section{padding:48px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--teal-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",sans-serif;font-weight:600;
+    font-size:clamp(24px,3.4vw,33px);line-height:1.14;margin:0 0 20px;}
+  h3{font-family:"Oswald",sans-serif;font-weight:600;font-size:21px;margin:34px 0 12px;}
+  h4{font-family:"Oswald",sans-serif;font-weight:500;font-size:17.5px;
+    margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  /* --- CALLOUT --- */
+  .callout{background:var(--kagiz2);border-left:4px solid var(--teal-deep);
+    padding:18px 22px;border-radius:0 5px 5px 0;margin:22px 0;font-size:16.5px;line-height:1.7;}
+  .callout.warn{border-left-color:var(--kehreba);background:#fbf3e2;}
+  .callout.err{border-left-color:var(--qirmizi);background:#fbeceb;}
+  .callout.ok{border-left-color:var(--yasil);background:#eaf7f0;}
+  .callout.key{border-left-color:var(--bnovsheyi);background:#f1eefb;}
+  .callout .k{font-family:"Oswald",sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-deep);display:block;margin-bottom:5px;
+    font-weight:600;}
+  .callout.warn .k{color:var(--amber-deep);}
+  .callout.err  .k{color:var(--qirmizi-deep);}
+  .callout.ok   .k{color:var(--yasil-deep);}
+  .callout.key  .k{color:var(--bnov-deep);}
+
+  /* --- TABLE --- */
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15.5px;line-height:1.6;}
+  .tbl thead th{background:var(--polad);color:#dbe6f0;font-family:"Oswald",sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:12px 14px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--teal);}
+  .tbl tbody td{padding:12px 14px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--kagiz2);}
+  .tbl td.y{color:var(--yasil-deep);font-weight:600;}
+  .tbl td.q{color:var(--qirmizi-deep);font-weight:600;}
+
+  /* --- KOD --- */
+  .kod{position:relative;margin:20px 0;}
+  .kod pre{background:var(--grafit);color:#d7e3ee;border-radius:7px;padding:18px 20px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,monospace;font-size:13.5px;
+    line-height:1.75;margin:0;border:1px solid var(--xett);}
+  .cmt{color:#6f8598;}
+  .str{color:#a8e6a0;}
+  .kw{color:#7fd4ff;}
+  .kopya{position:absolute;top:10px;right:10px;background:rgba(45,212,191,.14);color:#7fe6d8;
+    border:1px solid rgba(45,212,191,.42);border-radius:4px;font-family:"Oswald",sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:6px 11px;cursor:pointer;}
+  .kopya:hover{background:rgba(45,212,191,.3);}
+
+  /* --- NƏ / NİYƏ --- */
+  .nn{width:100%;border-collapse:collapse;margin:18px 0;font-size:15.5px;}
+  .nn th{background:var(--teal-deep);color:#fff;font-family:"Oswald",sans-serif;
+    font-weight:500;text-align:left;padding:10px 14px;font-size:12.5px;
+    letter-spacing:.08em;text-transform:uppercase;}
+  .nn td{padding:12px 14px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .nn td:first-child{width:38%;font-family:ui-monospace,Menlo,monospace;
+    font-size:13.5px;color:#0b5f57;background:#f2efe8;}
+
+  /* --- AXIN SXEMİ --- */
+  .axin{background:var(--grafit);border-radius:12px;padding:28px 22px;margin:26px 0;
+    overflow-x:auto;}
+  .axin-sira{display:flex;align-items:center;justify-content:center;gap:0;min-width:640px;}
+  .qutu{flex:1;min-width:100px;background:var(--polad);border:1px solid var(--xett);
+    border-radius:8px;padding:14px 10px;text-align:center;}
+  .qutu.yeni{border-color:var(--teal);background:#12303a;}
+  .qutu .i{font-size:22px;margin-bottom:6px;}
+  .qutu .ad{font-family:"Oswald",sans-serif;font-size:11.5px;text-transform:uppercase;
+    letter-spacing:.05em;color:#c6d3df;line-height:1.3;}
+  .qutu .alt{font-size:10px;color:#7d93a8;margin-top:4px;}
+  .ox{color:var(--teal);font-size:19px;padding:0 6px;flex:0 0 auto;}
+  .axin-bas{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--teal);margin:0 0 16px;text-align:center;}
+
+  /* --- ANLAYIS KARTI --- */
+  .anlayis{background:#fff;border:1px solid #e3ded4;border-radius:9px;
+    padding:20px 24px;margin:18px 0;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .anlayis .bas{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+  .anlayis .rq{flex:0 0 34px;height:34px;border-radius:8px;background:var(--bnovsheyi);
+    color:#fff;font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;
+    display:flex;align-items:center;justify-content:center;}
+  .anlayis .t{font-family:"Oswald",sans-serif;font-size:18px;font-weight:600;}
+  .anlayis .ing{font-size:13px;color:#7a8a99;font-style:italic;margin-left:auto;}
+
+  /* --- MISAL --- */
+  .misal{border:1px solid #e3ded4;border-radius:8px;overflow:hidden;margin:22px 0;background:#fff;}
+  .misal-h{background:var(--kagiz2);padding:11px 18px;border-bottom:1px solid #e3ded4;
+    font-family:"Oswald",sans-serif;font-size:14px;letter-spacing:.06em;text-transform:uppercase;
+    color:#33465a;}
+  .misal-b{padding:18px 20px;}
+
+  ul.siyahi{list-style:none;padding:0;margin:18px 0;}
+  ul.siyahi li{padding:10px 15px 10px 40px;position:relative;background:var(--kagiz2);
+    border-radius:6px;margin-bottom:7px;font-size:16px;line-height:1.6;
+    border-left:3px solid var(--teal-deep);}
+  ul.siyahi li::before{content:"▸";position:absolute;left:15px;top:9px;
+    color:var(--teal-deep);font-weight:bold;}
+
+  .xul{background:linear-gradient(180deg,var(--polad),var(--grafit));color:#dbe6f0;
+    border-radius:12px;padding:30px 32px;margin:30px 0;}
+  .xul h3{color:var(--teal);margin-top:0;}
+  .xul ul{padding-left:20px;}
+  .xul li{margin-bottom:9px;}
+
+  footer{background:var(--grafit);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",sans-serif;color:var(--teal);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+
+  @media print{
+    .hero{background:#0e1620 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .kopya{display:none;} section{page-break-inside:avoid;}
+  }
+  @media (max-width:760px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .kopya{position:static;margin-bottom:8px;display:block;}
+    .nn td:first-child{width:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat · Faza 3 · Dərs 08</p>
+    <h1>Telemetriyadan sənədə</h1>
+    <p class="lede">Faza 2-də <strong>rəqəmləri</strong> daşıyırdıq. İndi <strong>kağızı</strong> daşıyacağıq. Bu, sadəcə «bir az da məlumat» deyil — memarlığın <em>hər qatını</em> dəyişən keçiddir. Bu dərsdə bir sətir də kod yazmayacağıq. Əvvəlcə <strong>niyə</strong> sualına cavab verək.</p>
+    <div class="meta">
+      <span>Konseptual</span>
+      <span>Kod yoxdur</span>
+      <span>~25 dəqiqə</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Faza 2 — nə qurduq</a></li>
+    <li><a href="#s2">Ölçmə nədir</a></li>
+    <li><a href="#s3">Sənəd nədir</a></li>
+    <li><a href="#s4">Yeddi fərq</a></li>
+    <li><a href="#s5">Hər fərq nəyi dəyişir</a></li>
+    <li><a href="#s6">Faza 3-ün altı yeni anlayışı</a></li>
+    <li><a href="#s7">Yeni boru xətti</a></li>
+    <li><a href="#s8">Ən mühüm qərar: AI qərar vermir</a></li>
+    <li><a href="#s9">Lüğət</a></li>
+    <li><a href="#s10">Xülasə və növbəti dərs</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ═══════════ 1 ═══════════ -->
+<section id="s1">
+  <p class="sec-num">01</p>
+  <h2>Faza 2 — nə qurduq</h2>
+
+  <p>Əvvəlcə bildiyimizi yada salaq. Bu, təkrar deyil — <strong>müqayisə üçün təməldir</strong>. Faza 3-ün hər qərarı Faza 2 ilə fərqdən doğur.</p>
+
+  <div class="axin">
+    <p class="axin-bas">Faza 2 — telemetriya boru xətti</p>
+    <div class="axin-sira">
+      <div class="qutu"><div class="i">📡</div><div class="ad">Sensorlar</div><div class="alt">5 cihaz</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu"><div class="i">📬</div><div class="ad">MQTT<br>broker</div><div class="alt">:1883</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu"><div class="i">⚙️</div><div class="ad">FastAPI</div><div class="alt">:8000</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu"><div class="i">🗄️</div><div class="ad">Edge<br>PostgreSQL</div><div class="alt">:5434</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu"><div class="i">🚚</div><div class="ad">Sync<br>işçisi</div><div class="alt">Python</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu"><div class="i">🏢</div><div class="ad">Bakı<br>ERP</div><div class="alt">:5432</div></div>
+    </div>
+  </div>
+
+  <p>Bu zəncir <strong>bir işi</strong> görür: sensorun ölçdüyü rəqəmi Bakıya çatdırır. Və onu <em>yaxşı</em> görür — 12 000 ölçmə axdı, bir dənəsi də itmədi.</p>
+
+  <h3>Nəyi öyrəndik</h3>
+  <ul class="siyahi">
+    <li><strong>Outbox nümunəsi</strong> — hər sətrin <code class="inl">sync_status</code> sütunu var. 0 = növbədə, 1 = göndərilib. Sadə, amma güclü.</li>
+    <li><strong>At-least-once çatdırılma</strong> — şəbəkə titrəyəndə sətir <em>iki dəfə</em> göndərilə bilər. Bu, qorxulu deyil.</li>
+    <li><strong>İdempotentlik</strong> — çünki mərkəzdə <code class="inl">ON CONFLICT DO NOTHING</code> var. İkinci nüsxə səssizcə atılır.</li>
+    <li><strong>Sıra danışılmazdır</strong> — əvvəl mərkəzə yaz, <em>sonra</em> <code class="inl">sync_status=1</code> et. Tərsinə etsək, sətir itə bilər.</li>
+    <li><strong>Backoff</strong> — mərkəz ölüdürsə, hər 5 saniyədə döyəcləmə. Gözlə, sonra cəhd et.</li>
+  </ul>
+
+  <div class="callout ok">
+    <span class="k">Bu biliklər itmir</span>
+    Faza 3-də <strong>eyni nümunələri</strong> işlədəcəyik. <code class="inl">sync_status</code>, <code class="inl">ON CONFLICT</code>, backoff — hamısı qalır.<br><br>
+    Yeni olan <strong>nə</strong> daşıdığımızdır, <strong>necə</strong> daşıdığımız deyil.
+  </div>
+</section>
+
+<!-- ═══════════ 2 ═══════════ -->
+<section id="s2">
+  <p class="sec-num">02</p>
+  <h2>Ölçmə nədir</h2>
+
+  <p>Bir ölçməyə diqqətlə baxaq. Bazada belə görünür:</p>
+
+  <div class="kod">
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt">-- olcme cədvəlindən bir sətir</span>
+ id     │ cihaz_kod │ qiymet │ olcme_vaxti          │ keyfiyyet
+────────┼───────────┼────────┼──────────────────────┼──────────
+ 148271 │ S001      │  31.90 │ 2026-07-14 09:15:03  │ 1</pre>
+  </div>
+
+  <p>Bu sətir haqqında <strong>altı həqiqət</strong>:</p>
+
+  <table class="tbl">
+    <thead><tr><th>Xüsusiyyət</th><th>Dəyər</th><th>Nə deməkdir</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Ölçü</strong></td>
+        <td>~100 bayt</td>
+        <td>Bir SMS-dən kiçik. Şəbəkəyə heç bir yük deyil.</td>
+      </tr>
+      <tr>
+        <td><strong>Struktur</strong></td>
+        <td>Sabit</td>
+        <td>Həmişə eyni 5 sütun. Dünən də, bir il sonra da.</td>
+      </tr>
+      <tr>
+        <td><strong>Dəyişməzlik</strong></td>
+        <td>Heç vaxt dəyişmir</td>
+        <td>Saat 09:15:03-də temperatur 31.9 idi. Bu, <em>fakt</em>dır. Onu «düzəltmək» mənasızdır.</td>
+      </tr>
+      <tr>
+        <td><strong>Tezlik</strong></td>
+        <td>5 saniyədə bir</td>
+        <td>Gündə ~86 000 sətir. Çoxdur, amma kiçikdir.</td>
+      </tr>
+      <tr>
+        <td><strong>İtki dəyəri</strong></td>
+        <td>Aşağı</td>
+        <td>Bir ölçmə itsə — 5 saniyə sonra yenisi gəlir. Trend pozulmur.</td>
+      </tr>
+      <tr>
+        <td><strong>Təsdiq</strong></td>
+        <td>Lazım deyil</td>
+        <td>Heç kim temperaturu «təsdiqləmir». O, sadəcə <em>ölçülür</em>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout key">
+    <span class="k">Yadda saxlayın</span>
+    Ölçmə — <strong>keçmiş haqqında dəyişməz fakt</strong>dır.<br><br>
+    Kiçikdir, sabit strukturludur, çoxdur, ucuzdur və heç kimin razılığına ehtiyacı yoxdur.
+  </div>
+</section>
+
+<!-- ═══════════ 3 ═══════════ -->
+<section id="s3">
+  <p class="sec-num">03</p>
+  <h2>Sənəd nədir</h2>
+
+  <p>İndi zavodun anbarına gedən bir qaiməyə baxaq. Onun <strong>kağız üzərində</strong> nə olduğunu təsəvvür edin:</p>
+
+  <div class="misal">
+    <div class="misal-h">Real qaimə — nə var üzərində</div>
+    <div class="misal-b">
+      <ul class="siyahi">
+        <li><strong>Nömrə və tarix</strong> — QM-2026-0441, 13.07.2026</li>
+        <li><strong>Təchizatçı</strong> — «Aqro-Servis» MMC, VÖEN, ünvan, telefon</li>
+        <li><strong>Cədvəl</strong> — 3 sətir: material, miqdar, vahid, qiymət, cəmi</li>
+        <li><strong>Möhür</strong> — mavi, əyri basılıb, bir hərfi örtür</li>
+        <li><strong>İki imza</strong> — anbardarın və sürücünün</li>
+        <li><strong>Əlyazma düzəliş</strong> — «2500» üstündən xətt çəkilib, yanına «2480» yazılıb</li>
+        <li><strong>Skan keyfiyyəti</strong> — telefonla çəkilib, bir küncü kölgəlidir</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>İndi eyni altı sualı verək:</p>
+
+  <table class="tbl">
+    <thead><tr><th>Xüsusiyyət</th><th>Dəyər</th><th>Nə deməkdir</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Ölçü</strong></td>
+        <td class="q">2–20 MB</td>
+        <td>Bir skan PDF. <strong>200 000 dəfə</strong> ölçmədən böyük.</td>
+      </tr>
+      <tr>
+        <td><strong>Struktur</strong></td>
+        <td class="q">Naməlum</td>
+        <td>Bir qaimədə 3 sətir, digərində 47. Bir təchizatçıda VÖEN var, digərində yox.</td>
+      </tr>
+      <tr>
+        <td><strong>Dəyişməzlik</strong></td>
+        <td class="q">DƏYİŞİR</td>
+        <td>Mühasib səhv görür → düzəldir. Direktor rədd edir → status dəyişir. <strong>Sənəd yaşayan obyektdir.</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Tezlik</strong></td>
+        <td>Gündə 50–200</td>
+        <td>Azdır. Amma hər biri ağırdır.</td>
+      </tr>
+      <tr>
+        <td><strong>İtki dəyəri</strong></td>
+        <td class="q">FƏLAKƏT</td>
+        <td>Qaimə itsə — <strong>yenisi gəlmir</strong>. Bu, hüquqi sənəddir. Vergi yoxlaması onu tələb edə bilər.</td>
+      </tr>
+      <tr>
+        <td><strong>Təsdiq</strong></td>
+        <td class="q">MÜTLƏQDİR</td>
+        <td>Anbardar təsdiqləyir, mühasib yoxlayır, direktor imzalayır. <strong>İnsan zəncirdədir.</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout err">
+    <span class="k">Fərq kəmiyyət deyil — keyfiyyətdir</span>
+    Sənəd «böyük ölçmə» deyil. O, <strong>başqa növ varlıqdır</strong>.<br><br>
+    Ölçmə — keçmiş haqqında dəyişməz fakt.<br>
+    Sənəd — <strong>üzərində iş gedən, dəyişən, təsdiqlənən, hüquqi əhəmiyyəti olan obyekt</strong>.
+  </div>
+</section>
+
+<!-- ═══════════ 4 ═══════════ -->
+<section id="s4">
+  <p class="sec-num">04</p>
+  <h2>Yeddi fərq — yan-yana</h2>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>ÖLÇMƏ (Faza 2)</th><th>SƏNƏD (Faza 3)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Ölçü</strong></td><td class="y">100 bayt</td><td class="q">2–20 MB</td></tr>
+      <tr><td><strong>Struktur</strong></td><td class="y">Sabit, məlum</td><td class="q">Dəyişkən, naməlum</td></tr>
+      <tr><td><strong>Dəyişirmi</strong></td><td class="y">Heç vaxt</td><td class="q">Bəli — versiyalar</td></tr>
+      <tr><td><strong>İtsə</strong></td><td class="y">Dözülən</td><td class="q">Dözülməz</td></tr>
+      <tr><td><strong>Təsdiq</strong></td><td class="y">Yoxdur</td><td class="q">Mütləqdir</td></tr>
+      <tr><td><strong>Oxumaq</strong></td><td class="y">SQL kifayətdir</td><td class="q"><strong>Oxumaq lazımdır</strong> — gözlə</td></tr>
+      <tr><td><strong>Nə vaxt gəlir</strong></td><td class="y">Fasiləsiz</td><td class="q">Kəsik-kəsik, insanla</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">Altıncı sətir ən vacibidir</span>
+    Ölçməni oxumaq üçün <code class="inl">SELECT qiymet FROM olcme</code> kifayətdir. Rəqəm sütundadır.<br><br>
+    Qaiməni oxumaq üçün — <strong>ona baxmaq lazımdır</strong>. Kağızda «Qarğıdalı 2500 kq» yazılıb. Bu, heç bir sütunda deyil. O, <strong>şəkildir</strong>.<br><br>
+    Bax bu, Faza 3-ün ürəyidir: <strong>şəkli məlumata çevirmək</strong>.
+  </div>
+</section>
+
+<!-- ═══════════ 5 ═══════════ -->
+<section id="s5">
+  <p class="sec-num">05</p>
+  <h2>Hər fərq nəyi dəyişir</h2>
+
+  <p>İndi ən vacib hissə. Yuxarıdakı hər fərq <strong>memarlıqda konkret dəyişikliyə</strong> məcbur edir. Bir-bir gedək.</p>
+
+  <h3>Fərq 1 — Ölçü: 100 bayt → 20 MB</h3>
+
+  <p><strong>Problem:</strong> PostgreSQL faylı saxlaya bilər (<code class="inl">bytea</code> tipi ilə). Amma <em>etməməlidir</em>.</p>
+
+  <p><strong>Niyə:</strong> baza faylla dolarsa —</p>
+  <ul class="siyahi">
+    <li>Yedəkləmə (backup) dəqiqələrdən saatlara keçir</li>
+    <li>Hər <code class="inl">SELECT *</code> təsadüfən 20 MB çəkir</li>
+    <li>Replikasiya boğulur</li>
+    <li>Baza faylı «başa düşmür» — onunla heç nə edə bilmir, yalnız saxlayır</li>
+  </ul>
+
+  <div class="callout key">
+    <span class="k">Nəticə → Dərs 09</span>
+    <strong>Fayl bazaya yazılmır.</strong> O, ayrıca yerdə — <strong>obyekt yaddaşında</strong> (MinIO) saxlanılır.<br><br>
+    Bazada yalnız <em>ünvan</em> qalır: «bu fayl orada, bu açar altında».
+  </div>
+
+  <h3>Fərq 2 — İtki: dözülən → dözülməz</h3>
+
+  <p><strong>Problem:</strong> fayl şəbəkədən keçəndə bir bit dəyişə bilər. Bir bit! Və PDF açılmaz olar.</p>
+
+  <p><strong>Ölçmədə</strong> bu, problem deyil — sətir itsə, 5 saniyəyə yenisi gəlir.<br>
+  <strong>Sənəddə</strong> — qaimə əbədi korlanıb. Vergi yoxlamasında onu göstərə bilməzsiniz.</p>
+
+  <div class="callout key">
+    <span class="k">Nəticə → Dərs 10</span>
+    <strong>SHA-256 barmaq izi.</strong> Zavodda faylın «barmaq izini» hesablayırıq. Bakıda <em>yenidən</em> hesablayırıq.<br><br>
+    Uyğun gəlmirsə — fayl korlanıb, <strong>təkrar göndərilir</strong>.
+  </div>
+
+  <h3>Fərq 3 — Struktur: sabit → naməlum</h3>
+
+  <p><strong>Problem:</strong> qaimədə neçə sətir var? Bilmirik. 3? 47? Hər qaimədə fərqli.</p>
+
+  <p>Sabit cədvəl yaratmaq olmaz:</p>
+
+  <div class="kod">
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt">-- BELƏ ETMƏK OLMAZ — neçə sütun yaradaq?</span>
+CREATE TABLE qaime (
+    material_1 TEXT, miqdar_1 NUMERIC,
+    material_2 TEXT, miqdar_2 NUMERIC,
+    material_3 TEXT, miqdar_3 NUMERIC,
+    <span class="cmt">-- ...47-yə qədər? Absurddur.</span>
+);</pre>
+  </div>
+
+  <div class="callout key">
+    <span class="k">Nəticə → Dərs 11</span>
+    <strong>JSONB.</strong> PostgreSQL-in «çevik sütun» tipi. İçində istənilən struktur ola bilər — 3 sətir də, 47 sətir də.<br><br>
+    Üstəlik onun içində <strong>axtarış</strong> etmək olar. Bu, adi mətn deyil.
+  </div>
+
+  <h3>Fərq 4 — Dəyişmə: heç vaxt → tez-tez</h3>
+
+  <p><strong>Problem:</strong> mühasib qaiməni düzəldir. Köhnə hal <em>itməməlidir</em> — kim, nə vaxt, nəyi dəyişdi?</p>
+
+  <div class="callout key">
+    <span class="k">Nəticə → Dərs 11</span>
+    <strong>Versiya cədvəli + trigger.</strong> Sənəd hər dəyişəndə köhnə halı avtomatik arxivə düşür.<br><br>
+    Bu, <em>audit izi</em>dir. Hüquqi sənəddə mütləqdir.
+  </div>
+
+  <h3>Fərq 5 — Oxumaq: SQL → göz</h3>
+
+  <p><strong>Problem:</strong> qaimədəki «Qarğıdalı 2500 kq» heç bir sütunda deyil. O, <strong>piksellərdir</strong>.</p>
+
+  <p>Klassik həll — <em>OCR proqramı</em> (Tesseract kimi). Amma:</p>
+  <ul class="siyahi">
+    <li>Azərbaycan dilində zəifdir — <code class="inl">ə</code>, <code class="inl">ğ</code>, <code class="inl">ı</code> hərflərini çaşdırır</li>
+    <li>Yalnız <strong>hərfləri</strong> tanıyır — cədvəli, məntiqi başa düşmür</li>
+    <li>Möhür altındakı rəqəmi oxuya bilmir</li>
+    <li>«2500 üstündən xətt, yanında 2480» — bunu izah edə bilmir</li>
+  </ul>
+
+  <div class="callout key">
+    <span class="k">Nəticə → Dərs 14, 15</span>
+    <strong>Vision LLM.</strong> Claude modelinə PDF-i <em>birbaşa</em> göndəririk. O, həm <strong>oxuyur</strong>, həm <strong>başa düşür</strong>.<br><br>
+    «Bu, cədvəldir. Bu sütun miqdardır. Bu rəqəm düzəldilib.» — bir addımda.
+  </div>
+
+  <h3>Fərq 6 — Təsdiq: yoxdur → mütləqdir</h3>
+
+  <p><strong>Problem:</strong> AI 95% dəqiqdir. Bəs qalan 5%?</p>
+
+  <p>Ölçmədə 5% xəta — trend yenə düzgün görünür.<br>
+  <strong>Mühasibatda 5% xəta — fəlakətdir.</strong> Anbar qalığı yanlış olur, hesabat yanlış olur, vergi yanlış olur.</p>
+
+  <div class="callout key">
+    <span class="k">Nəticə → Dərs 18 · ƏN VACİB QƏRAR</span>
+    <strong>AI qərar vermir — TƏKLİF edir.</strong><br><br>
+    O, oxuyur və deyir: «Mən belə başa düşdüm». Sonra <strong>insan təsdiqləyir</strong>. Yalnız təsdiqdən sonra anbar dəyişir.
+  </div>
+
+  <h3>Fərq 7 — Material adları</h3>
+
+  <p><strong>Problem:</strong> qaimədə «Qarğıdalı yemi» yazılıb. Bazada material kodu <code class="inl">QARGIDALI</code>-dır.</p>
+  <p>Bunlar <em>eyni şeydir</em>. Amma kompüter üçün <strong>tamamilə fərqli iki sətir</strong>.</p>
+
+  <div class="callout key">
+    <span class="k">Nəticə → Dərs 19</span>
+    <strong>Fuzzy uzlaşdırma</strong> (<code class="inl">pg_trgm</code>). «Nə qədər oxşardırlar?» sualına <strong>rəqəmlə</strong> cavab verən alət.<br><br>
+    Oxşarlıq yüksəkdirsə — uzlaşdır. Aşağıdırsa — <strong>insandan soruş</strong>. Səhv material seçmək anbarı korlayar.
+  </div>
+</section>
+
+<!-- ═══════════ 6 ═══════════ -->
+<section id="s6">
+  <p class="sec-num">06</p>
+  <h2>Faza 3-ün altı yeni anlayışı</h2>
+
+  <p>Bunlar sizin üçün yenidir. Hər birinə <strong>ayrıca dərs</strong> ayrılıb. İndi sadəcə tanış olaq — dərinliyə sonra gedəcəyik.</p>
+
+  <div class="anlayis">
+    <div class="bas">
+      <div class="rq">1</div>
+      <div class="t">Obyekt yaddaşı</div>
+      <div class="ing">object storage</div>
+    </div>
+    <p>Faylları saxlayan xüsusi anbar. Bazadan <strong>ayrı</strong>. Hər fayla bir <em>açar</em> verilir, açarla geri götürülür.</p>
+    <p>Poçt saxlama kamerası kimi: çamadanı verirsən, nömrə alırsan. Nömrə ilə geri alırsan. Kamera çamadanın içində nə olduğunu bilmir — və <strong>bilməməlidir</strong>.</p>
+    <p><strong>Bizim alət:</strong> MinIO → <em>Dərs 09</em></p>
+  </div>
+
+  <div class="anlayis">
+    <div class="bas">
+      <div class="rq">2</div>
+      <div class="t">Kriptoqrafik hash</div>
+      <div class="ing">SHA-256</div>
+    </div>
+    <p>Faylın «barmaq izi» — 64 simvolluq sətir. Faylın <strong>bir baytı</strong> dəyişsə, barmaq izi <em>tamamilə</em> dəyişir.</p>
+    <p>Beləliklə: zavodda hesabla, Bakıda yenidən hesabla. Eynidirsə — fayl bütövdür. Fərqlidirsə — korlanıb.</p>
+    <p><strong>Bizim alət:</strong> SHA-256 → <em>Dərs 10</em></p>
+  </div>
+
+  <div class="anlayis">
+    <div class="bas">
+      <div class="rq">3</div>
+      <div class="t">Çevik sütun</div>
+      <div class="ing">JSONB</div>
+    </div>
+    <p>PostgreSQL sütunu, içində <strong>istənilən struktur</strong> saxlaya bilir. Bir qaimədə 3 sətir, digərində 47 — problem deyil.</p>
+    <p>Adi mətndən fərqi: <strong>içində axtarış etmək olar</strong>. «Qarğıdalı olan bütün qaimələri tap» — bir sorğu.</p>
+    <p><strong>Bizim alət:</strong> JSONB + GIN indeks → <em>Dərs 11</em></p>
+  </div>
+
+  <div class="anlayis">
+    <div class="bas">
+      <div class="rq">4</div>
+      <div class="t">Görən model</div>
+      <div class="ing">vision LLM</div>
+    </div>
+    <p>Süni intellekt modeli — <strong>şəkli görür</strong> və məzmununu başa düşür. Ona qaimə göndəririk, o, struktur məlumat qaytarır.</p>
+    <p>Klassik OCR yalnız <em>hərfləri</em> tanıyır. LLM <em>mənanı</em> tutur: «bu cədvəldir, bu sütun miqdardır, bu rəqəm düzəldilib».</p>
+    <p><strong>Bizim alət:</strong> Claude API → <em>Dərs 14, 15</em></p>
+  </div>
+
+  <div class="anlayis">
+    <div class="bas">
+      <div class="rq">5</div>
+      <div class="t">Agent</div>
+      <div class="ing">agent</div>
+    </div>
+    <p>Bir işi görən müstəqil proqram parçası. <strong>Giriş → iş → çıxış.</strong></p>
+    <p>Bizim agentlərimiz:</p>
+    <ul style="margin-top:8px;">
+      <li><strong>OCR_QAIME</strong> — qaiməni oxuyur</li>
+      <li><strong>ANBAR_MUQAYISE</strong> — anbarla tutuşdurur</li>
+      <li><strong>RESEPT_SERFIYYAT</strong> — reseptlə tutuşdurur</li>
+    </ul>
+    <p style="margin-top:10px;">Hamısının <strong>eyni interfeysi</strong> var — bu, gələcəkdə yenisini əlavə etməyi asanlaşdırır.</p>
+    <p><strong>Dərs:</strong> 14, 20</p>
+  </div>
+
+  <div class="anlayis">
+    <div class="bas">
+      <div class="rq">6</div>
+      <div class="t">İnsan nəzarət döngəsi</div>
+      <div class="ing">human-in-the-loop</div>
+    </div>
+    <p>AI <strong>təklif edir</strong>, insan <strong>təsdiqləyir</strong>. Sistem yalnız təsdiqdən sonra dəyişir.</p>
+    <p>Bu, texniki məhdudiyyət deyil — <strong>prinsipial qərardır</strong>. Mühasibat sənədində «demək olar ki, düzgün» yoxdur.</p>
+    <p><strong>Dərs:</strong> 18</p>
+  </div>
+</section>
+
+<!-- ═══════════ 7 ═══════════ -->
+<section id="s7">
+  <p class="sec-num">07</p>
+  <h2>Yeni boru xətti</h2>
+
+  <p>İndi Faza 3-ün tam mənzərəsini görək. Yaşıl qutular — <strong>yeni</strong>.</p>
+
+  <div class="axin">
+    <p class="axin-bas">Zavod tərəfi (Siyəzən — Intel Mac)</p>
+    <div class="axin-sira">
+      <div class="qutu yeni"><div class="i">📄</div><div class="ad">Qaimə<br>skanı</div><div class="alt">PDF / şəkil</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu yeni"><div class="i">⚙️</div><div class="ad">FastAPI<br>/senedler</div><div class="alt">:8000</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu yeni"><div class="i">📦</div><div class="ad">MinIO<br>fayl</div><div class="alt">:9000</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu"><div class="i">🗄️</div><div class="ad">Edge<br>PostgreSQL</div><div class="alt">metadata</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu"><div class="i">🚚</div><div class="ad">Sync<br>işçisi</div><div class="alt">2 axın</div></div>
+    </div>
+  </div>
+
+  <div class="axin">
+    <p class="axin-bas">Mərkəz tərəfi (Bakı — M4 Mac)</p>
+    <div class="axin-sira">
+      <div class="qutu yeni"><div class="i">📦</div><div class="ad">MinIO<br>mərkəz</div><div class="alt">SHA yoxlanır</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu"><div class="i">🗄️</div><div class="ad">zarat_erp_2</div><div class="alt">zavod_sened</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu yeni"><div class="i">🤖</div><div class="ad">AI agent<br>serveri</div><div class="alt">:8100</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu yeni"><div class="i">👤</div><div class="ad">İNSAN<br>təsdiqi</div><div class="alt">mühasib</div></div>
+      <span class="ox">▸</span>
+      <div class="qutu yeni"><div class="i">📊</div><div class="ad">Anbar<br>qalığı</div><div class="alt">dəyişir</div></div>
+    </div>
+  </div>
+
+  <h3>Diqqət — iki şey</h3>
+
+  <div class="callout warn">
+    <span class="k">① AI yalnız MƏRKƏZDƏ işləyir</span>
+    Zavodda AI yoxdur. Niyə?<br><br>
+    <strong>Zavodda internet zəifdir</strong> — LLM çağırışı üçün sabit əlaqə lazımdır.<br>
+    <strong>AI-a baza lazımdır</strong> — anbar, resept, təchizatçı. Onlar mərkəzdədir.<br>
+    <strong>Xərc</strong> — bir yerdə nəzarət etmək asandır.<br><br>
+    <strong>Zavod toplayır. Mərkəz düşünür.</strong>
+  </div>
+
+  <div class="callout err">
+    <span class="k">② İNSAN zəncirin içindədir</span>
+    Boru xəttində <strong>👤 İNSAN TƏSDİQİ</strong> qutusuna baxın. O, təsadüfi deyil.<br><br>
+    Faza 2-də insan yox idi — sensor ölçür, sistem yazır, hamısı.<br>
+    Faza 3-də <strong>insansız heç nə anbara düşmür</strong>.
+  </div>
+</section>
+
+<!-- ═══════════ 8 ═══════════ -->
+<section id="s8">
+  <p class="sec-num">08</p>
+  <h2>Ən mühüm qərar: AI qərar vermir</h2>
+
+  <p>Bu bölmə qısa, amma <strong>bütün Faza 3-ün ən vacib fikridir</strong>. Onu başa düşsəniz, qalan hər şey yerinə oturur.</p>
+
+  <h3>Səhv yol</h3>
+
+  <div class="kod">
+<pre><span class="cmt">-- BELƏ QURMAQ OLMAZ:</span>
+
+Qaimə gəldi
+   ↓
+AI oxudu
+   ↓
+Anbar qalığı DƏYİŞDİ      <span class="cmt">← AI qərar verdi</span>
+   ↓
+Hesabat yarandı</pre>
+  </div>
+
+  <p>Bu, işləyər. Sürətli olar. <strong>Və bir gün fəlakət olar.</strong></p>
+
+  <p>AI möhür altındakı «2500»-ü «2600» oxuyar. Heç kim görməz. Anbar qalığı yanlış olar. Növbəti ay inventarizasiyada 100 kq fərq çıxar. Kimsə oğurluqda şübhələnər. Həqiqi səbəb isə — bir piksel.</p>
+
+  <h3>Düzgün yol</h3>
+
+  <div class="kod">
+<pre>Qaimə gəldi
+   ↓
+AI oxudu
+   ↓
+TƏKLİF yaratdı            <span class="cmt">← status = 'teklif'</span>
+   ↓
+Mühasib EKRANDA gördü:
+   · solda  — orijinal qaimə şəkli
+   · sağda  — AI-ın oxuduğu cədvəl
+   · aşağı əminlikli sahələr SARI ilə
+   ↓
+Mühasib təsdiqlədi (ya düzəltdi)
+   ↓
+İNDİ anbar qalığı dəyişdi  <span class="cmt">← insan qərar verdi</span></pre>
+  </div>
+
+  <div class="callout key">
+    <span class="k">Niyə bu, «yavaş» deyil</span>
+    İlk baxışda əlavə addım kimi görünür. Amma:<br><br>
+    <strong>Əvvəl:</strong> mühasib qaiməni əlinə alır, 47 sətri əl ilə yazır. <strong>20 dəqiqə.</strong><br>
+    <strong>İndi:</strong> AI 47 sətri hazır verir, mühasib gözü ilə yoxlayır və təsdiqləyir. <strong>2 dəqiqə.</strong><br><br>
+    Biz insanı <em>çıxarmırıq</em>. Biz onun işini <strong>10 dəfə yüngülləşdiririk</strong>.
+  </div>
+
+  <h3>Və bir bonus — sistem özündən öyrənir</h3>
+
+  <p>Mühasib düzəliş edəndə biz onu <strong>saxlayırıq</strong>:</p>
+
+  <div class="kod">
+<pre>zavod_ai.cixaris cədvəli:
+  netice          → AI nə oxudu
+  insan_duzelisi  → insan nəyi dəyişdi   <span class="cmt">← TƏLİM MATERİALI</span>
+  status          → tesdiqlendi | duzelis_edildi | redd_edildi</pre>
+  </div>
+
+  <p>Altı ay sonra soruşa bilərik: <em>«AI nə qədər dəqiqdir?»</em></p>
+
+  <div class="kod">
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt">-- zavod_ai.deqiqlik görünüşü bunu deyir</span>
+ hefte      │ hamisi │ toxunulmadan │ duzelis │ deqiqlik_faiz
+────────────┼────────┼──────────────┼─────────┼───────────────
+ 2026-07-06 │    142 │          128 │      14 │          90.1
+ 2026-07-13 │    156 │          147 │       9 │          94.2</pre>
+  </div>
+
+  <p><strong>Bu, yeganə dürüst cavabdır.</strong> Onsuz «AI yaxşı işləyir» — sadəcə hissdir.</p>
+</section>
+
+<!-- ═══════════ 9 ═══════════ -->
+<section id="s9">
+  <p class="sec-num">09</p>
+  <h2>Lüğət — bu dərsdə keçən terminlər</h2>
+
+  <table class="nn">
+    <thead><tr><th>Termin</th><th>Sadə dildə</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>telemetriya</td>
+        <td>Cihazlardan avtomatik gələn ölçmə axını. Faza 2-nin mövzusu.</td>
+      </tr>
+      <tr>
+        <td>metadata</td>
+        <td>«Məlumat haqqında məlumat». Faylın <em>özü</em> deyil — onun adı, ölçüsü, tarixi, kim yüklədi.</td>
+      </tr>
+      <tr>
+        <td>obyekt yaddaşı<br><em>(object storage)</em></td>
+        <td>Faylları saxlayan anbar. Fayl → açar → fayl. Bazadan ayrı.</td>
+      </tr>
+      <tr>
+        <td>MinIO</td>
+        <td>Bizim işlətdiyimiz obyekt yaddaşı proqramı. Öz serverimizdə işləyir.</td>
+      </tr>
+      <tr>
+        <td>hash / SHA-256</td>
+        <td>Faylın 64 simvolluq «barmaq izi». Bir bayt dəyişsə — tamamilə dəyişir.</td>
+      </tr>
+      <tr>
+        <td>JSONB</td>
+        <td>PostgreSQL-in çevik sütun tipi. İçində istənilən struktur ola bilər, üstəlik axtarıla bilər.</td>
+      </tr>
+      <tr>
+        <td>LLM</td>
+        <td>Böyük dil modeli. Mətn (və şəkil) başa düşən süni intellekt. Claude — bunlardan biridir.</td>
+      </tr>
+      <tr>
+        <td>vision model</td>
+        <td>Şəkil <em>görən</em> LLM. Ona PDF verirsən, o oxuyur.</td>
+      </tr>
+      <tr>
+        <td>agent</td>
+        <td>Bir işi görən müstəqil proqram parçası. Giriş → iş → çıxış.</td>
+      </tr>
+      <tr>
+        <td>prompt</td>
+        <td>Modelə verilən göstəriş. «Bu qaiməni oxu və JSON qaytar» — bu, promptdur.</td>
+      </tr>
+      <tr>
+        <td>token</td>
+        <td>Modelin «sözcüyü». Xərc token ilə ölçülür. ~1 token ≈ 4 hərf.</td>
+      </tr>
+      <tr>
+        <td>əminlik<br><em>(confidence)</em></td>
+        <td>Modelin öz cavabına inam dərəcəsi: 0-dan 1-ə. 0.98 = «demək olar ki, əminəm».</td>
+      </tr>
+      <tr>
+        <td>fuzzy uzlaşdırma</td>
+        <td>«Qarğıdalı» ilə «Qargidali» nə qədər oxşardır? Rəqəmlə cavab verən üsul.</td>
+      </tr>
+      <tr>
+        <td>idempotentlik</td>
+        <td>Eyni əməliyyatı iki dəfə etsən — nəticə dəyişmir. Sync-in təməli.</td>
+      </tr>
+      <tr>
+        <td>human-in-the-loop</td>
+        <td>İnsan qərar zəncirindədir. AI təklif edir, insan təsdiqləyir.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════ 10 ═══════════ -->
+<section id="s10">
+  <div class="xul">
+    <h3>Xülasə — beş fikir</h3>
+    <ul>
+      <li><strong>Sənəd «böyük ölçmə» deyil.</strong> O, başqa növ varlıqdır: ağır, dəyişkən, hüquqi, təsdiq tələb edən.</li>
+      <li><strong>Fayl bazaya yazılmır.</strong> Obyekt yaddaşına (MinIO) gedir, bazada yalnız ünvanı qalır.</li>
+      <li><strong>Fayl korlana bilər.</strong> SHA-256 barmaq izi ilə hər iki tərəfdə yoxlanılır.</li>
+      <li><strong>Sənədi oxumaq üçün göz lazımdır.</strong> Vision LLM həm görür, həm başa düşür.</li>
+      <li><strong>AI qərar vermir — TƏKLİF edir.</strong> İnsan təsdiqləməyincə anbar dəyişmir. Bu, danışılmazdır.</li>
+    </ul>
+  </div>
+
+  <h3>Növbəti dərs</h3>
+
+  <div class="callout">
+    <span class="k">Dərs 09 — Fayl haradadır?</span>
+    <strong>Obyekt yaddaşı və MinIO.</strong><br><br>
+    Öyrənəcəyik:
+    <ul style="margin:10px 0 0;padding-left:20px;">
+      <li>Fayl sistemi, baza və obyekt yaddaşı — üç fərqli yol, üç fərqli məqsəd</li>
+      <li>Niyə <code class="inl">bytea</code> ilə bazaya yazmaq fəlakətdir</li>
+      <li>MinIO nədir, niyə «S3 uyğun» olması vacibdir</li>
+      <li>Bucket, obyekt açarı, presigned URL — nə deməkdir</li>
+      <li>Bizim açar sxemimiz: <code class="inl">SIYEZEN/2026/07/13/&lt;uuid&gt;.pdf</code> — hər hissəsi niyə belədir</li>
+      <li>Əməli iş: hər iki maşında MinIO quraşdırmaq, sınamaq</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Group · Siyəzən yem zavodu · Faza 3</p>
+  <p>Dərs 08 — Telemetriyadan sənədə</p>
+</footer>
+
+<script>
+function kop(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent;
+    btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1600);
+  });
+}
+</script>
+</body>
+</html>
