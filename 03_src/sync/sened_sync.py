@@ -6,8 +6,11 @@ Eyni olcme_sync.py nümunəsi:
   2. Mərkəzə yaz (ON CONFLICT DO UPDATE — sənəd dəyişə bilər)
   3. YALNIZ ONDAN SONRA sync_status = 1 et
 """
+import json
 import logging
 import time
+
+from psycopg.types.json import Jsonb
 
 from .baza import edge_hovuz, merkez_hovuz
 from .konfiq import ZAVOD_KOD, SYNC_BATCH_SENED
@@ -83,12 +86,15 @@ async def sened_gonder() -> int:
     async with merkez_hovuz.connection() as mconn:
         async with mconn.cursor() as mcur:
             for r in setirler:
+                meta = r[9]
+                if isinstance(meta, str):
+                    meta = json.loads(meta)
                 await mcur.execute(
                     SQL_MERKEZ,
-                    (ZAVOD_KOD, r[0],          # zavod_kod, edge_id
-                     r[1], r[2], r[3], r[4], r[5],   # novu..qeyd
-                     r[6], r[7], r[8], r[9],          # daxil_eden..metadata
-                     r[10], r[11]),                    # yaradilma, deyisme
+                    (ZAVOD_KOD, r[0],                  # zavod_kod, edge_id
+                     r[1], r[2], r[3], r[4], r[5],     # novu..qeyd
+                     r[6], r[7], r[8], Jsonb(meta),    # daxil_eden..metadata
+                     r[10], r[11]),                     # yaradilma, deyisme
                 )
                 netice = await mcur.fetchone()
                 if netice and netice[0]:

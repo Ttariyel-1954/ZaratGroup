@@ -21,7 +21,6 @@ Hər çağırış:
 from __future__ import annotations
 
 import asyncio
-import base64
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -32,6 +31,7 @@ from typing import Any
 import psycopg
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from minio import Minio
 from pydantic import BaseModel
 
 from .agent_anbar import ANBAR_MUQAYISE
@@ -65,6 +65,11 @@ def _dsn(pref: str) -> str:
 
 MERKEZ_DSN = _dsn("MERKEZ_DB")
 AI_GUNLUK_LIMIT = int(os.getenv("AI_GUNLUK_TOKEN_LIMITI", "500000"))
+
+MINIO_MERKEZ_URL = os.getenv("MINIO_MERKEZ_URL", "http://localhost:9010")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "zaratuser")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "Siyezen2026Minio")
+MINIO_BUCKET     = os.getenv("MINIO_BUCKET",     "zarat-sened")
 
 # ── Agentlər ─────────────────────────────────────────────────────────────────
 
@@ -147,6 +152,19 @@ async def _gunluk_token_yoxla() -> bool:
         return True  # DB xətasında blok etmə
 
 
+def _minio_yukle(acari: str, mime: str) -> tuple[bytes, str]:
+    """Sinxron — asyncio.to_thread() içindən çağırılır."""
+    endpoint = MINIO_MERKEZ_URL.replace("https://", "").replace("http://", "")
+    secure   = MINIO_MERKEZ_URL.startswith("https://")
+    mc      = Minio(endpoint, access_key=MINIO_ACCESS_KEY,
+                    secret_key=MINIO_SECRET_KEY, secure=secure)
+    cavab   = mc.get_object(MINIO_BUCKET, acari)
+    melumat = cavab.read()
+    cavab.close()
+    cavab.release_conn()
+    return melumat, mime
+
+
 def _json_str(v: Any) -> str:
     import json
     return json.dumps(v, ensure_ascii=False)
@@ -181,10 +199,7 @@ app = FastAPI(
 # ── Modellər ──────────────────────────────────────────────────────────────────
 
 class OCR_Sorgu(BaseModel):
-    sened_id:  int
-    fayl_id:   int
-    melumat_b64: str          # base64 fayl məzmunu
-    mime_tipi:   str = "application/pdf"
+    sened_id: int
 
 
 class Kontekst_Sorgu(BaseModel):
@@ -226,16 +241,38 @@ async def ocr_icra(sorgu: OCR_Sorgu):
         raise HTTPException(status_code=429,
                             detail="Günlük token limiti aşıldı.")
 
+    # 1. DB-dən fayl meta yüklə
+    conn = await _merkez()
+    async with conn.cursor() as cur:
+        await cur.execute(
+            """
+            SELECT id, obyekt_acari, mime_tipi
+            FROM zavod_sened.fayl
+            WHERE sened_id = %s
+            ORDER BY id
+            LIMIT 1
+            """,
+            (sorgu.sened_id,),
+        )
+        fayl_setr = await cur.fetchone()
+    if fayl_setr is None:
+        raise HTTPException(status_code=404,
+                            detail="Bu sənəd üçün fayl tapılmadı.")
+    fayl_id, acari, mime_tipi = fayl_setr
+
+    # 2. MinIO-dan endir (sinxron çağırış — to_thread ilə)
     try:
-        melumat = base64.b64decode(sorgu.melumat_b64)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Yanlış base64 məlumat.")
+        melumat, mime_tipi = await asyncio.to_thread(
+            _minio_yukle, acari, mime_tipi
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"MinIO xətası: {e}")
 
     giris = AgentGirisi(
         sened_id=sorgu.sened_id,
-        fayl_id=sorgu.fayl_id,
+        fayl_id=fayl_id,
         melumat=melumat,
-        mime_tipi=sorgu.mime_tipi,
+        mime_tipi=mime_tipi,
     )
 
     cixis = await AGENTLER["OCR_QAIME"].icra(giris)
@@ -245,7 +282,7 @@ async def ocr_icra(sorgu: OCR_Sorgu):
         METRIKA["xeta"] += 1
         raise HTTPException(status_code=500, detail=cixis.xeta)
 
-    cixaris_id = await _cixaris_yaz(cixis, sorgu.sened_id, sorgu.fayl_id)
+    cixaris_id = await _cixaris_yaz(cixis, sorgu.sened_id, fayl_id)
     METRIKA["cixaris_yazilan"] += 1
 
     return {

@@ -2,11 +2,11 @@
 Agent 1: OCR_QAIME — PDF/şəkil sənəddən strukturlu məlumat çıxarır.
 
 Çıxarılan sahələr:
-  - temin_eden  : təchizatçı adı
-  - sened_no    : qaimənin nömrəsi
+  - qarsi_teref : təchizatçı adı
+  - nomre       : qaimənin nömrəsi
   - tarix       : sənədin tarixi (ISO 8601)
-  - materiallar : [{ad, miqdar, vahid, vahid_qiymet, mebleg}]
-  - umumi_mebleg: cəmi məbləğ
+  - setirler    : [{material, miqdar, vahid, vahid_qiymet, cemi}]
+  - cemi_mebleg : cəmi məbləğ
   - valyuta     : AZN / USD / EUR / ...
 
 §0 → Bu agent yalnız TƏKLİF edir. İnsan təsdiqləyir.
@@ -31,19 +31,19 @@ Cavabın YALNIZ JSON olmalıdır — başqa heç bir mətn olmadan.
 Rəqəmlərdə vergül (1.234,56) formatı varsa — nöqtəyə (1234.56) çevir.
 
 {
-  "temin_eden":   "string|null",
-  "sened_no":     "string|null",
+  "qarsi_teref":  "string|null",
+  "nomre":        "string|null",
   "tarix":        "YYYY-MM-DD|null",
-  "materiallar": [
+  "setirler": [
     {
-      "ad":           "string",
+      "material":     "string",
       "miqdar":       number,
       "vahid":        "kq|ton|litr|ədəd|...",
       "vahid_qiymet": number|null,
-      "mebleg":       number|null
+      "cemi":         number|null
     }
   ],
-  "umumi_mebleg": number|null,
+  "cemi_mebleg":  number|null,
   "valyuta":      "AZN|USD|EUR|...|null",
   "_qeydler":     "string|null"
 }
@@ -53,11 +53,11 @@ EMINLIK_REHBERI = """
 Hər sahə üçün öz əminliyini 0..1 ölçüsündə JSON kimi qaytar.
 Yalnız əsas sahələr:
 {
-  "temin_eden": 0.95,
-  "sened_no":   0.90,
-  "tarix":      0.85,
-  "materiallar": 0.80,
-  "umumi_mebleg": 0.75
+  "qarsi_teref": 0.95,
+  "nomre":       0.90,
+  "tarix":       0.85,
+  "setirler":    0.80,
+  "cemi_mebleg": 0.75
 }
 """.strip()
 
@@ -114,7 +114,7 @@ class OCR_QAIME(BaseAgent):
             }
         ]
 
-        sha = prompt_sha256(SISTEM, str(giris.fayl_id))
+        sha = prompt_sha256(SISTEM, str(giris.sened_id))
 
         try:
             # _mesaj_gonder sinxrondur → event loop bloklanmasın
