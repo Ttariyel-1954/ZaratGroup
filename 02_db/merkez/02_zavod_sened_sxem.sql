@@ -483,6 +483,11 @@ CREATE INDEX IF NOT EXISTS idx_zai_cixaris_novbe
 CREATE INDEX IF NOT EXISTS idx_zai_cixaris_sened
     ON zavod_ai.cixaris (sened_id);
 
+-- Eyni fayl ikinci dəfə emal olunmasın — teklif statusunda dublikat yoxdur
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cixaris_fayl_tek
+    ON zavod_ai.cixaris (fayl_id, agent_kod)
+    WHERE status = 'teklif' AND fayl_id IS NOT NULL;
+
 
 -- -----------------------------------------------------------------------------
 -- QƏRAR — AI nə aşkarladı
@@ -520,6 +525,11 @@ CREATE TABLE IF NOT EXISTS zavod_ai.qerar (
 
 CREATE INDEX IF NOT EXISTS idx_zai_qerar_yeni
     ON zavod_ai.qerar (seviyye, yaradilma DESC) WHERE status = 'yeni';
+
+-- Eyni problem iki dəfə qeydə alınmasın — açıq (yeni) qərarda dublikat yoxdur
+CREATE UNIQUE INDEX IF NOT EXISTS idx_qerar_tek
+    ON zavod_ai.qerar (agent_kod, basliq, (coalesce(material_kod, '')))
+    WHERE status = 'yeni';
 
 
 -- -----------------------------------------------------------------------------

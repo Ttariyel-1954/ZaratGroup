@@ -219,6 +219,7 @@ app = FastAPI(
 
 class OCR_Sorgu(BaseModel):
     sened_id: int
+    mecburi:  bool = False   # True → keşi keç, yenidən emal et
 
 
 class Anbar_Sorgu(BaseModel):
@@ -274,7 +275,7 @@ async def ocr_icra(sorgu: OCR_Sorgu):
     async with conn.cursor() as cur:
         await cur.execute(
             """
-            SELECT id, obyekt_acari, mime_tipi
+            SELECT id, obyekt_acari, mime_tipi, sha256
             FROM zavod_sened.fayl
             WHERE sened_id = %s
             ORDER BY id
@@ -286,9 +287,34 @@ async def ocr_icra(sorgu: OCR_Sorgu):
     if fayl_setr is None:
         raise HTTPException(status_code=404,
                             detail="Bu sənəd üçün fayl tapılmadı.")
-    fayl_id, acari, mime_tipi = fayl_setr
+    fayl_id, acari, mime_tipi, sha256 = fayl_setr
 
-    # 2. MinIO-dan endir (sinxron çağırış — to_thread ilə)
+    # 2. Keş yoxla — eyni fayl artıq emal olunubsa LLM çağırma
+    if not sorgu.mecburi:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT c.id, c.netice, c.eminlik, c.status
+                FROM zavod_ai.cixaris c
+                WHERE c.fayl_id = %s
+                  AND c.agent_kod = 'OCR_QAIME'
+                  AND c.status IN ('teklif','tesdiqlendi','duzelis_edildi')
+                ORDER BY c.id DESC LIMIT 1
+                """,
+                (fayl_id,),
+            )
+            kes = await cur.fetchone()
+        if kes:
+            log.info("OCR keş: fayl_id=%d cixaris_id=%d", fayl_id, kes[0])
+            return {
+                "cixaris_id": kes[0],
+                "netice":     kes[1],
+                "eminlik":    kes[2],
+                "token":      0,
+                "kesden":     True,
+            }
+
+    # 3. MinIO-dan endir (sinxron çağırış — to_thread ilə)
     try:
         melumat, mime_tipi = await asyncio.to_thread(
             _minio_yukle, acari, mime_tipi
@@ -603,12 +629,35 @@ async def anbar_icra(sorgu: Anbar_Sorgu):
     if not await _gunluk_token_yoxla():
         raise HTTPException(status_code=429, detail="Günlük token limiti aşıldı.")
 
-    # ── 5. Hər tapıntı üçün LLM izahı + qerar-a yaz ─────────────────────────
+    # ── 5. Hər tapıntı üçün: mövcuddursa delil yenilə, yoxdursa LLM + yarat ──
     agent = AGENTLER["ANBAR_MUQAYISE"]
     qerar_idler: list[int] = []
     cem_g = cem_c = 0
 
     for t in tapintilar:
+        # Açıq qərar artıq varmı? (status='yeni')
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT id FROM zavod_ai.qerar
+                WHERE agent_kod = 'ANBAR_MUQAYISE'
+                  AND basliq = %s
+                  AND material_kod IS NOT DISTINCT FROM %s
+                  AND status = 'yeni'
+                LIMIT 1
+                """,
+                (t["basliq"], t["material_kod"]),
+            )
+            existing = await cur.fetchone()
+
+        if existing:
+            # Mövcud qərar — LLM çağırılmır, yeni sətir yaradılmır
+            qerar_idler.append(existing[0])
+            log.info("Anbar: mövcud qərar saxlanıldı id=%d (%s)",
+                     existing[0], t["basliq"])
+            continue
+
+        # Yeni tapıntı — LLM ilə izah al, qerar-a yaz
         izah, tovsiyye, g, c, ms = await agent.izahla(t["basliq"], t["delil"])
         cem_g += g
         cem_c += c
