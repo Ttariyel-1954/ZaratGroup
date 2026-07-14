@@ -616,9 +616,13 @@ BEGIN
 
         GRANT SELECT, INSERT, UPDATE
             ON ALL TABLES IN SCHEMA zavod_sened TO zavod_sync;
-        GRANT SELECT
-            ON ALL TABLES IN SCHEMA zavod_anbar, zavod_istehsal TO zavod_sync;
+        -- zavod_anbar: INSERT herekat üçün lazımdır (AI_TESDIQ)
         GRANT SELECT, INSERT
+            ON ALL TABLES IN SCHEMA zavod_anbar TO zavod_sync;
+        GRANT SELECT
+            ON ALL TABLES IN SCHEMA zavod_istehsal TO zavod_sync;
+        -- zavod_ai: UPDATE cixaris üçün lazımdır (tesdiq endpoint)
+        GRANT SELECT, INSERT, UPDATE
             ON ALL TABLES IN SCHEMA zavod_ai TO zavod_sync;
 
         GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA
