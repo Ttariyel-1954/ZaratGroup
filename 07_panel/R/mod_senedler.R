@@ -141,7 +141,7 @@ mod_senedler_Server <- function(id, taymer) {
       # ID sütununu gizlət, amma seçim üçün saxla
       goster_d <- if ("id" %in% names(d)) d[, names(d) != "id", drop = FALSE] else d
 
-      datatable(
+      dt <- datatable(
         goster_d,
         rownames  = FALSE,
         selection = "single",
@@ -151,12 +151,15 @@ mod_senedler_Server <- function(id, taymer) {
           dom        = "ftp",
           language   = list(search = "Axtar:", info = "_{start}-{end} / {total}")
         )
-      ) |>
-        formatStyle("Status",
-                    color = styleEqual(
-                      c("qaralama","tesdiq_gozleyir","tesdiqlendi","redd_edildi","legv"),
-                      c("#64748b","#f5a524","#5bd08a","#e5695f","#9ca3af")
-                    ))
+      )
+      if ("Status" %in% names(goster_d)) {
+        dt <- dt |> formatStyle("Status",
+                      color = styleEqual(
+                        c("qaralama","tesdiq_gozleyir","tesdiqlendi","redd_edildi","legv"),
+                        c("#64748b","#f5a524","#5bd08a","#e5695f","#9ca3af")
+                      ))
+      }
+      dt
     })
 
     # Seçili sənədi izlə

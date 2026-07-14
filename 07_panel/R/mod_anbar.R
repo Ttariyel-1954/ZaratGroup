@@ -78,10 +78,13 @@ mod_anbar_Server <- function(id, taymer) {
     # ---- Cədvəl baxışı ----
     output$qaliq_cedvel <- renderDT({
       d <- qaliq_data()
-      if (is.null(d)) d <- data.frame(Vəziyyət = "Mərkəz əlçatmazdır")
+      if (is.null(d) || !("ad" %in% names(d))) {
+        return(datatable(data.frame(Xəbər = "Mərkəz əlçatmazdır"), rownames = FALSE))
+      }
 
-      goster <- d[, c("ad", "vahid", "qaliq", "min_qaliq", "son_herekat")]
-      names(goster) <- c("Material", "Vahid", "Qalıq", "Min hədd", "Son hərəkat")
+      SUTUNLAR <- c(ad = "Material", vahid = "Vahid", qaliq = "Qalıq",
+                    min_qaliq = "Min hədd", son_herekat = "Son hərəkat")
+      goster <- setNames(d[, names(SUTUNLAR), drop = FALSE], SUTUNLAR)
 
       datatable(
         goster,
@@ -90,7 +93,7 @@ mod_anbar_Server <- function(id, taymer) {
         class     = "compact stripe hover",
         options   = list(pageLength = 20, dom = "ft")
       ) |>
-        formatStyle("Qalıq", "Min hədd",
+        formatStyle(SUTUNLAR[["qaliq"]], SUTUNLAR[["min_qaliq"]],
                     backgroundColor = styleInterval(0, c("#fef2f2", "white")),
                     target = "row")
     })
