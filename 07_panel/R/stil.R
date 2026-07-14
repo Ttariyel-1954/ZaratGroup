@@ -37,10 +37,30 @@ STIL <- "
 .merhele .et  { font-size:10px; color:#6b7280; text-align:center; }
 .merhele .dt  { font-size:10px; color:#9ca3af; text-align:center; max-width:140px; line-height:1.3; }
 .seqment {
-  width:28px; height:3px; background:#5bd08a; flex-shrink:0;
-  position:relative; margin:0 -2px;
+  width:36px; height:3px; flex-shrink:0;
+  position:relative; margin:0 4px;
+  background:linear-gradient(90deg, #5bd08a 0%, #9ef5c4 50%, #5bd08a 100%);
+  background-size:72px 100%;
+  animation:axim 1.1s linear infinite;
+  overflow:visible;
 }
-.seqment.dur { background:#e5695f; }
+.seqment.dur {
+  background:linear-gradient(90deg, #e5695f 0%, #f4a49e 50%, #e5695f 100%);
+  background-size:72px 100%;
+}
+.seqment::after {
+  content:''; position:absolute;
+  right:-7px; top:50%; transform:translateY(-50%);
+  width:0; height:0;
+  border-top:5px solid transparent;
+  border-bottom:5px solid transparent;
+  border-left:7px solid #5bd08a;
+}
+.seqment.dur::after { border-left-color:#e5695f; }
+@keyframes axim {
+  from { background-position:0 0; }
+  to   { background-position:72px 0; }
+}
 
 /* BAŞLIQ */
 .zavod-bas {
