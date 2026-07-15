@@ -1,10 +1,9 @@
 # ==============================================================================
-# AI KÖMƏKÇİ MODULU — Faza 2 söhbət funksionallığı
-# AI qaydaları ƏVƏZ ETMİR — onları izah edir.
-# Açar yoxdursa, panel yenə işləyir.
+# AI KÖMƏKÇİ MODULU — /komekci/sual endpointi vasitəsilə
+# Bütün Claude çağırışı AI serverindədir (03_src/ai/agent_server.py).
 # ==============================================================================
 
-ai_hazirdir <- function() nzchar(KFG$ai_acar)
+ai_hazirdir <- function() nzchar(KFG$ai_url)
 
 ai_kontekst <- function(st, problemler) {
   jsonlite::toJSON(list(
@@ -22,61 +21,20 @@ ai_kontekst <- function(st, problemler) {
   ), auto_unbox = TRUE)
 }
 
-AI_SISTEM <- paste(
-  "Sən Siyəzən yem zavodunun telemetriya sisteminin köməkçisisən.",
-  "Səninlə danışan adam ZAVOD OPERATORUDUR — mühəndis deyil, proqramçı deyil.",
-  "",
-  "Qaydalar:",
-  "1. YALNIZ Azərbaycan dilində cavab ver.",
-  "2. Texniki jarqon işlətmə. 'FastAPI' yerinə 'emal proqramı', 'MQTT' yerinə 'məlumat qutusu' de.",
-  "3. Qısa yaz. Operator ekranda oxuyur, kitab oxumur.",
-  "4. Həmişə KONKRET addım ver: 'nəyi yoxla', 'hansı düyməni bas'.",
-  "5. Data itkisi barədə həmişə sakitləşdir — sistem outbox pattern istifadə edir,",
-  "   şəbəkə kəsilsə də məlumat itmir, zavodda gözləyir.",
-  "6. Bilmədiyini uydurma. Əmin deyilsənsə: 'mühəndisə müraciət edin' de.",
-  "",
-  "Sistemin quruluşu: Sensorlar → məlumat qutusu → emal proqramı → zavod bazası",
-  "→ göndərici → Bakıdakı mərkəzi baza → AI analiz.",
-  sep = "\n"
-)
-
 ai_sorus <- function(sual, kontekst, tarixce = list()) {
   if (!ai_hazirdir())
-    return("AI açarı qurulmayıb. .env faylına ANTHROPIC_API_KEY əlavə edin.")
-
-  mesajlar <- c(
-    tarixce,
-    list(list(role = "user", content = paste0(
-      "SİSTEMİN HAZIRKI VƏZİYYƏTİ:\n", kontekst,
-      "\n\nOPERATORUN SUALI:\n", sual
-    )))
-  )
+    return("AI server URL qurulmayıb. .env faylına AI_URL əlavə edin.")
 
   tryCatch({
-    cavab <- httr2::request("https://api.anthropic.com/v1/messages") |>
-      httr2::req_headers(
-        "x-api-key"          = KFG$ai_acar,
-        "anthropic-version"  = "2023-06-01",
-        "content-type"       = "application/json"
-      ) |>
-      httr2::req_body_json(list(
-        model      = KFG$ai_model,
-        max_tokens = 1200,
-        system     = AI_SISTEM,
-        messages   = mesajlar
-      )) |>
+    cnt <- httr2::request(paste0(KFG$ai_url, "/komekci/sual")) |>
+      httr2::req_body_json(list(sual = sual, kontekst = kontekst)) |>
       httr2::req_timeout(45) |>
       httr2::req_perform() |>
       httr2::resp_body_json()
-
-    metnler <- vapply(
-      Filter(function(b) identical(b$type, "text"), cavab$content),
-      function(b) b$text, character(1)
-    )
-    paste(metnler, collapse = "\n")
+    cnt$cavab %||% "AI cavab qaytarmadı."
   }, error = function(e) {
-    paste0("AI-a müraciət alınmadı: ", conditionMessage(e),
-           "\n\nAşağıdakı hazır həll addımlarından istifadə edin.")
+    paste0("AI serverə müraciət alınmadı: ", conditionMessage(e),
+           "\n\nAI serverin işlədiyini yoxlayın (port 8100).")
   })
 }
 
@@ -123,11 +81,11 @@ mod_ai_kohekci_Server <- function(id, veziyyet, problemler) {
       if (ai_hazirdir())
         div(style = "font-size:12.5px; color:#2f8f5b;",
             icon("circle-check"),
-            glue(" AI qoşuludur ({KFG$ai_model})"))
+            glue(" AI serveri qoşuludur ({KFG$ai_url})"))
       else
         div(style = "font-size:12.5px; color:#b9781a;",
             icon("triangle-exclamation"),
-            " AI açarı yoxdur. .env → ANTHROPIC_API_KEY. Panel açarsız da tam işləyir.")
+            " AI_URL qurulmayıb. .env → AI_URL=http://127.0.0.1:8100")
     })
 
     ai_isle <- function(sual) {
