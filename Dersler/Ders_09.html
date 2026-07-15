@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs 09 — Fayl haradadır? Obyekt yaddaşı və MinIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --grafit:#0e1620; --polad:#17222f; --xett:#2a3b4d;
+    --acc:#f5a524;         /* DƏRS 09 — KƏHRƏBA */
+    --acc-deep:#b9781a;
+    --acc-soft:#fbf3e2;
+    --teal:#2dd4bf; --teal-deep:#0d9488;
+    --mavi:#5aa9e6; --mavi-deep:#2c6b9e;
+    --yasil:#5bd08a; --yasil-deep:#2f8f5b;
+    --qirmizi:#e5695f; --qirmizi-deep:#c0453a;
+    --bnovsheyi:#a78bfa; --bnov-deep:#6d4fc4;
+    --kagiz:#f7f5f0; --kagiz2:#efece4; --murekkeb:#1a222c;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--kagiz);color:var(--murekkeb);
+    font-family:Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.8;}
+
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e8e2d4;padding:1px 6px;border-radius:3px;color:#7a4e08;
+    white-space:nowrap;}
+
+  .hero{background:radial-gradient(1200px 400px at 75% -15%,rgba(245,165,36,.20),transparent 62%),
+    linear-gradient(180deg,var(--grafit),var(--polad));
+    color:#e8eef5;padding:64px 32px 52px;border-bottom:3px solid var(--acc);}
+  .wrap{max-width:1000px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--acc);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",sans-serif;font-weight:700;
+    font-size:clamp(30px,4.8vw,50px);line-height:1.06;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:20px;color:#c6d3df;max-width:800px;margin:0;line-height:1.7;}
+  .hero .meta{margin-top:26px;display:flex;gap:26px;flex-wrap:wrap;
+    font-family:"Oswald",sans-serif;font-size:13px;letter-spacing:.1em;
+    text-transform:uppercase;color:#7d93a8;}
+
+  .toc{background:var(--kagiz2);border-bottom:1px solid #ddd8cc;padding:24px 32px;}
+  .toc ol{max-width:1000px;margin:0 auto;padding-left:22px;columns:2;column-gap:40px;font-size:15.5px;}
+  .toc li{margin-bottom:6px;break-inside:avoid;}
+  .toc a{color:var(--acc-deep);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:1000px;margin:0 auto;padding:0 32px;}
+  section{padding:48px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--acc-deep);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",sans-serif;font-weight:600;
+    font-size:clamp(24px,3.4vw,33px);line-height:1.14;margin:0 0 20px;}
+  h3{font-family:"Oswald",sans-serif;font-weight:600;font-size:21px;margin:34px 0 12px;
+    padding-left:12px;border-left:4px solid var(--acc);}
+  h4{font-family:"Oswald",sans-serif;font-weight:500;font-size:17.5px;
+    margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--kagiz2);border-left:4px solid var(--acc-deep);
+    padding:18px 22px;border-radius:0 5px 5px 0;margin:22px 0;font-size:16.5px;line-height:1.7;}
+  .callout.warn{border-left-color:var(--acc);background:var(--acc-soft);}
+  .callout.err{border-left-color:var(--qirmizi);background:#fbeceb;}
+  .callout.ok{border-left-color:var(--yasil);background:#eaf7f0;}
+  .callout.key{border-left-color:var(--bnovsheyi);background:#f1eefb;}
+  .callout.blue{border-left-color:var(--mavi);background:#e9f2fa;}
+  .callout .k{font-family:"Oswald",sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--acc-deep);display:block;margin-bottom:5px;
+    font-weight:600;}
+  .callout.warn .k{color:var(--acc-deep);}
+  .callout.err  .k{color:var(--qirmizi-deep);}
+  .callout.ok   .k{color:var(--yasil-deep);}
+  .callout.key  .k{color:var(--bnov-deep);}
+  .callout.blue .k{color:var(--mavi-deep);}
+  .callout ul{margin:10px 0 0;padding-left:20px;}
+  .callout li{margin-bottom:6px;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:15.5px;line-height:1.6;}
+  .tbl thead th{background:var(--polad);color:#dbe6f0;font-family:"Oswald",sans-serif;
+    font-weight:500;letter-spacing:.04em;text-align:left;padding:12px 14px;font-size:13px;
+    text-transform:uppercase;border-bottom:2px solid var(--acc);}
+  .tbl tbody td{padding:12px 14px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--kagiz2);}
+  .tbl td.y{color:var(--yasil-deep);font-weight:600;}
+  .tbl td.q{color:var(--qirmizi-deep);font-weight:600;}
+  .tbl td.o{color:var(--acc-deep);font-weight:600;}
+
+  .kod{position:relative;margin:20px 0;}
+  .kod .mas{position:absolute;top:-11px;left:14px;background:var(--acc);color:#2a1c05;
+    font-family:"Oswald",sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;
+    padding:3px 11px;border-radius:3px;z-index:2;}
+  .kod .mas.m4{background:var(--mavi);color:#08192a;}
+  .kod pre{background:var(--grafit);color:#d7e3ee;border-radius:7px;padding:22px 20px 18px;
+    overflow-x:auto;font-family:ui-monospace,Menlo,monospace;font-size:13.5px;
+    line-height:1.75;margin:0;border:1px solid var(--xett);}
+  .cmt{color:#6f8598;}
+  .str{color:#a8e6a0;}
+  .kw{color:#7fd4ff;}
+  .num{color:#f0b86e;}
+  .kopya{position:absolute;top:10px;right:10px;background:rgba(245,165,36,.16);color:#f5c477;
+    border:1px solid rgba(245,165,36,.45);border-radius:4px;font-family:"Oswald",sans-serif;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:6px 11px;cursor:pointer;}
+  .kopya:hover{background:rgba(245,165,36,.32);}
+
+  .nn{width:100%;border-collapse:collapse;margin:18px 0;font-size:15.5px;}
+  .nn th{background:var(--acc-deep);color:#fff;font-family:"Oswald",sans-serif;
+    font-weight:500;text-align:left;padding:10px 14px;font-size:12.5px;
+    letter-spacing:.08em;text-transform:uppercase;}
+  .nn td{padding:12px 14px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .nn td:first-child{width:34%;font-family:ui-monospace,Menlo,monospace;
+    font-size:13px;color:#7a4e08;background:#f4efe3;}
+
+  .muq{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:24px 0;}
+  .muq-k{border-radius:9px;padding:18px;border:2px solid;}
+  .muq-k.pis{border-color:var(--qirmizi);background:#fbeceb;}
+  .muq-k.orta{border-color:var(--acc);background:var(--acc-soft);}
+  .muq-k.yaxsi{border-color:var(--yasil);background:#eaf7f0;}
+  .muq-k h4{margin:0 0 10px;font-family:"Oswald",sans-serif;font-size:16px;}
+  .muq-k.pis h4{color:var(--qirmizi-deep);}
+  .muq-k.orta h4{color:var(--acc-deep);}
+  .muq-k.yaxsi h4{color:var(--yasil-deep);}
+  .muq-k ul{margin:0;padding-left:17px;font-size:14px;line-height:1.6;}
+  .muq-k li{margin-bottom:5px;}
+  .muq-k .verdikt{margin-top:12px;padding-top:10px;border-top:1px solid rgba(0,0,0,.12);
+    font-family:"Oswald",sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.08em;}
+
+  .acar{background:var(--grafit);border-radius:10px;padding:26px 22px;margin:24px 0;
+    overflow-x:auto;}
+  .acar-x{font-family:ui-monospace,Menlo,monospace;font-size:16px;color:#d7e3ee;
+    text-align:center;letter-spacing:.03em;white-space:nowrap;margin-bottom:6px;}
+  .acar-x .p1{color:var(--acc);} .acar-x .p2{color:var(--teal);}
+  .acar-x .p3{color:var(--bnovsheyi);} .acar-x .p4{color:var(--yasil);}
+  .acar-c{display:flex;justify-content:center;font-family:ui-monospace,monospace;
+    font-size:12px;color:#6f8598;white-space:nowrap;}
+  .acar-izah{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px;}
+  .acar-izah div{background:var(--polad);border-radius:6px;padding:12px;
+    border-top:3px solid;}
+  .acar-izah div:nth-child(1){border-color:var(--acc);}
+  .acar-izah div:nth-child(2){border-color:var(--teal);}
+  .acar-izah div:nth-child(3){border-color:var(--bnovsheyi);}
+  .acar-izah div:nth-child(4){border-color:var(--yasil);}
+  .acar-izah .t{font-family:"Oswald",sans-serif;font-size:12px;text-transform:uppercase;
+    letter-spacing:.06em;color:#c6d3df;margin-bottom:5px;}
+  .acar-izah .d{font-size:13px;color:#8ea2b4;line-height:1.5;}
+
+  .addim{counter-reset:ad;}
+  .addim > .a{position:relative;padding-left:52px;margin-bottom:26px;}
+  .addim > .a::before{counter-increment:ad;content:counter(ad);
+    position:absolute;left:0;top:0;width:34px;height:34px;border-radius:8px;
+    background:var(--acc);color:#2a1c05;font-family:"Oswald",sans-serif;font-weight:700;
+    font-size:16px;display:flex;align-items:center;justify-content:center;}
+  .addim > .a h4{margin-top:4px;}
+
+  ul.siyahi{list-style:none;padding:0;margin:18px 0;}
+  ul.siyahi li{padding:10px 15px 10px 40px;position:relative;background:var(--kagiz2);
+    border-radius:6px;margin-bottom:7px;font-size:16px;line-height:1.6;
+    border-left:3px solid var(--acc-deep);}
+  ul.siyahi li::before{content:"▸";position:absolute;left:15px;top:9px;
+    color:var(--acc-deep);font-weight:bold;}
+
+  .xeta{border:1px solid #e3ded4;border-radius:8px;overflow:hidden;margin:20px 0;background:#fff;}
+  .xeta-h{background:#fbeceb;padding:11px 18px;border-bottom:1px solid #e3ded4;
+    font-family:ui-monospace,monospace;font-size:13px;color:var(--qirmizi-deep);}
+  .xeta-b{padding:16px 20px;font-size:15.5px;}
+  .xeta-b .seb{color:var(--qirmizi-deep);font-weight:600;}
+  .xeta-b .hel{color:var(--yasil-deep);font-weight:600;}
+
+  .xul{background:linear-gradient(180deg,var(--polad),var(--grafit));color:#dbe6f0;
+    border-radius:12px;padding:30px 32px;margin:30px 0;}
+  .xul h3{color:var(--acc);margin-top:0;border:none;padding:0;}
+  .xul ul{padding-left:20px;}
+  .xul li{margin-bottom:9px;}
+
+  footer{background:var(--grafit);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",sans-serif;color:var(--acc);letter-spacing:.14em;
+    text-transform:uppercase;font-size:13px;}
+
+  @media print{
+    .hero{background:#0e1620 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .kopya{display:none;} section{page-break-inside:avoid;}
+  }
+  @media (max-width:800px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .kopya{position:static;margin-bottom:8px;display:block;}
+    .nn td:first-child{width:auto;}
+    .muq{grid-template-columns:1fr;}
+    .acar-izah{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat · Faza 3 · Dərs 09</p>
+    <h1>Fayl haradadır?<br>Obyekt yaddaşı və MinIO</h1>
+    <p class="lede">Bir qaimə skanı — <strong>20 meqabayt</strong>. Onu hara qoyaq? Bu, sadə görünən sualdır, amma yanlış cavab layihəni <em>bir il sonra</em> öldürür. Bu dərsdə üç mümkün cavaba baxacağıq, ikisini rədd edəcəyik və üçüncüsünü — <strong>obyekt yaddaşını</strong> — hər detalı ilə quracağıq.</p>
+    <div class="meta">
+      <span>Konsepsiya + əməli iş</span>
+      <span>İki maşın</span>
+      <span>~40 dəqiqə</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Sual: 20 MB-ı hara qoyaq?</a></li>
+    <li><a href="#s2">Yol 1 — Bazaya yazaq (BLOB)</a></li>
+    <li><a href="#s3">Yol 2 — Adi qovluğa ataq</a></li>
+    <li><a href="#s4">Yol 3 — Obyekt yaddaşı</a></li>
+    <li><a href="#s5">Obyekt yaddaşının lüğəti</a></li>
+    <li><a href="#s6">Niyə «S3 uyğun» vacibdir</a></li>
+    <li><a href="#s7">MinIO — niyə məhz o</a></li>
+    <li><a href="#s8">Bizim açar sxemi — hər hissəsi</a></li>
+    <li><a href="#s9">Quraşdırma — INTEL</a></li>
+    <li><a href="#s10">Quraşdırma — M4</a></li>
+    <li><a href="#s11">Şəbəkə testi</a></li>
+    <li><a href="#s12">Konfiqurasiya — .env</a></li>
+    <li><a href="#s13">Panel PDF-i necə göstərəcək</a></li>
+    <li><a href="#s14">Biz hansı xətalara düşdük</a></li>
+    <li><a href="#s15">Lüğət</a></li>
+    <li><a href="#s16">Xülasə</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ═════ 1 ═════ -->
+<section id="s1">
+  <p class="sec-num">01</p>
+  <h2>Sual: 20 MB-ı hara qoyaq?</h2>
+
+  <p>Mühasib telefonla qaimənin şəklini çəkdi. Fayl <strong>4 MB</strong>. Skanerdən keçsə — <strong>20 MB</strong>. Gündə 100 sənəd. Ayda 3000. İldə 36 000.</p>
+
+  <p>Sadə hesab:</p>
+
+  <div class="kod">
+<pre>Gündə    100 sənəd × 5 MB  =    500 MB
+Ayda    3000 sənəd × 5 MB  =     15 GB
+İldə   36000 sənəd × 5 MB  =    180 GB
+5 ildə                     =    900 GB</pre>
+  </div>
+
+  <p>Bu, <strong>ciddi rəqəmdir</strong>. Və qərar indi verilməlidir — bir il sonra 180 GB-ı bir yerdən digərinə köçürmək <em>həftələrlə</em> iş deməkdir.</p>
+
+  <div class="callout key">
+    <span class="k">Üç mümkün cavab</span>
+    <ul>
+      <li><strong>Bazaya yazaq</strong> — PostgreSQL faylı da saxlaya bilir (<code class="inl">bytea</code> tipi)</li>
+      <li><strong>Adi qovluğa ataq</strong> — <code class="inl">/var/senedler/</code> kimi bir yerə</li>
+      <li><strong>Obyekt yaddaşına qoyaq</strong> — bu iş üçün yaradılmış xüsusi sistemə</li>
+    </ul>
+  </div>
+
+  <p>Üçünə də <strong>ciddi</strong> baxaq. «Filankəs belə deyib» ilə qərar verilməz — hər variantın <em>öz</em> nəticələri var.</p>
+</section>
+
+<!-- ═════ 2 ═════ -->
+<section id="s2">
+  <p class="sec-num">02</p>
+  <h2>Yol 1 — Bazaya yazaq (BLOB)</h2>
+
+  <p>PostgreSQL-də <code class="inl">bytea</code> tipi var. Faylı birbaşa sütuna yaza bilərik:</p>
+
+  <div class="kod">
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt">-- BELƏ ETMƏK MÜMKÜNDÜR... amma etməyəcəyik</span>
+CREATE TABLE sened_fayl (
+    id       BIGSERIAL PRIMARY KEY,
+    ad       TEXT NOT NULL,
+    <span class="kw">mezmun   BYTEA NOT NULL</span>      <span class="cmt">← faylın ÖZÜ burada</span>
+);
+
+INSERT INTO sened_fayl (ad, mezmun)
+VALUES ('qaime.pdf', pg_read_binary_file('/tmp/qaime.pdf'));</pre>
+  </div>
+
+  <p>İşləyir. Sadədir. <strong>Bir cədvəl, bir sorğu.</strong> Tranzaksiya da var — fayl və metadata birlikdə yazılır ya heç yazılmır.</p>
+
+  <p>Bəs niyə bu, <strong>fəlakətdir</strong>?</p>
+
+  <h3>Səbəb 1 — Yedəkləmə ölür</h3>
+
+  <p>PostgreSQL-in yedəyi (<code class="inl">pg_dump</code>) <strong>bütün bazanı</strong> mətn faylına çevirir.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Vəziyyət</th><th>Baza ölçüsü</th><th>pg_dump müddəti</th></tr></thead>
+    <tbody>
+      <tr><td>Yalnız metadata</td><td class="y">200 MB</td><td class="y">~15 saniyə</td></tr>
+      <tr><td>+ 1 illik fayllar</td><td class="q">180 GB</td><td class="q">~4 saat</td></tr>
+      <tr><td>+ 5 illik fayllar</td><td class="q">900 GB</td><td class="q">~20 saat</td></tr>
+    </tbody>
+  </table>
+
+  <p>Hər gecə 20 saatlıq yedəkləmə — <strong>mümkünsüzdür</strong>. Və bərpa daha uzun çəkəcək.</p>
+
+  <div class="callout err">
+    <span class="k">Real nəticə</span>
+    Yedəkləmə ağırlaşdıqca, komanda onu <strong>etməməyə başlayır</strong>. «Bu gecə keçək, sabah edərik.»<br><br>
+    Sonra disk sınır. Və yedək — üç aylıqdır.
+  </div>
+
+  <h3>Səbəb 2 — Hər sorğu ağırlaşır</h3>
+
+  <p>Bu, incə və təhlükəli problemdir:</p>
+
+  <div class="kod">
+<pre><span class="cmt">-- Zərərsiz görünür...</span>
+SELECT * FROM sened_fayl WHERE id = 42;
+
+<span class="cmt">-- ...amma "*" MEZMUN sütununu da çəkir!</span>
+<span class="cmt">-- 20 MB şəbəkədən keçdi. Halbuki yalnız adı lazım idi.</span></pre>
+  </div>
+
+  <p>Proqramçı bunu <em>görmür</em>. Kod işləyir, sadəcə yavaşdır. Səbəbi tapmaq həftələr çəkir.</p>
+
+  <h3>Səbəb 3 — Yaddaş və keş korlanır</h3>
+
+  <p>PostgreSQL <strong>keş</strong> saxlayır — tez-tez işlədilən sətirləri RAM-da tutur. Bu, sürətin əsasıdır.</p>
+
+  <p>Fayllar bazada olsa, keşi <strong>onlar doldurur</strong>. Nəticə: real işlək sətirlər keşdən çıxır, hər sorğu diskə gedir. <strong>Bütün sistem yavaşlayır</strong> — təkcə fayl sorğuları yox.</p>
+
+  <h3>Səbəb 4 — Baza faylı «başa düşmür»</h3>
+
+  <p>PostgreSQL <code class="inl">bytea</code> ilə <strong>heç nə edə bilmir</strong>. Onun içində axtarış yoxdur, sıxılma yoxdur, önizləmə yoxdur. O, sadəcə <em>baytları saxlayır</em>.</p>
+
+  <p>Yəni: bazanın bütün gücünü — indekslər, sorğular, tranzaksiyalar — <strong>istifadə etmirik</strong>. Onu bahalı, yavaş fayl serverinə çeviririk.</p>
+
+  <div class="callout err">
+    <span class="k">Verdikt — RƏDD</span>
+    <strong>Fayl heç vaxt bazaya BLOB kimi yazılmır.</strong><br><br>
+    Bu, sənaye standartıdır — kaprız deyil. Hər böyük sistem bu dərsi <em>öz zərəri ilə</em> öyrənib.
+  </div>
+</section>
+
+<!-- ═════ 3 ═════ -->
+<section id="s3">
+  <p class="sec-num">03</p>
+  <h2>Yol 2 — Adi qovluğa ataq</h2>
+
+  <p>Yaxşı, bazaya yox. Bəs sadəcə qovluğa?</p>
+
+  <div class="kod">
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt"># Sadə və aydın:</span>
+/var/zarat/senedler/2026/07/13/qaime_TEST-001.pdf
+
+<span class="cmt"># Bazada yalnız yol saxlanılır:</span>
+INSERT INTO sened_fayl (ad, yol)
+VALUES ('qaime.pdf', '/var/zarat/senedler/2026/07/13/qaime_TEST-001.pdf');</pre>
+  </div>
+
+  <p>Bu, <strong>BLOB-dan çox-çox yaxşıdır</strong>. Baza yüngül qalır, yedəkləmə sürətli olur.</p>
+
+  <p>Amma <strong>Faza 3 üçün kifayət deyil</strong>. Səbəblərə baxaq — hər biri bizim <em>real</em> tələbimizdir.</p>
+
+  <h3>Problem 1 — İki maşın arasında köçürmə</h3>
+
+  <p>Fayl Siyəzəndədir. Bakıya çatmalıdır. Necə?</p>
+  <ul class="siyahi">
+    <li><code class="inl">scp</code> ilə? — SSH açarları, icazələr, əl ilə skript</li>
+    <li><code class="inl">rsync</code> ilə? — daha yaxşı, amma yenə əl ilə qurulmalıdır</li>
+    <li>Hər ikisi <strong>yarımçıq köçürməni</strong> özü idarə etmir — şəbəkə kəsilsə, fayl korlanır və heç kim bilmir</li>
+  </ul>
+
+  <h3>Problem 2 — Bütövlük yoxlaması yoxdur</h3>
+
+  <p>Fayl çatdı. Bəs <strong>düzgün çatdımı</strong>? Bir bit dəyişməyibmi?</p>
+
+  <p>Fayl sistemi bunu <strong>demir</strong>. SHA-256 hesablamağı, müqayisə etməyi, uyğunsuzluqda təkrar göndərməyi — <strong>hamısını əl ilə yazmalısınız</strong>.</p>
+
+  <div class="callout warn">
+    <span class="k">«Əl ilə yazarıq» — bu cavab niyə pisdir</span>
+    Yaza bilərsiniz. 200 sətir kod. Sonra test edərsiniz. Sonra bir kənar hal tapılar — yarımçıq fayl, disk dolub, icazə yoxdur.<br><br>
+    Sonra daha 100 sətir. Sonra yenə bir hal...<br><br>
+    <strong>Siz obyekt yaddaşını yenidən ixtira edirsiniz</strong> — pis şəkildə.
+  </div>
+
+  <h3>Problem 3 — Girişə nəzarət</h3>
+
+  <p>Panel PDF-i mühasibə göstərməlidir. Amma:</p>
+  <ul class="siyahi">
+    <li>Qovluğu veb serverə açsaq — <strong>hamı</strong> hər sənədi görər</li>
+    <li>Faylı hər dəfə oxuyub brauzerə ötürsək — server yüklənər</li>
+    <li>Müvəqqəti keçid (link) lazımdır — «5 dəqiqə keçərli» — bunu da əl ilə yazmalı</li>
+  </ul>
+
+  <h3>Problem 4 — Sabah buluda köçsək</h3>
+
+  <p>Bir gün zavod deyəcək: «Serveri buluda köçürək». Onda:</p>
+
+  <div class="kod">
+<pre><span class="cmt">-- Fayl sistemi ilə: BÜTÜN kodu yenidən yazırsınız</span>
+open('/var/zarat/senedler/...')     →  boto3.client('s3').get_object(...)
+os.path.exists(...)                 →  s3.head_object(...)
+shutil.copy(...)                    →  s3.copy_object(...)
+<span class="cmt">-- Hər yerdə. Hər faylda. Səhvlərlə.</span></pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Verdikt — KİFAYƏT DEYİL</span>
+    Fayl sistemi <em>kiçik</em> layihə üçün yaxşıdır. Bizdə isə: <strong>iki maşın, bütövlük yoxlaması, girişə nəzarət, gələcəkdə bulud</strong>.<br><br>
+    Bunların hamısını əl ilə yazmaq — <strong>obyekt yaddaşını yenidən ixtira etməkdir</strong>.
+  </div>
+</section>
+
+<!-- ═════ 4 ═════ -->
+<section id="s4">
+  <p class="sec-num">04</p>
+  <h2>Yol 3 — Obyekt yaddaşı</h2>
+
+  <h3>Nədir</h3>
+
+  <p><strong>Obyekt yaddaşı</strong> (<em>object storage</em>) — faylları saxlamaq üçün <strong>xüsusi olaraq yaradılmış</strong> sistemdir. Baza deyil. Fayl sistemi deyil. Üçüncü şey.</p>
+
+  <div class="callout blue">
+    <span class="k">Ən yaxşı bənzətmə — poçt saxlama kamerası</span>
+    Vağzalda çamadanı təhvil verirsiniz. Sizə <strong>nömrə</strong> verirlər.<br><br>
+    Çamadanı geri almaq üçün — <strong>yalnız nömrə</strong> lazımdır. Nə rəfin nömrəsi, nə otağın adı, nə də kameranın daxili quruluşu sizi maraqlandırmır.<br><br>
+    Kamera da çamadanın <em>içində nə olduğunu bilmir</em>. Və <strong>bilməməlidir</strong>. Onun işi — saxlamaq və nömrə ilə qaytarmaq.
+  </div>
+
+  <p>Obyekt yaddaşı da <strong>tam olaraq belədir</strong>:</p>
+
+  <div class="kod">
+<pre>Fayl VER   →  açar AL
+             "SIYEZEN/2026/07/13/4f51650d....pdf"
+
+açar VER   →  Fayl AL</pre>
+  </div>
+
+  <p>Bu qədər. Sadə interfeys — <strong>böyük güc</strong>.</p>
+
+  <h3>Üç yolun müqayisəsi</h3>
+
+  <div class="muq">
+    <div class="muq-k pis">
+      <h4>① Baza (BLOB)</h4>
+      <ul>
+        <li>Yedək 20 saat</li>
+        <li>Keş korlanır</li>
+        <li><code>SELECT *</code> 20 MB çəkir</li>
+        <li>Baza faylı başa düşmür</li>
+        <li>✓ Tranzaksiya var</li>
+      </ul>
+      <div class="verdikt">RƏDD</div>
+    </div>
+    <div class="muq-k orta">
+      <h4>② Fayl sistemi</h4>
+      <ul>
+        <li>Sadə, tanış</li>
+        <li>Baza yüngül</li>
+        <li>✗ Köçürmə əl ilə</li>
+        <li>✗ Bütövlük yoxlaması yox</li>
+        <li>✗ Girişə nəzarət yox</li>
+      </ul>
+      <div class="verdikt">KİFAYƏT DEYİL</div>
+    </div>
+    <div class="muq-k yaxsi">
+      <h4>③ Obyekt yaddaşı</h4>
+      <ul>
+        <li>Köçürmə hazır</li>
+        <li>Hash yoxlaması hazır</li>
+        <li>Müvəqqəti link hazır</li>
+        <li>Buluda köçmə asan</li>
+        <li>Versiyalama var</li>
+      </ul>
+      <div class="verdikt">SEÇİLDİ</div>
+    </div>
+  </div>
+
+  <h3>Baza ilə obyekt yaddaşı — birlikdə işləyir</h3>
+
+  <p>Diqqət: biz bazadan <strong>imtina etmirik</strong>. Onlar <em>fərqli işlər</em> görür:</p>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>PostgreSQL</th><th>MinIO</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Nə saxlayır</strong></td><td>Metadata: ad, ölçü, tarix, kim, status</td><td>Faylın <strong>özü</strong> — baytlar</td></tr>
+      <tr><td><strong>Nə edə bilir</strong></td><td>Axtarış, filtr, birləşdirmə, hesablama</td><td>Saxla, qaytar, sil</td></tr>
+      <tr><td><strong>Ölçüsü</strong></td><td>Kiçik — 200 MB</td><td>Böyük — 180 GB</td></tr>
+      <tr><td><strong>Əlaqə</strong></td><td colspan="2" style="text-align:center;"><code class="inl">obyekt_acari</code> sütunu — <strong>körpü budur</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="kod">
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt">-- Bazada BELƏ görünür (faylın ÖZÜ yoxdur!)</span>
+SELECT id, orijinal_ad, olcu_bayt, obyekt_acari, sha256
+FROM zavod_sened.fayl;
+
+ id │  orijinal_ad   │ olcu_bayt │ obyekt_acari                            │ sha256
+────┼────────────────┼───────────┼─────────────────────────────────────────┼──────────
+  1 │ test_qaime.pdf │     43288 │ SIYEZEN/2026/07/13/4f51650d1a7f....pdf  │ 6df094...
+                                   <span class="cmt">↑ BU, MinIO-DAKI ÜNVANDIR</span></pre>
+  </div>
+
+  <p>Baza deyir: <em>«fayl orada, bu açar altında»</em>. Faylın özü MinIO-dadır.</p>
+</section>
+
+<!-- ═════ 5 ═════ -->
+<section id="s5">
+  <p class="sec-num">05</p>
+  <h2>Obyekt yaddaşının lüğəti</h2>
+
+  <p>Dörd söz. Onları bilməsəniz, sənədləri oxuya bilməzsiniz.</p>
+
+  <table class="nn">
+    <thead><tr><th>Söz</th><th>Nə deməkdir</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>bucket<br><span style="color:#7a8a99;">(vedrə)</span></td>
+        <td>
+          <strong>Ən üst səviyyəli qab.</strong> Bir layihə = bir bucket, adətən.<br><br>
+          Bizdə: <code class="inl">zarat-sened</code><br><br>
+          Qovluqdan fərqi: bucket <strong>iç-içə olmur</strong>. Onun içində bucket ola bilməz. Yalnız obyektlər.
+        </td>
+      </tr>
+      <tr>
+        <td>object<br><span style="color:#7a8a99;">(obyekt)</span></td>
+        <td>
+          <strong>Bir fayl.</strong> Amma «fayl» sözündən qəsdən qaçırlar — çünki obyektin <em>qovluq yolu</em> yoxdur, <strong>açarı</strong> var.
+        </td>
+      </tr>
+      <tr>
+        <td>key<br><span style="color:#7a8a99;">(açar)</span></td>
+        <td>
+          <strong>Obyektin adı — tam və unikal.</strong><br><br>
+          <code class="inl">SIYEZEN/2026/07/13/4f51650d.pdf</code><br><br>
+          ⚠️ Diqqət: burada <code class="inl">/</code> işarələri var, amma <strong>qovluq yoxdur!</strong> Bu, sadəcə uzun bir addır. MinIO onu qovluq kimi <em>göstərir</em> (rahat olsun deyə), amma daxildə hər şey <strong>düz siyahıdır</strong>.
+        </td>
+      </tr>
+      <tr>
+        <td>metadata</td>
+        <td>
+          Obyektə yapışdırılan əlavə məlumat: <code class="inl">Content-Type: application/pdf</code>, ölçü, tarix.<br><br>
+          Biz əsas metadata-nı <strong>PostgreSQL-də</strong> saxlayırıq — orada axtarış edə bilirik.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">Ən çox çaşdıran məqam</span>
+    <code class="inl">SIYEZEN/2026/07/13/fayl.pdf</code> — bu, <strong>DÖRD QOVLUQ DEYİL</strong>.<br><br>
+    Bu, <strong>bir sətirdir</strong> — obyektin adı. İçində <code class="inl">/</code> simvolu var, vəssalam.<br><br>
+    MinIO konsolu onu qovluq ağacı kimi çəkir — <em>gözə xoş gəlsin deyə</em>. Daxildə isə bucket-də sadəcə minlərlə obyekt var, hərəsinin uzun adı ilə.<br><br>
+    <strong>Niyə bu vacibdir:</strong> «qovluğu yenidən adlandırmaq» əməliyyatı <em>yoxdur</em>. Hər obyekti təkbətək köçürməlisiniz.
+  </div>
+</section>
+
+<!-- ═════ 6 ═════ -->
+<section id="s6">
+  <p class="sec-num">06</p>
+  <h2>Niyə «S3 uyğun» vacibdir</h2>
+
+  <p>MinIO haqqında hər yerdə yazılır: <em>«S3-compatible»</em>. Bu, nə deməkdir və niyə bizə lazımdır?</p>
+
+  <h3>S3 nədir</h3>
+
+  <p><strong>Amazon S3</strong> — dünyanın ən çox işlədilən obyekt yaddaşıdır. 2006-cı ildən bəri. O qədər yayılıb ki, onun <strong>interfeysi standarta çevrilib</strong>.</p>
+
+  <p>«S3 uyğun» deməkdir: <strong>bu sistem S3 ilə eyni dildə danışır</strong>. Eyni əmrlər, eyni cavablar.</p>
+
+  <h3>Bizə nə verir</h3>
+
+  <div class="kod">
+<pre><span class="cmt"># Bu gün — MinIO, öz serverimizdə:</span>
+client = Minio(<span class="str">"localhost:9000"</span>, access_key=..., secret_key=...)
+client.put_object(<span class="str">"zarat-sened"</span>, acar, data, length)
+
+<span class="cmt"># Sabah — Amazon buludunda:</span>
+client = Minio(<span class="str">"s3.amazonaws.com"</span>, access_key=..., secret_key=...)
+client.put_object(<span class="str">"zarat-sened"</span>, acar, data, length)
+
+<span class="cmt">#         ↑ YALNIZ ÜNVAN DƏYİŞDİ. KOD EYNİDİR.</span></pre>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Bu, strateji qərardır</span>
+    Bu gün zavodun öz serveri var — <strong>internet olmasa da işləməlidir</strong>.<br><br>
+    Sabah şirkət buluda keçə bilər. O gün <strong>bir sətir dəyişəcək</strong> — ünvan.<br><br>
+    Standarta bağlanmaq <em>indi</em> heç nəyə başa gəlmir, <em>sonra</em> aylarla iş qazandırır.
+  </div>
+
+  <p>Eyni məntiq başqa yerdə də var: Google Cloud Storage, Cloudflare R2, Backblaze B2 — <strong>hamısı S3 uyğundur</strong>. Kod dəyişməyəcək.</p>
+</section>
+
+<!-- ═════ 7 ═════ -->
+<section id="s7">
+  <p class="sec-num">07</p>
+  <h2>MinIO — niyə məhz o</h2>
+
+  <table class="nn">
+    <thead><tr><th>Xüsusiyyət</th><th>Bizim üçün nə deməkdir</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Yerli işləyir</td>
+        <td>Zavodda internet kəsilsə də, mühasib sənəd yükləyə bilər. <strong>P1 prinsipi:</strong> edge müstəqildir.</td>
+      </tr>
+      <tr>
+        <td>S3 uyğun</td>
+        <td>Sabah buluda köçsək — kod dəyişmir.</td>
+      </tr>
+      <tr>
+        <td>Bir binar fayl</td>
+        <td>Nə Docker, nə Kubernetes, nə klaster. <code class="inl">brew install</code> və işə düşür. <strong>3 nəfərlik zavod üçün doğru ölçü.</strong></td>
+      </tr>
+      <tr>
+        <td>Veb konsol</td>
+        <td>Brauzerdən faylları görmək olar — <code class="inl">:9001</code>. Sazlamada əvəzsizdir.</td>
+      </tr>
+      <tr>
+        <td>Versiyalama</td>
+        <td>Eyni açara ikinci fayl yazsanız, köhnəsi <em>itmir</em> (aktivləşdirsək).</td>
+      </tr>
+      <tr>
+        <td>Açıq mənbə</td>
+        <td>Lisenziya xərci yoxdur.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>İki port — qarışdırmayın</h3>
+
+  <table class="tbl">
+    <thead><tr><th>Port</th><th>Nədir</th><th>Kim işlədir</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>9000</strong></td>
+        <td><strong>API</strong> — proqramların danışdığı qapı</td>
+        <td>FastAPI, sync işçisi, AI agenti, <code class="inl">mc</code> klienti</td>
+      </tr>
+      <tr>
+        <td><strong>9001</strong></td>
+        <td><strong>Konsol</strong> — brauzer interfeysi</td>
+        <td>İnsan — siz, sazlama üçün</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="k">Bunu qarışdırmaq — ən çox rast gəlinən səhv</span>
+    <code class="inl">.env</code>-də <code class="inl">MINIO_URL=http://localhost:9001</code> yazsanız — proqram <strong>işləməyəcək</strong>. Çünki 9001 insanlar üçündür, proqramlar üçün deyil.<br><br>
+    <strong>Proqram həmişə 9000-ə qoşulur.</strong>
+  </div>
+</section>
+
+<!-- ═════ 8 ═════ -->
+<section id="s8">
+  <p class="sec-num">08</p>
+  <h2>Bizim açar sxemi — hər hissəsi</h2>
+
+  <p>Faylı MinIO-ya qoyanda ona açar veririk. Açarı <strong>necə</strong> qurmaq — mühüm dizayn qərarıdır. Bizimki belədir:</p>
+
+  <div class="acar">
+    <div class="acar-x">
+      <span class="p1">SIYEZEN</span>/<span class="p2">2026</span>/<span class="p2">07</span>/<span class="p2">13</span>/<span class="p3">4f51650d1a7f40ed8c870eab7a9d1fd4</span><span class="p4">.pdf</span>
+    </div>
+    <div class="acar-c">
+      &nbsp;&nbsp;↑zavod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑&nbsp;&nbsp;&nbsp;&nbsp;tarix&nbsp;&nbsp;&nbsp;&nbsp;↑&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑UUID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑tip
+    </div>
+    <div class="acar-izah">
+      <div>
+        <div class="t">SIYEZEN</div>
+        <div class="d">Zavod kodu. Sabah ikinci zavod açılsa, faylları qarışmaz.</div>
+      </div>
+      <div>
+        <div class="t">2026 / 07 / 13</div>
+        <div class="d">Tarix. Köhnə faylları arxivləmək və ya silmək asan olur.</div>
+      </div>
+      <div>
+        <div class="t">4f51650d...</div>
+        <div class="d">UUID — təsadüfi unikal ad. Toqquşma olmur.</div>
+      </div>
+      <div>
+        <div class="t">.pdf</div>
+        <div class="d">Uzantı. Brauzer və alətlər tipi bilir.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Niyə UUID, orijinal ad yox?</h3>
+
+  <p>Ən vacib sual. Cavab — <strong>toqquşma</strong>.</p>
+
+  <div class="kod">
+<pre><span class="cmt">-- Səhv: orijinal adı açar kimi işlətsək</span>
+Mühasib A yükləyir:  qaime.pdf   →  SIYEZEN/2026/07/13/qaime.pdf
+Mühasib B yükləyir:  qaime.pdf   →  SIYEZEN/2026/07/13/qaime.pdf
+
+                                     <span class="cmt">↑ İKİNCİSİ BİRİNCİNİ ƏZDİ!</span>
+                                     <span class="cmt">  Birinci qaimə ƏBƏDİ İTDİ.</span></pre>
+  </div>
+
+  <p>Telefondan gələn şəkillərin adı çox vaxt <code class="inl">IMG_0001.jpg</code> olur. Gündə <strong>onlarla</strong> toqquşma olardı.</p>
+
+  <div class="kod">
+<pre><span class="cmt">-- Düzgün: UUID</span>
+Mühasib A:  qaime.pdf  →  SIYEZEN/2026/07/13/4f51650d1a7f40ed....pdf
+Mühasib B:  qaime.pdf  →  SIYEZEN/2026/07/13/9c3ab27e5f1204bb....pdf
+
+                          <span class="cmt">↑ Toqquşma RİYAZİ CƏHƏTDƏN mümkünsüzdür</span></pre>
+  </div>
+
+  <div class="callout key">
+    <span class="k">Bəs orijinal ad harada qalır?</span>
+    <strong>Bazada.</strong> <code class="inl">zavod_sened.fayl.orijinal_ad</code> sütununda.<br><br>
+    Mühasib panelə baxanda <code class="inl">qaime_2026_07_13.pdf</code> görür — çünki bazadan oxuyuruq.<br>
+    MinIO-da isə fayl UUID adı ilə oturur — çünki orada <strong>unikallıq</strong> vacibdir, gözəllik yox.<br><br>
+    <strong>Hər sistem öz işini görür.</strong>
+  </div>
+
+  <h3>UUID nə qədər təhlükəsizdir?</h3>
+
+  <p>UUID — 128 bitlik təsadüfi rəqəmdir. Neçə variant var?</p>
+
+  <div class="kod">
+<pre>2^122 ≈ 5 300 000 000 000 000 000 000 000 000 000 000 000
+
+Saniyədə 1 milyard UUID yaratsanız,
+50%-lik toqquşma ehtimalına çatmaq üçün
+<span class="kw">85 il</span> lazımdır.
+
+Bizim gündə 100 faylımız var.</pre>
+  </div>
+</section>
+
+<!-- ═════ 9 ═════ -->
+<section id="s9">
+  <p class="sec-num">09</p>
+  <h2>Quraşdırma — INTEL (zavod)</h2>
+
+  <div class="addim">
+    <div class="a">
+      <h4>Proqramları quraşdırın</h4>
+      <p>İki şey lazımdır: <strong>server</strong> (faylları saxlayan) və <strong>klient</strong> (əmr sətrindən idarə edən).</p>
+      <div class="kod">
+        <span class="mas">INTEL</span>
+        <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>brew install minio/stable/minio minio/stable/mc
+
+<span class="cmt"># Yoxlayaq — ikisi də quruldumu?</span>
+which minio mc</pre>
+      </div>
+      <table class="nn">
+        <thead><tr><th>Nə</th><th>Niyə</th></tr></thead>
+        <tbody>
+          <tr><td>minio</td><td>Serverin özü — faylları saxlayır, API verir</td></tr>
+          <tr><td>mc</td><td><em>MinIO Client</em> — terminaldan idarə. <code class="inl">ls</code>, <code class="inl">cp</code>, <code class="inl">rm</code> kimi əmrlər</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="a">
+      <h4>Data qovluğu yaradın</h4>
+      <p>MinIO fayları harasa yazmalıdır. Bu qovluğu <strong>heç vaxt əl ilə dəyişməyin</strong> — MinIO orada öz strukturunu qurur.</p>
+      <div class="kod">
+        <span class="mas">INTEL</span>
+        <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>mkdir -p /usr/local/var/minio</pre>
+      </div>
+      <div class="callout warn">
+        <span class="k">Niyə məhz bu yol</span>
+        Intel Mac-də Homebrew <code class="inl">/usr/local</code>-dadır. M4-də isə <code class="inl">/opt/homebrew</code>. Bu, Apple-ın çip keçidindən qalan fərqdir.<br><br>
+        <strong>Yolu qarışdırsanız</strong> — MinIO başlayar, amma boş qovluqda. Fayllarınız «yoxa çıxar» (əslində köhnə qovluqda qalar).
+      </div>
+    </div>
+
+    <div class="a">
+      <h4>Parolu təyin edin və işə salın</h4>
+      <div class="kod">
+        <span class="mas">INTEL</span>
+        <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>cd ~/Desktop/Zarat_Faza2_Zavod
+
+<span class="cmt"># Bu iki dəyişən MinIO-nun admin hesabını yaradır</span>
+export MINIO_ROOT_USER=zarat_admin
+export MINIO_ROOT_PASSWORD=Zarat2026Siyezen
+
+nohup minio server /usr/local/var/minio \
+      --address :9000 --console-address :9001 \
+      >> _LOG/minio.log 2>&1 &
+
+sleep 3
+lsof -i :9000 | grep LISTEN</pre>
+      </div>
+
+      <table class="nn">
+        <thead><tr><th>Hissə</th><th>Nə edir və niyə</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>MINIO_ROOT_USER<br>MINIO_ROOT_PASSWORD</td>
+            <td>Admin hesabı. <strong>İlk dəfə</strong> işə salanda yaranır.<br><br>⚠️ <strong>Parolda <code class="inl">!</code> işarəsi olmasın!</strong> Bash onu «tarixçə genişlənməsi» kimi başa düşür və əmri korlayır. Bu, bizi bir dəfə yandırıb.</td>
+          </tr>
+          <tr>
+            <td>nohup ... &amp;</td>
+            <td><code class="inl">nohup</code> — «terminal bağlansa da işləməyə davam et».<br><code class="inl">&amp;</code> — «fonda işlə, terminalı bloklama».<br><br>Bunsuz terminal pəncərəsini bağlayan kimi MinIO ölər.</td>
+          </tr>
+          <tr>
+            <td>--address :9000</td>
+            <td>API portu — <strong>proqramlar</strong> bura qoşulur.</td>
+          </tr>
+          <tr>
+            <td>--console-address :9001</td>
+            <td>Veb konsol — <strong>insan</strong> bura qoşulur.</td>
+          </tr>
+          <tr>
+            <td>&gt;&gt; _LOG/minio.log 2&gt;&amp;1</td>
+            <td>Bütün çıxışı (həm normal, həm xəta) logga yaz. <strong>Nəsə sınsa — cavab oradadır.</strong></td>
+          </tr>
+          <tr>
+            <td>lsof -i :9000</td>
+            <td>«Bu portu kim tutub?» — LISTEN görsək, server qalxıb.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="a">
+      <h4>Klienti qoşun (alias)</h4>
+      <p><strong>Alias</strong> — serverin qısa adı. Hər dəfə ünvan və parol yazmamaq üçün.</p>
+      <div class="kod">
+        <span class="mas">INTEL</span>
+        <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>mc alias set edge http://localhost:9000 zarat_admin Zarat2026Siyezen
+
+<span class="cmt"># İndi "edge" sözü bu serveri bildirir</span>
+mc admin info edge</pre>
+      </div>
+      <p><code class="inl">mc admin info</code> serverin vəziyyətini göstərir. İşləyirsə — alias və parol <strong>doğrudur</strong>.</p>
+    </div>
+
+    <div class="a">
+      <h4>Bucket yaradın</h4>
+      <div class="kod">
+        <span class="mas">INTEL</span>
+        <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>mc mb edge/zarat-sened
+mc ls edge</pre>
+      </div>
+      <div class="callout err">
+        <span class="k">Bizi yandıran incəlik</span>
+        Biz əvvəlcə <code class="inl">mc mb --ignore-existing edge/zarat-sened</code> yazmışdıq.<br><br>
+        Bu bayraq <strong>xətanı udur</strong> — bucket yaranmasa da, heç nə demir. Biz «yarandı» sandıq, sonra fayl yükləyəndə <code class="inl">Bucket does not exist</code> aldıq.<br><br>
+        <strong>Dərs:</strong> ilk dəfə bayraqsız işlədin — xətanı görün. <code class="inl">--ignore-existing</code> yalnız skriptlərdə, təkrar icra üçün.
+      </div>
+    </div>
+
+    <div class="a">
+      <h4>Sınayın</h4>
+      <div class="kod">
+        <span class="mas">INTEL</span>
+        <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>echo <span class="str">"Zarat test fayli"</span> &gt; /tmp/test.txt
+
+mc cp /tmp/test.txt edge/zarat-sened/test.txt
+mc ls edge/zarat-sened
+mc cat edge/zarat-sened/test.txt</pre>
+      </div>
+      <p>Mətn geri gəlsə — <strong>MinIO tam işləyir</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════ 10 ═════ -->
+<section id="s10">
+  <p class="sec-num">10</p>
+  <h2>Quraşdırma — M4 (mərkəz)</h2>
+
+  <p>Eyni addımlar, <strong>iki fərqlə</strong>:</p>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>INTEL</th><th>M4</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Data yolu</strong></td><td><code class="inl">/usr/local/var/minio</code></td><td class="o"><code class="inl">/opt/homebrew/var/minio</code></td></tr>
+      <tr><td><strong>Alias adı</strong></td><td><code class="inl">edge</code></td><td class="o"><code class="inl">merkez</code></td></tr>
+      <tr><td>Parol</td><td colspan="2" style="text-align:center;"><strong>EYNİ olmalıdır</strong> — yoxsa köçürmə işləməz</td></tr>
+    </tbody>
+  </table>
+
+  <div class="kod">
+    <span class="mas m4">M4</span>
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre>brew install minio/stable/minio minio/stable/mc
+mkdir -p /opt/homebrew/var/minio
+
+cd ~/Desktop/Zarat_Faza2_Zavod
+export MINIO_ROOT_USER=zarat_admin
+export MINIO_ROOT_PASSWORD=Zarat2026Siyezen
+
+nohup minio server /opt/homebrew/var/minio \
+      --address :9000 --console-address :9001 \
+      &gt;&gt; _LOG/minio.log 2&gt;&amp;1 &amp;
+
+sleep 4
+lsof -i :9000 | grep LISTEN
+
+mc alias set merkez http://localhost:9000 zarat_admin Zarat2026Siyezen
+mc mb merkez/zarat-sened
+mc ls merkez</pre>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Əgər "Exit 1" görsəniz</span>
+    Deməli MinIO <strong>artıq işləyir</strong> — port tutulub, ikinci nüsxə qalxa bilmir.<br><br>
+    Bu, <strong>xəta deyil</strong>. <code class="inl">lsof -i :9000</code> ilə yoxlayın — LISTEN varsa, hər şey qaydasındadır.
+  </div>
+</section>
+
+<!-- ═════ 11 ═════ -->
+<section id="s11">
+  <p class="sec-num">11</p>
+  <h2>Şəbəkə testi — həlledici an</h2>
+
+  <p>İndiyə qədər hər maşın <strong>öz içində</strong> işləyirdi. Əsl sual: <strong>Intel Bakıya fayl göndərə bilirmi?</strong></p>
+
+  <div class="kod">
+    <span class="mas">INTEL</span>
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt"># Mərkəz MinIO-ya UZAQDAN alias qururuq</span>
+mc alias set uzaq http://Tariyels-MacBook-Pro.local:9000 \
+   zarat_admin Zarat2026Siyezen
+
+<span class="cmt"># Fayl göndəririk</span>
+mc cp /tmp/test.txt uzaq/zarat-sened/sebeke_testi.txt
+
+<span class="cmt"># Geri oxuyuruq — çatdımı?</span>
+mc cat uzaq/zarat-sened/sebeke_testi.txt \
+  &amp;&amp; echo <span class="str">"FAYL SINXRONIZASIYASI MUMKUNDUR"</span></pre>
+  </div>
+
+  <h3>Diqqət — IP ünvanı yoxdur!</h3>
+
+  <p><code class="inl">Tariyels-MacBook-Pro.local</code> — bu, <strong>Bonjour adıdır</strong>.</p>
+
+  <div class="callout key">
+    <span class="k">Niyə IP yazmırıq</span>
+    Ofisin Wi-Fi-si <strong>DHCP</strong> işlədir — IP ünvanları avtomatik paylanır və <em>dəyişir</em>.<br><br>
+    Bir dəfə <code class="inl">192.168.1.68</code> yazdıq. Səhəri gün router yenidən qalxdı, M4 <code class="inl">192.168.91.х</code> aldı. <strong>Bütün sistem dayandı.</strong> Səbəbi tapmaq bir saat çəkdi.<br><br>
+    <strong>Bonjour</strong> (Apple-ın texnologiyası) maşını <em>adı ilə</em> tapır — IP nə olursa olsun. Ad dəyişmir.<br><br>
+    <strong>Qayda: konfiqurasiyada IP yazmayın. Ad yazın.</strong>
+  </div>
+
+  <p>Test keçsə — M4-də konsolu açın (<code class="inl">http://localhost:9001</code>), <code class="inl">sebeke_testi.txt</code> orada görünəcək. <strong>Bu, öz gözünüzlə gördüyünüz sübutdur.</strong></p>
+</section>
+
+<!-- ═════ 12 ═════ -->
+<section id="s12">
+  <p class="sec-num">12</p>
+  <h2>Konfiqurasiya — .env</h2>
+
+  <p>Proqramlar MinIO-nun harada olduğunu haradan bilir? <code class="inl">.env</code> faylından.</p>
+
+  <div class="kod">
+    <span class="mas">INTEL</span>
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt"># 01_config/.env</span>
+
+MINIO_EDGE_URL=http://localhost:9000
+MINIO_MERKEZ_URL=http://Tariyels-MacBook-Pro.local:9000
+MINIO_ACCESS_KEY=zarat_admin
+MINIO_SECRET_KEY=Zarat2026Siyezen
+MINIO_BUCKET=zarat-sened</pre>
+  </div>
+
+  <div class="kod">
+    <span class="mas m4">M4</span>
+    <button class="kopya" onclick="kop(this)">Kopyala</button>
+<pre><span class="cmt"># M4-də TƏRSİNƏDİR — o, özü mərkəzdir</span>
+
+MINIO_EDGE_URL=http://Royas-MacBook-Pro.local:9000
+MINIO_MERKEZ_URL=http://localhost:9000
+MINIO_ACCESS_KEY=zarat_admin
+MINIO_SECRET_KEY=Zarat2026Siyezen
+MINIO_BUCKET=zarat-sened</pre>
+  </div>
+
+  <h3>Ən bahalı dərsimiz</h3>
+
+  <div class="callout err">
+    <span class="k">Konfiqurasiya ilə reallıq ayrılanda sistem SƏSSİZCƏ sınır</span>
+    Bir gündə <strong>dörd dəfə</strong> bu tələyə düşdük:<br><br>
+    <table style="width:100%;margin-top:10px;font-size:15px;border-collapse:collapse;">
+      <tr style="border-bottom:1px solid rgba(0,0,0,.1);"><td style="padding:6px 0;"><strong>PostgreSQL portu</strong></td><td>.env: 5434</td><td>həqiqətdə: 5432</td></tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,.1);"><td style="padding:6px 0;"><strong>Mərkəz ünvanı</strong></td><td>.env: 192.168.1.68</td><td>həqiqətdə: dəyişib</td></tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,.1);"><td style="padding:6px 0;"><strong>MinIO portu</strong></td><td>.env: 9010</td><td>həqiqətdə: 9000</td></tr>
+      <tr><td style="padding:6px 0;"><strong>MinIO istifadəçi</strong></td><td>.env: zaratuser</td><td>həqiqətdə: zarat_admin</td></tr>
+    </table>
+    <br>
+    Hər dəfə sistem <strong>xəta vermədi</strong> — sadəcə <em>işləmədi</em>. Səbəbi tapmaq saatlar apardı.
+  </div>
+
+  <h3>Və ən incə tələ</h3>
+
+  <div class="callout warn">
+    <span class="k">.env dəyişdi — PROSES BİLMİR</span>
+    Proqram <code class="inl">.env</code>-i <strong>bir dəfə</strong> oxuyur — işə düşəndə.<br><br>
+    Sonra <code class="inl">.env</code>-i düzəltsəniz, işləyən proses <strong>köhnə dəyərlərlə</strong> qalır. O, yeni faylı görmür.<br><br>
+    <strong>Qayda:</strong> <code class="inl">.env</code> dəyişəndən sonra <strong>hər dəfə</strong> prosesi yenidən başladın:
+    <div class="kod" style="margin-top:12px;">
+<pre>pkill -f "uvicorn api.main"
+sleep 2
+nohup uvicorn api.main:app --app-dir 03_src --port 8000 &amp;</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═════ 13 ═════ -->
+<section id="s13">
+  <p class="sec-num">13</p>
+  <h2>Panel PDF-i necə göstərəcək</h2>
+
+  <p>Mühasib panelə baxır. Solda — orijinal qaimə, sağda — AI-ın oxuduğu cədvəl. Amma PDF <strong>MinIO-dadır</strong>. Brauzer onu necə görəcək?</p>
+
+  <h3>Üç yol — ikisi pisdir</h3>
+
+  <table class="tbl">
+    <thead><tr><th>Yol</th><th>Problem</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Bucket-i açıq et</strong></td>
+        <td class="q">Bütün qaimələr internetdə. <strong>Fəlakət.</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Server faylı oxuyub ötürsün</strong></td>
+        <td class="q">Hər baxışda 20 MB serverdən keçir. 10 mühasib → server ölür.</td>
+      </tr>
+      <tr>
+        <td class="y"><strong>Presigned URL</strong></td>
+        <td class="y">Müvəqqəti, imzalanmış keçid. Brauzer <strong>birbaşa</strong> MinIO-dan çəkir.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Presigned URL nədir</h3>
+
+  <div class="kod">
+<pre><span class="cmt"># Proqram MinIO-dan xahiş edir:</span>
+url = client.presigned_get_object(
+    <span class="str">"zarat-sened"</span>,
+    <span class="str">"SIYEZEN/2026/07/13/4f51650d.pdf"</span>,
+    expires=timedelta(minutes=<span class="num">15</span>)     <span class="cmt">← 15 dəqiqə keçərlidir</span>
+)
+
+<span class="cmt"># Nəticə — belə bir keçid:</span>
+http://localhost:9000/zarat-sened/SIYEZEN/2026/07/13/4f51650d.pdf
+     ?X-Amz-Signature=a3f2...&amp;X-Amz-Expires=900&amp;...
+       <span class="cmt">↑ İMZA — MinIO onu yoxlayır</span></pre>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Niyə bu, gözəldir</span>
+    <ul>
+      <li><strong>Bucket gizli qalır</strong> — açıq deyil</li>
+      <li><strong>Server yüklənmir</strong> — brauzer birbaşa MinIO-dan çəkir</li>
+      <li><strong>Keçid müvəqqətidir</strong> — 15 dəqiqədən sonra ölür</li>
+      <li>Kimsə keçidi kopyalasa da — <strong>tezliklə yararsız olur</strong></li>
+    </ul>
+  </div>
+
+  <p>Panel modulunda bu, belə görünəcək:</p>
+
+  <div class="kod">
+<pre><span class="cmt"># R Shiny — sənəd önizləməsi</span>
+output$sened_onizleme &lt;- renderUI({
+  url &lt;- presigned_url_al(secilmis_sened()$obyekt_acari)
+  tags$iframe(src = url, width = <span class="str">"100%"</span>, height = <span class="str">"600px"</span>)
+})</pre>
+  </div>
+</section>
+
+<!-- ═════ 14 ═════ -->
+<section id="s14">
+  <p class="sec-num">14</p>
+  <h2>Biz hansı xətalara düşdük</h2>
+
+  <p>Bunlar <strong>real</strong> xətalardır — bu layihədə, bu günlərdə. Hər biri vaxt apardı.</p>
+
+  <div class="xeta">
+    <div class="xeta-h">mc: &lt;ERROR&gt; Failed to copy. Bucket `zarat-sened` does not exist.</div>
+    <div class="xeta-b">
+      <p><span class="seb">Səbəb:</span> <code class="inl">mc mb --ignore-existing</code> işlətmişdik. Bayraq xətanı uddu — bucket yaranmadı, amma heç nə demədi.</p>
+      <p><span class="hel">Həll:</span> bayraqsız <code class="inl">mc mb edge/zarat-sened</code>. Xətanı gizlətməyin.</p>
+    </div>
+  </div>
+
+  <div class="xeta">
+    <div class="xeta-h">mc: &lt;ERROR&gt; The Access Key Id you provided does not exist in our records.</div>
+    <div class="xeta-b">
+      <p><span class="seb">Səbəb:</span> alias-da yazdığımız parol MinIO-nun işə düşərkən aldığı paroldan fərqli idi.</p>
+      <p><span class="hel">Həll:</span> <code class="inl">_LOG/minio.log</code>-a baxın — MinIO başlayanda istifadəçi adını çap edir. Ya da MinIO-nu <strong>bildiyiniz parolla</strong> yenidən başladın.</p>
+    </div>
+  </div>
+
+  <div class="xeta">
+    <div class="xeta-h">{"detail":"MinIO əlçatmazdır. Servisi yoxlayın."}</div>
+    <div class="xeta-b">
+      <p><span class="seb">Səbəb:</span> MinIO işləyirdi (port 9000). Amma FastAPI <strong>köhnə .env</strong> ilə qalxmışdı — 9010 və <code class="inl">zaratuser</code> axtarırdı.</p>
+      <p><span class="hel">Həll:</span> <code class="inl">.env</code>-i düzəlt <strong>və prosesi yenidən başlat</strong>. Restart olmadan dəyişiklik görünmür.</p>
+      <p style="color:#b9781a;"><strong>Bu, ən tez-tez düşdüyümüz tələdir.</strong></p>
+    </div>
+  </div>
+
+  <div class="xeta">
+    <div class="xeta-h">[2]+ Exit 1  nohup minio server ...</div>
+    <div class="xeta-b">
+      <p><span class="seb">Səbəb:</span> MinIO <strong>onsuz da işləyirdi</strong>. İkinci nüsxə portu tuta bilmədi.</p>
+      <p><span class="hel">Həll:</span> Bu, xəta deyil. <code class="inl">lsof -i :9000</code> ilə yoxlayın — LISTEN varsa, hər şey qaydasındadır.</p>
+    </div>
+  </div>
+
+  <div class="callout key">
+    <span class="k">Ümumi qanunauyğunluq</span>
+    Bu dörd xətanın <strong>üçü</strong> eyni kökdən gəlir: <strong>konfiqurasiya ilə reallıq ayrılıb</strong>.<br><br>
+    Sistem sizə «konfiq səhvdir» demir. O, sadəcə <em>işləmir</em>. Ona görə <strong>hər dəyişiklikdən sonra yoxlayın</strong>:
+    <div class="kod" style="margin-top:12px;">
+<pre>grep "^MINIO_" 01_config/.env      <span class="cmt"># konfiq nə deyir</span>
+lsof -i :9000 | grep LISTEN        <span class="cmt"># həqiqətdə nə var</span>
+mc admin info edge                 <span class="cmt"># qoşula bilirikmi</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═════ 15 ═════ -->
+<section id="s15">
+  <p class="sec-num">15</p>
+  <h2>Lüğət</h2>
+
+  <table class="nn">
+    <thead><tr><th>Termin</th><th>Sadə dildə</th></tr></thead>
+    <tbody>
+      <tr><td>obyekt yaddaşı</td><td>Faylları saxlayan xüsusi sistem. Fayl ver → açar al. Açar ver → fayl al.</td></tr>
+      <tr><td>MinIO</td><td>Bizim işlətdiyimiz obyekt yaddaşı. Öz serverimizdə işləyir.</td></tr>
+      <tr><td>bucket</td><td>Ən üst səviyyəli qab. Bizdə: <code class="inl">zarat-sened</code>. İç-içə olmur.</td></tr>
+      <tr><td>obyekt</td><td>Bir fayl — obyekt yaddaşının dilində.</td></tr>
+      <tr><td>açar (key)</td><td>Obyektin tam adı. İçində <code class="inl">/</code> ola bilər, amma bu <strong>qovluq deyil</strong>.</td></tr>
+      <tr><td>BLOB / bytea</td><td>Faylı birbaşa bazada saxlamaq. <strong>Biz etmirik.</strong></td></tr>
+      <tr><td>S3</td><td>Amazon-un obyekt yaddaşı. İnterfeysi standarta çevrilib.</td></tr>
+      <tr><td>S3 uyğun</td><td>«S3 ilə eyni dildə danışır». Buluda köçmək asan olur.</td></tr>
+      <tr><td>UUID</td><td>128 bitlik təsadüfi unikal ad. Toqquşma praktiki olaraq mümkünsüzdür.</td></tr>
+      <tr><td>presigned URL</td><td>Müvəqqəti, imzalanmış keçid. Faylı göstərmək üçün — bucket-i açmadan.</td></tr>
+      <tr><td>mc</td><td>MinIO Client — terminal aləti. <code class="inl">ls</code>, <code class="inl">cp</code>, <code class="inl">mb</code> əmrləri.</td></tr>
+      <tr><td>alias</td><td>Serverin qısa adı: <code class="inl">edge</code>, <code class="inl">merkez</code>. Hər dəfə parol yazmamaq üçün.</td></tr>
+      <tr><td>Bonjour / mDNS</td><td>Apple-ın texnologiyası — maşını <em>adı ilə</em> tapır. IP dəyişsə də ad qalır.</td></tr>
+      <tr><td>nohup ... &amp;</td><td>«Fonda işlə, terminal bağlansa da davam et».</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═════ 16 ═════ -->
+<section id="s16">
+  <div class="xul">
+    <h3>Xülasə — altı fikir</h3>
+    <ul>
+      <li><strong>Fayl bazaya yazılmır.</strong> BLOB yedəkləməni öldürür, keşi korlayır, hər sorğunu ağırlaşdırır.</li>
+      <li><strong>Adi qovluq da kifayət deyil.</strong> Köçürmə, bütövlük, girişə nəzarət — hamısını əl ilə yazmalı olardıq.</li>
+      <li><strong>Obyekt yaddaşı üçüncü yoldur.</strong> Fayl ver → açar al. Poçt saxlama kamerası kimi.</li>
+      <li><strong>Baza və MinIO birlikdə işləyir.</strong> Baza metadata saxlayır və axtarır, MinIO faylı saxlayır. Körpü — <code class="inl">obyekt_acari</code> sütunu.</li>
+      <li><strong>UUID toqquşmanı öldürür.</strong> Orijinal ad bazada qalır — göstərmək üçün. MinIO-da unikallıq vacibdir.</li>
+      <li><strong>Konfiq ilə reallıq ayrılanda sistem SƏSSİZCƏ sınır.</strong> <code class="inl">.env</code> dəyişəndə <strong>prosesi yenidən başladın</strong>.</li>
+    </ul>
+  </div>
+
+  <h3>Nə qurduq</h3>
+
+  <ul class="siyahi">
+    <li>İki maşında MinIO — <strong>INTEL</strong> (zavod) və <strong>M4</strong> (mərkəz)</li>
+    <li>Hər ikisində <code class="inl">zarat-sened</code> bucket-i</li>
+    <li><code class="inl">.env</code>-də konfiqurasiya — hər iki maşında</li>
+    <li><strong>Sübut edilmiş:</strong> Intel Bakıya fayl göndərə bilir</li>
+    <li>Real qaimə PDF-i sistemə düşdü: <code class="inl">SIYEZEN/2026/07/13/4f51650d....pdf</code></li>
+  </ul>
+
+  <h3>Növbəti dərs</h3>
+
+  <div class="callout">
+    <span class="k">Dərs 10 — SHA-256: faylın barmaq izi</span>
+    Fayl Bakıya çatdı. Bəs <strong>düzgün</strong> çatdımı? Bir bit dəyişməyibmi?<br><br>
+    Öyrənəcəyik:
+    <ul>
+      <li>Hash nədir — və niyə şifrələmə <em>deyil</em></li>
+      <li>Niyə bir baytın dəyişməsi bütün barmaq izini dəyişir</li>
+      <li>SHA-256 necə hesablanır (praktikada — nəzəriyyəsiz)</li>
+      <li><code class="inl">sha256_yoxlandi = TRUE</code> — bu sütun nəyi sübut edir</li>
+      <li>Niyə mərkəz hash-i <strong>təkrar hesablayır</strong>, edge-in sözünə inanmır</li>
+      <li>Bonus: hash ilə <strong>dublikat aşkarlama</strong> — eyni qaimə iki dəfə yüklənibsə</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Group · Siyəzən yem zavodu · Faza 3</p>
+  <p>Dərs 09 — Fayl haradadır? Obyekt yaddaşı və MinIO</p>
+</footer>
+
+<script>
+function kop(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o = btn.textContent;
+    btn.textContent = 'Kopyalandı ✓';
+    setTimeout(()=>btn.textContent = o, 1600);
+  });
+}
+</script>
+</body>
+</html>

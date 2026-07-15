@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dərs — İki ötürmə üsulu və zavodun rəqəmsal əkizi</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --grafit:#0e1620; --polad:#17222f; --xett:#2a3b4d;
+    --tel:#5aa9e6;  --tel-d:#2c6b9e;   /* USUL 1 — MAVI (telemetriya) */
+    --tel-soft:#e9f2fa;
+    --min:#a78bfa;  --min-d:#6d4fc4;   /* USUL 2 — BƏNÖVŞƏYİ (MinIO) */
+    --min-soft:#f1eefb;
+    --teal:#2dd4bf; --teal-d:#0d9488;
+    --kehreba:#f5a524; --amber-d:#b9781a;
+    --yasil:#5bd08a; --yasil-d:#2f8f5b;
+    --qirmizi:#e5695f; --qirmizi-d:#c0453a;
+    --kagiz:#f7f5f0; --kagiz2:#efece4; --murekkeb:#1a222c;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--kagiz);color:var(--murekkeb);
+    font-family:Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.8;}
+
+  code.inl{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;
+    background:#e6e2d8;padding:1px 6px;border-radius:3px;color:#0b5f57;white-space:nowrap;}
+
+  .hero{background:radial-gradient(1000px 380px at 25% -12%,rgba(90,169,230,.18),transparent 60%),
+    radial-gradient(1000px 380px at 78% -12%,rgba(167,139,250,.20),transparent 60%),
+    linear-gradient(180deg,var(--grafit),var(--polad));
+    color:#e8eef5;padding:64px 32px 52px;
+    border-bottom:3px solid;border-image:linear-gradient(90deg,var(--tel),var(--min)) 1;}
+  .wrap{max-width:1040px;margin:0 auto;}
+  .eyebrow{font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:13px;color:var(--teal);font-weight:600;margin:0 0 14px;}
+  .hero h1{font-family:"Oswald",sans-serif;font-weight:700;
+    font-size:clamp(29px,4.6vw,49px);line-height:1.07;margin:0 0 18px;color:#fff;}
+  .hero .lede{font-size:20px;color:#c6d3df;max-width:840px;margin:0;line-height:1.7;}
+  .hero .meta{margin-top:26px;display:flex;gap:26px;flex-wrap:wrap;
+    font-family:"Oswald",sans-serif;font-size:13px;letter-spacing:.1em;
+    text-transform:uppercase;color:#7d93a8;}
+
+  .toc{background:var(--kagiz2);border-bottom:1px solid #ddd8cc;padding:24px 32px;}
+  .toc ol{max-width:1040px;margin:0 auto;padding-left:22px;columns:2;column-gap:40px;font-size:15.5px;}
+  .toc li{margin-bottom:6px;break-inside:avoid;}
+  .toc a{color:var(--teal-d);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+
+  main{max-width:1040px;margin:0 auto;padding:0 32px;}
+  section{padding:48px 0;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sec-num{font-family:"Oswald",sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.26em;color:var(--teal-d);text-transform:uppercase;margin:0 0 8px;}
+  h2{font-family:"Oswald",sans-serif;font-weight:600;
+    font-size:clamp(24px,3.4vw,33px);line-height:1.14;margin:0 0 20px;}
+  h3{font-family:"Oswald",sans-serif;font-weight:600;font-size:21px;margin:34px 0 12px;}
+  h4{font-family:"Oswald",sans-serif;font-weight:500;font-size:17.5px;
+    margin:22px 0 8px;color:#33465a;}
+  p{margin:0 0 16px;}
+
+  .callout{background:var(--kagiz2);border-left:4px solid var(--teal-d);
+    padding:18px 22px;border-radius:0 5px 5px 0;margin:22px 0;font-size:16.5px;line-height:1.7;}
+  .callout.tel{border-left-color:var(--tel-d);background:var(--tel-soft);}
+  .callout.min{border-left-color:var(--min-d);background:var(--min-soft);}
+  .callout.warn{border-left-color:var(--kehreba);background:#fbf3e2;}
+  .callout.ok{border-left-color:var(--yasil);background:#eaf7f0;}
+  .callout .k{font-family:"Oswald",sans-serif;text-transform:uppercase;
+    letter-spacing:.13em;font-size:12px;color:var(--teal-d);display:block;margin-bottom:5px;font-weight:600;}
+  .callout.tel .k{color:var(--tel-d);}
+  .callout.min .k{color:var(--min-d);}
+  .callout.warn .k{color:var(--amber-d);}
+  .callout.ok .k{color:var(--yasil-d);}
+  .callout ul{margin:10px 0 0;padding-left:20px;}
+  .callout li{margin-bottom:6px;}
+
+  /* İKİ ÜSUL YAN-YANA */
+  .iki{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:26px 0;}
+  .usul{border-radius:12px;padding:24px;border:2px solid;}
+  .usul.u1{border-color:var(--tel);background:var(--tel-soft);}
+  .usul.u2{border-color:var(--min);background:var(--min-soft);}
+  .usul .nm{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;margin-bottom:4px;}
+  .usul.u1 .nm{color:var(--tel-d);}
+  .usul.u2 .nm{color:var(--min-d);}
+  .usul h3{margin:0 0 14px;font-size:20px;}
+  .usul .ik{font-size:30px;margin-bottom:10px;}
+  .usul ul{margin:0;padding-left:18px;font-size:15px;line-height:1.7;}
+  .usul li{margin-bottom:7px;}
+  .usul .misal{margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,.1);
+    font-size:13.5px;color:#4a5c6e;}
+
+  .tbl{width:100%;border-collapse:collapse;margin:22px 0;font-size:14.5px;line-height:1.55;}
+  .tbl thead th{background:var(--polad);color:#dbe6f0;font-family:"Oswald",sans-serif;
+    font-weight:500;text-align:left;padding:11px 13px;font-size:12px;
+    text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--teal);}
+  .tbl tbody td{padding:11px 13px;border-bottom:1px solid #e3ded4;vertical-align:top;}
+  .tbl tbody tr:nth-child(even){background:var(--kagiz2);}
+  .tbl .u1-b{color:var(--tel-d);font-weight:600;}
+  .tbl .u2-b{color:var(--min-d);font-weight:600;}
+
+  /* KATEQORİYA KARTI */
+  .kat{background:#fff;border:1px solid #e3ded4;border-radius:11px;
+    margin:22px 0;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .kat-h{padding:16px 22px;display:flex;align-items:center;gap:14px;
+    border-bottom:1px solid #e8e3d9;}
+  .kat-h.u1{background:var(--tel-soft);}
+  .kat-h.u2{background:var(--min-soft);}
+  .kat-h.hib{background:linear-gradient(90deg,var(--tel-soft),var(--min-soft));}
+  .kat-h .ik{font-size:26px;}
+  .kat-h .t{font-family:"Oswald",sans-serif;font-size:19px;font-weight:600;}
+  .kat-h .rozet{margin-left:auto;font-family:"Oswald",sans-serif;font-size:10.5px;
+    letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:12px;
+    white-space:nowrap;}
+  .rozet.u1{background:var(--tel-d);color:#fff;}
+  .rozet.u2{background:var(--min-d);color:#fff;}
+  .rozet.hib{background:linear-gradient(90deg,var(--tel-d),var(--min-d));color:#fff;}
+  .kat-b{padding:6px 0;}
+
+  .sm{width:100%;border-collapse:collapse;font-size:14.5px;}
+  .sm td{padding:10px 22px;border-bottom:1px solid #f0ece3;vertical-align:top;}
+  .sm tr:last-child td{border-bottom:none;}
+  .sm td:first-child{width:32%;font-weight:600;color:#2a3644;}
+  .sm td:nth-child(2){width:30%;font-family:ui-monospace,Menlo,monospace;
+    font-size:12.5px;color:#6d4fc4;}
+  .sm .cihaz{color:#7a8a99;font-size:13px;}
+
+  ul.siyahi{list-style:none;padding:0;margin:18px 0;}
+  ul.siyahi li{padding:10px 15px 10px 40px;position:relative;background:var(--kagiz2);
+    border-radius:6px;margin-bottom:7px;font-size:16px;line-height:1.6;
+    border-left:3px solid var(--teal-d);}
+  ul.siyahi li::before{content:"▸";position:absolute;left:15px;top:9px;
+    color:var(--teal-d);font-weight:bold;}
+
+  /* AXIN */
+  .axin{background:var(--grafit);border-radius:12px;padding:26px 22px;margin:26px 0;overflow-x:auto;}
+  .axin-bas{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;margin:0 0 16px;text-align:center;}
+  .axin-bas.u1{color:var(--tel);} .axin-bas.u2{color:var(--min);}
+  .axin-sira{display:flex;align-items:center;justify-content:center;min-width:600px;}
+  .qutu{flex:1;min-width:96px;background:var(--polad);border:1px solid var(--xett);
+    border-radius:8px;padding:13px 9px;text-align:center;}
+  .qutu.u1{border-color:var(--tel-d);}
+  .qutu.u2{border-color:var(--min-d);}
+  .qutu .i{font-size:20px;margin-bottom:5px;}
+  .qutu .ad{font-family:"Oswald",sans-serif;font-size:11px;text-transform:uppercase;
+    letter-spacing:.04em;color:#c6d3df;line-height:1.3;}
+  .qutu .al{font-size:9.5px;color:#7d93a8;margin-top:3px;}
+  .ox{font-size:17px;padding:0 5px;flex:0 0 auto;}
+  .ox.u1{color:var(--tel);} .ox.u2{color:var(--min);}
+
+  .xul{background:linear-gradient(180deg,var(--polad),var(--grafit));color:#dbe6f0;
+    border-radius:12px;padding:30px 32px;margin:30px 0;}
+  .xul h3{color:var(--teal);margin-top:0;}
+  .xul ul{padding-left:20px;} .xul li{margin-bottom:9px;}
+
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:24px 0;}
+  .stat .s{background:#fff;border:1px solid #e3ded4;border-radius:10px;padding:18px;text-align:center;}
+  .stat .s .n{font-family:"Oswald",sans-serif;font-size:32px;font-weight:600;color:var(--murekkeb);}
+  .stat .s.u1 .n{color:var(--tel-d);} .stat .s.u2 .n{color:var(--min-d);}
+  .stat .s .l{font-size:13px;color:#7a8a99;margin-top:5px;}
+
+  footer{background:var(--grafit);color:#8ea2b4;padding:32px;text-align:center;font-size:13.5px;}
+  footer .d{font-family:"Oswald",sans-serif;letter-spacing:.14em;text-transform:uppercase;
+    font-size:13px;background:linear-gradient(90deg,var(--tel),var(--min));
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+
+  @media print{.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    section{page-break-inside:avoid;}}
+  @media (max-width:820px){
+    .hero{padding:46px 20px 38px;} main{padding:0 20px;} .toc ol{columns:1;}
+    .iki{grid-template-columns:1fr;} .sm td{display:block;width:auto !important;}
+    .sm td:first-child{padding-bottom:2px;} .sm td:nth-child(2){padding-top:2px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Zarat · Faza 3 · Rəqəmsal əkiz</p>
+    <h1>İki ötürmə üsulu və<br>zavodun rəqəmsal əkizi</h1>
+    <p class="lede">Siyəzən zavodunu Bakıda tam bərpa etmək üçün <strong>hər şeyi</strong> ötürməliyik — sensor rəqəmindən video kameraya, qaimədən səsli hesabata qədər. Amma hamısı eyni yolla getmir. <strong>İki ayrı boru xətti</strong> var. Bu dərs onların hər ikisini, və zavoddan gələ bilən <em>bütün</em> məlumat növlərini kataloqlaşdırır.</p>
+    <div class="meta">
+      <span>Tam kataloq</span>
+      <span>İki üsul</span>
+      <span>~45 dəqiqə</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Rəqəmsal əkiz nədir</a></li>
+    <li><a href="#s2">İki üsul — əsas fərq</a></li>
+    <li><a href="#s3">Hansı məlumat hansı üsulla</a></li>
+    <li><a href="#s4">Üsul 1 — telemetriya kataloqu</a></li>
+    <li><a href="#s5">Üsul 2 — sənəd və media kataloqu</a></li>
+    <li><a href="#s6">Anbar sənədləri</a></li>
+    <li><a href="#s7">Mühasibat və maliyyə</a></li>
+    <li><a href="#s8">Foto, video, səs</a></li>
+    <li><a href="#s9">Cihazlar və qurğular</a></li>
+    <li><a href="#s10">Lokal saxlama — necə</a></li>
+    <li><a href="#s11">Hibrid hallar</a></li>
+    <li><a href="#s12">Tam mənzərə — rəqəmsal əkiz</a></li>
+    <li><a href="#s13">Xülasə</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ═══ 1 ═══ -->
+<section id="s1">
+  <p class="sec-num">01</p>
+  <h2>Rəqəmsal əkiz nədir</h2>
+
+  <p><strong>Rəqəmsal əkiz</strong> (<em>digital twin</em>) — fiziki obyektin kompüterdəki tam surətidir. Zavod Siyəzəndədir, amma onun <em>hər detalı</em> Bakıda rəqəmsal formada yaşayır.</p>
+
+  <p>Direktor Bakıda oturur və bilir:</p>
+  <ul class="siyahi">
+    <li>Bu dəqiqə silo 3-də temperatur neçədir</li>
+    <li>Dünən hansı qaimələr gəldi, anbara nə düşdü</li>
+    <li>Bu həftə hansı reseptlə nə qədər yem istehsal olundu</li>
+    <li>Gecə növbəsində kamera nəyi qeydə aldı</li>
+    <li>Laboratoriya son partiyanın proteinini neçə ölçdü</li>
+  </ul>
+
+  <p>Bunun üçün zavoddan <strong>hər cür məlumat</strong> axmalıdır. Amma məlumatlar müxtəlifdir — biri 100 bayt, digəri 2 qiqabayt. Onları <strong>eyni boru ilə</strong> daşımaq olmaz.</p>
+
+  <div class="callout ok">
+    <span class="k">Əsas ideya</span>
+    Rəqəmsal əkiz <strong>iki ayaq</strong> üstündə dayanır:<br><br>
+    <strong>Üsul 1 — telemetriya</strong>: nə <em>baş verir</em> (canlı ölçmələr)<br>
+    <strong>Üsul 2 — sənəd/media</strong>: nə <em>qeydə alınır</em> (fayllar)<br><br>
+    Biri olmadan əkiz natamamdır. Sensor deyir «temperatur 32°», sənəd deyir «bu partiya bu reseptlə hazırlandı». <strong>İkisi birləşəndə tam mənzərə yaranır.</strong>
+  </div>
+</section>
+
+<!-- ═══ 2 ═══ -->
+<section id="s2">
+  <p class="sec-num">02</p>
+  <h2>İki üsul — əsas fərq</h2>
+
+  <div class="iki">
+    <div class="usul u1">
+      <div class="ik">📡</div>
+      <div class="nm">Üsul 1</div>
+      <h3>Telemetriya axını</h3>
+      <ul>
+        <li>Kiçik — 100 bayt</li>
+        <li>Tez-tez — saniyələrlə</li>
+        <li>Struktur <strong>sabit</strong></li>
+        <li>Faylsız — sadəcə rəqəm</li>
+        <li>İtsə — dözülən</li>
+        <li>Dəyişməz — keçmiş fakt</li>
+      </ul>
+      <div class="misal">
+        <strong>Yol:</strong> Sensor → MQTT → baza → sync → Bakı<br>
+        <strong>Alət:</strong> 07_panel/app.R (Faza 2)
+      </div>
+    </div>
+
+    <div class="usul u2">
+      <div class="ik">📦</div>
+      <div class="nm">Üsul 2</div>
+      <h3>Sənəd və media axını</h3>
+      <ul>
+        <li>Böyük — MB, hətta GB</li>
+        <li>Seyrək — gündə onlarla</li>
+        <li>Struktur <strong>naməlum</strong></li>
+        <li>Fayl var — PDF, foto, video</li>
+        <li>İtsə — <strong>fəlakət</strong></li>
+        <li>Dəyişir — versiyalar, təsdiqlər</li>
+      </ul>
+      <div class="misal">
+        <strong>Yol:</strong> Fayl → MinIO, metadata → baza → sync<br>
+        <strong>Alət:</strong> MinIO + SHA-256 (Faza 3)
+      </div>
+    </div>
+  </div>
+
+  <h3>Niyə ikisi ayrıdır</h3>
+
+  <p>Təsəvvür edin: bir boru ilə həm <strong>su damcısı</strong>, həm <strong>daş</strong> daşımaq istəyirsiniz. Damcı üçün nazik, sürətli boru lazımdır. Daş üçün geniş, möhkəm. Bir boru ikisini də pis daşıyar.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Xüsusiyyət</th><th>Üsul 1 — telemetriya</th><th>Üsul 2 — sənəd/media</th></tr></thead>
+    <tbody>
+      <tr><td>Tipik ölçü</td><td class="u1-b">100 bayt</td><td class="u2-b">2 MB – 2 GB</td></tr>
+      <tr><td>Tezlik</td><td class="u1-b">5 saniyədə</td><td class="u2-b">gündə 10–200</td></tr>
+      <tr><td>Baza yükü</td><td class="u1-b">yüngül — birbaşa yazılır</td><td class="u2-b">yalnız metadata</td></tr>
+      <tr><td>Fayl harada</td><td class="u1-b">yoxdur</td><td class="u2-b">MinIO obyekt yaddaşı</td></tr>
+      <tr><td>Bütövlük</td><td class="u1-b">lazım deyil</td><td class="u2-b">SHA-256 mütləq</td></tr>
+      <tr><td>AI necə işlədir</td><td class="u1-b">rəqəmləri analiz edir</td><td class="u2-b">faylı oxuyur (OCR, görüntü)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══ 3 ═══ -->
+<section id="s3">
+  <p class="sec-num">03</p>
+  <h2>Hansı məlumat hansı üsulla</h2>
+
+  <p>Sadə qayda: <strong>«bu, bir rəqəmdir, yoxsa bir fayl?»</strong></p>
+
+  <div class="iki">
+    <div class="usul u1">
+      <div class="nm">Üsul 1 seç, əgər...</div>
+      <ul>
+        <li>Cihaz avtomatik ölçür</li>
+        <li>Nəticə bir rəqəmdir (temperatur, çəki)</li>
+        <li>Fasiləsiz gəlir</li>
+        <li>Struktur həmişə eynidir</li>
+        <li>İnsan müdaxiləsi yoxdur</li>
+      </ul>
+    </div>
+    <div class="usul u2">
+      <div class="nm">Üsul 2 seç, əgər...</div>
+      <ul>
+        <li>Nəticə bir fayldır (PDF, JPG, MP4)</li>
+        <li>İnsan yaradır və ya təsdiqləyir</li>
+        <li>Hüquqi əhəmiyyəti var</li>
+        <li>Struktur dəyişkəndir</li>
+        <li>Böyükdür və seyrək gəlir</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Sərhəd hallar da var</span>
+    Bəzi məlumatlar <strong>hər iki üsulla</strong> gedir. Məsələn: çəki sensoru fasiləsiz ölçür (Üsul 1), amma çəki hesabatı PDF kimi imzalanıb saxlanılır (Üsul 2). Bunlara <strong>hibrid</strong> deyirik — bölmə 11-də açacağıq.
+  </div>
+</section>
+
+<!-- ═══ 4 ═══ -->
+<section id="s4">
+  <p class="sec-num">04</p>
+  <h2>Üsul 1 — telemetriya kataloqu</h2>
+
+  <p>Hazırda <strong>5 cihaz</strong> nümayiş etdiririk. Amma tam zavodda onlarla ölçmə nöqtəsi olacaq. Budur mümkün olanların kataloqu:</p>
+
+  <div class="kat">
+    <div class="kat-h u1">
+      <span class="ik">🌡️</span>
+      <span class="t">Mühit sensorları</span>
+      <span class="rozet u1">Üsul 1</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Temperatur</td><td>DS18B20, PT100</td><td class="cihaz">Silolar, anbar, istehsal sahəsi</td></tr>
+        <tr><td>Rütubət</td><td>DHT22, SHT31</td><td class="cihaz">Yem rütubəti kritikdir — kif riski</td></tr>
+        <tr><td>Hava təzyiqi</td><td>BMP280</td><td class="cihaz">Ventilyasiya nəzarəti</td></tr>
+        <tr><td>CO₂ / qaz</td><td>MH-Z19, MQ seriyası</td><td class="cihaz">Fermentasiya, təhlükəsizlik</td></tr>
+        <tr><td>Toz səviyyəsi</td><td>PMS5003</td><td class="cihaz">Partlayış riski — yem tozu</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="kat">
+    <div class="kat-h u1">
+      <span class="ik">⚖️</span>
+      <span class="t">Çəki və miqdar</span>
+      <span class="rozet u1">Üsul 1</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Bunker çəkisi</td><td>Tenzo-sensor (HX711)</td><td class="cihaz">Nə qədər xammal qalıb</td></tr>
+        <tr><td>Konveyer çəkisi</td><td>Belt scale</td><td class="cihaz">Saatda neçə ton keçir</td></tr>
+        <tr><td>Silo səviyyəsi</td><td>Ultrasəs, radar</td><td class="cihaz">Doluluq %-i</td></tr>
+        <tr><td>Maye axını</td><td>Flow meter</td><td class="cihaz">Yağ, melassa əlavəsi</td></tr>
+        <tr><td>Torba sayı</td><td>Optik sayğac</td><td class="cihaz">Qablaşdırma xətti</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="kat">
+    <div class="kat-h u1">
+      <span class="ik">⚡</span>
+      <span class="t">Enerji və avadanlıq</span>
+      <span class="rozet u1">Üsul 1</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Elektrik enerjisi</td><td>PZEM-004T</td><td class="cihaz">kWh — ton məhsula düşən enerji</td></tr>
+        <tr><td>Mühərrik cərəyanı</td><td>SCT-013</td><td class="cihaz">Yüklənmə, nasazlıq əlaməti</td></tr>
+        <tr><td>Titrəyiş</td><td>ADXL345</td><td class="cihaz">Podşipnik aşınması — prediktiv</td></tr>
+        <tr><td>Mühərrik sürəti</td><td>Enkoder, tахometr</td><td class="cihaz">Konveyer, dəyirman RPM</td></tr>
+        <tr><td>Yağ təzyiqi</td><td>Təzyiq sensoru</td><td class="cihaz">Reduktor, hidravlika</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="kat">
+    <div class="kat-h u1">
+      <span class="ik">🚪</span>
+      <span class="t">Vəziyyət və keçid</span>
+      <span class="rozet u1">Üsul 1</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Qapı / darvaza</td><td>Maqnit açar</td><td class="cihaz">Açıq/bağlı — təhlükəsizlik</td></tr>
+        <tr><td>Hərəkət</td><td>PIR sensor</td><td class="cihaz">Gecə hərəkəti, işıq nəzarəti</td></tr>
+        <tr><td>RFID keçid</td><td>RFID oxuyucu</td><td class="cihaz">İşçi/nəqliyyat giriş-çıxışı</td></tr>
+        <tr><td>Klapan mövqeyi</td><td>Limit açar</td><td class="cihaz">Açıq/qapalı vəziyyət</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout tel">
+    <span class="k">Hamısının ortaq cəhəti</span>
+    Bunlar <strong>rəqəm istehsal edir</strong> və dayanmadan göndərir. Fayl yoxdur. Struktur sabitdir: <code class="inl">cihaz_kod, qiymet, vaxt</code>.<br><br>
+    Ona görə hamısı <strong>Üsul 1</strong> ilə gedir — sensor → MQTT → edge baza → sync → Bakı. Bu, artıq işləyən boru xəttidir (Faza 2).
+  </div>
+</section>
+
+<!-- ═══ 5 ═══ -->
+<section id="s5">
+  <p class="sec-num">05</p>
+  <h2>Üsul 2 — sənəd və media kataloqu</h2>
+
+  <p>İndi əsas hissə. Zavodda dövr edən <strong>hər sənəd, hər fayl</strong> Üsul 2 ilə gedir. Onları qruplara ayıraq.</p>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">📄</span>
+      <span class="t">İlkin sənədlər (provodkalar)</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Mədaxil qaiməsi</td><td>PDF, JPG, skan</td><td class="cihaz">Xammal anbara daxil olanda</td></tr>
+        <tr><td>Məxaric qaiməsi</td><td>PDF, JPG</td><td class="cihaz">Anbardan istehsala verilən</td></tr>
+        <tr><td>Təhvil-təslim aktı</td><td>PDF, imzalı</td><td class="cihaz">İki tərəf arasında</td></tr>
+        <tr><td>Yük vərəqəsi (TTN)</td><td>PDF, skan</td><td class="cihaz">Nəqliyyat sənədi</td></tr>
+        <tr><td>Qəbul aktı</td><td>PDF</td><td class="cihaz">Keyfiyyət uyğunsuzluğu</td></tr>
+        <tr><td>Silinmə aktı</td><td>PDF</td><td class="cihaz">Zədələnmiş, xarab material</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout min">
+    <span class="k">Niyə bunlar Üsul 2</span>
+    Hər biri <strong>fiziki kağızdır</strong> — imzalı, möhürlü, hüquqi. Skan olunur, PDF/foto olur. İtsə — bərpa olunmur. Vergi yoxlaması onu tələb edə bilər.<br><br>
+    Struktur da dəyişkəndir: bir qaimədə 3 sətir, digərində 47. Ona görə <strong>fayl MinIO-da, məlumat JSONB-də</strong>. AI onu <strong>oxuyur</strong> (Dərs — Vision OCR).
+  </div>
+</section>
+
+<!-- ═══ 6 ═══ -->
+<section id="s6">
+  <p class="sec-num">06</p>
+  <h2>Anbar sənədləri</h2>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">📦</span>
+      <span class="t">Anbar əməliyyatları</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>İnventarizasiya siyahısı</td><td>Excel, PDF</td><td class="cihaz">Dövri sayım nəticəsi</td></tr>
+        <tr><td>Anbar kartı</td><td>PDF, skan</td><td class="cihaz">Hər materialın hərəkət tarixçəsi</td></tr>
+        <tr><td>Yerdəyişmə sənədi</td><td>PDF</td><td class="cihaz">Anbardan anbara köçürmə</td></tr>
+        <tr><td>Partiya pasportu</td><td>PDF + foto</td><td class="cihaz">Xammal mənşəyi, tarixi</td></tr>
+        <tr><td>Saxlama şərtləri jurnalı</td><td>Excel</td><td class="cihaz">Temperatur/rütubət qeydiyyatı</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <p>Diqqət: <strong>anbar kartı</strong> və <strong>saxlama jurnalı</strong> maraqlı hallardır. Onların <em>məzmunu</em> Üsul 1 telemetriyasından gəlir (sensor ölçmələri), amma <em>rəsmi sənəd</em> kimi PDF olaraq Üsul 2 ilə saxlanılır. Bu, hibridə nümunədir.</p>
+
+  <div class="callout min">
+    <span class="k">AI burada nə edir</span>
+    İnventarizasiya PDF-ini oxuyub <strong>bazadakı qalıqla müqayisə edir</strong>. Fərq varsa — «anbarda 2500 yazılıb, sistem 2480 deyir» — qərar yaradır. Bu, oğurluğu və səhvi tutur.
+  </div>
+</section>
+
+<!-- ═══ 7 ═══ -->
+<section id="s7">
+  <p class="sec-num">07</p>
+  <h2>Mühasibat və maliyyə sənədləri</h2>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">💰</span>
+      <span class="t">Maliyyə provodkaları</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Hesab-faktura</td><td>PDF, elektron</td><td class="cihaz">Alış/satış — ƏDV daxil</td></tr>
+        <tr><td>Ödəniş tapşırığı</td><td>PDF, bank formatı</td><td class="cihaz">Bank köçürməsi</td></tr>
+        <tr><td>Bank çıxarışı</td><td>PDF, Excel, MT940</td><td class="cihaz">Hesab hərəkəti</td></tr>
+        <tr><td>Kassa mədaxil/məxaric</td><td>PDF, skan</td><td class="cihaz">Nağd əməliyyat</td></tr>
+        <tr><td>Avans hesabatı</td><td>PDF + çeklər</td><td class="cihaz">İşçi xərcləri</td></tr>
+        <tr><td>Akt-hesablaşma</td><td>PDF, imzalı</td><td class="cihaz">Qarşılıqlı borc razılaşması</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">👥</span>
+      <span class="t">Kadr və əmək haqqı</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Əmək haqqı cədvəli</td><td>Excel, PDF</td><td class="cihaz">Aylıq hesablama</td></tr>
+        <tr><td>Tabel (iş vaxtı)</td><td>Excel, skan</td><td class="cihaz">Kim neçə saat işlədi</td></tr>
+        <tr><td>Əmr və sərəncamlar</td><td>PDF, imzalı</td><td class="cihaz">İşə qəbul, məzuniyyət</td></tr>
+        <tr><td>Növbə cədvəli</td><td>Excel</td><td class="cihaz">Kim hansı növbədə</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">📋</span>
+      <span class="t">Müqavilə və hüquqi</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Təchizat müqaviləsi</td><td>PDF, imzalı</td><td class="cihaz">Təchizatçılarla</td></tr>
+        <tr><td>Satış müqaviləsi</td><td>PDF</td><td class="cihaz">Müştərilərlə</td></tr>
+        <tr><td>Sertifikat / lisenziya</td><td>PDF, skan</td><td class="cihaz">Keyfiyyət, baytar icazəsi</td></tr>
+        <tr><td>Sığorta polisi</td><td>PDF</td><td class="cihaz">Əmlak, məhsul sığortası</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout min">
+    <span class="k">Maliyyə AI-ı gələcəkdə</span>
+    Bank çıxarışı + hesab-faktura + ödəniş tapşırığı birləşəndə AI <strong>debitor-kreditor</strong> analizini avtomatlaşdıra bilər: «bu təchizatçıya 5000 borc qalıb, ödəniş 15 gün gecikib». Bu, gələcək agentdir — indi əsası qoyulur.
+  </div>
+</section>
+
+<!-- ═══ 8 ═══ -->
+<section id="s8">
+  <p class="sec-num">08</p>
+  <h2>Foto, video, səs</h2>
+
+  <p>Sənədlərdən başqa, zavod <strong>media</strong> da yaradır. Bunlar ən böyük fayllardır — MinIO burada əvəzsizdir.</p>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">📷</span>
+      <span class="t">Foto sənədləşmə</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Avadanlıq müayinəsi</td><td>JPG, ~2–5 MB</td><td class="cihaz">Nasazlıq, aşınma qeydi</td></tr>
+        <tr><td>Xammal qəbulu foto</td><td>JPG</td><td class="cihaz">Keyfiyyət, çirklənmə sübutu</td></tr>
+        <tr><td>Zədə/qəza foto</td><td>JPG</td><td class="cihaz">Sığorta, təhqiqat üçün</td></tr>
+        <tr><td>Məhsul nümunəsi</td><td>JPG</td><td class="cihaz">Rəng, tekstura, keyfiyyət</td></tr>
+        <tr><td>Sayğac göstəricisi</td><td>JPG</td><td class="cihaz">Elektrik, su sayğacı foto</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">🎥</span>
+      <span class="t">Video</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Təhlükəsizlik kamerası</td><td>MP4, GB-larla</td><td class="cihaz">7/24 yazı, hərəkətlə tetiklənən</td></tr>
+        <tr><td>İstehsal xətti nəzarəti</td><td>MP4</td><td class="cihaz">Proses monitorinqi</td></tr>
+        <tr><td>Yükləmə-boşaltma</td><td>MP4</td><td class="cihaz">Mübahisə halında sübut</td></tr>
+        <tr><td>Dron müayinəsi</td><td>MP4, 4K</td><td class="cihaz">Silo, dam, ərazi baxışı</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">🎙️</span>
+      <span class="t">Səs</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Növbə hesabatı</td><td>MP3, M4A</td><td class="cihaz">Növbətçi səsli qeyd edir</td></tr>
+        <tr><td>Telefon danışığı</td><td>MP3</td><td class="cihaz">Sifariş, razılaşma qeydi</td></tr>
+        <tr><td>Avadanlıq səsi</td><td>WAV</td><td class="cihaz">Anomal səs — nasazlıq diaqnostikası</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Video niyə xüsusi diqqət tələb edir</span>
+    Bir kamera gündə <strong>10–50 GB</strong> yaradır. Bunu bütünlüklə Bakıya göndərmək — <strong>internet kanalını boğar</strong>.<br><br>
+    Həll: video <em>lokal</em> MinIO-da qalır, Bakıya yalnız <strong>metadata + hərəkət anları</strong> göndərilir. Tam video lazım olsa — sonradan, gecə, sıxılmış şəkildə. Bu, «edge işləmə» prinsipidir.
+  </div>
+
+  <div class="callout min">
+    <span class="k">AI media ilə nə edə bilər</span>
+    <ul>
+      <li><strong>Foto:</strong> avadanlıq şəklindən aşınmanı, xammaldan çirklənməni aşkarlayır</li>
+      <li><strong>Video:</strong> hərəkət, icazəsiz giriş, təhlükəsizlik pozuntusu</li>
+      <li><strong>Səs:</strong> növbə hesabatını mətnə çevirir, anomal avadanlıq səsini tanıyır</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══ 9 ═══ -->
+<section id="s9">
+  <p class="sec-num">09</p>
+  <h2>Məlumatı toplayan cihazlar və qurğular</h2>
+
+  <p>Hər iki üsul üçün fiziki avadanlıq lazımdır. Onları rollarına görə ayıraq.</p>
+
+  <div class="kat">
+    <div class="kat-h u1">
+      <span class="ik">🔌</span>
+      <span class="t">Telemetriya toplayıcıları (Üsul 1)</span>
+      <span class="rozet u1">Üsul 1</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Mikrokontroller</td><td>ESP32, Arduino</td><td class="cihaz">Sensordan oxuyur, MQTT göndərir</td></tr>
+        <tr><td>Sənaye kontrolleri</td><td>PLC (Siemens, Delta)</td><td class="cihaz">Böyük avadanlıqlar üçün</td></tr>
+        <tr><td>Edge kompüter</td><td>Raspberry Pi, Mac</td><td class="cihaz">Yerli emal, MQTT broker</td></tr>
+        <tr><td>Şəbəkə şlüzü</td><td>LoRa, Modbus gateway</td><td class="cihaz">Uzaq sensorları birləşdirir</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="kat">
+    <div class="kat-h u2">
+      <span class="ik">📸</span>
+      <span class="t">Sənəd/media toplayıcıları (Üsul 2)</span>
+      <span class="rozet u2">Üsul 2</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Skaner</td><td>Sənəd skaneri, MFP</td><td class="cihaz">Kağız qaimə → PDF</td></tr>
+        <tr><td>Telefon / planşet</td><td>iOS, Android</td><td class="cihaz">Mühasib qaiməni çəkir</td></tr>
+        <tr><td>İP kamera</td><td>Hikvision, Dahua</td><td class="cihaz">Video axını</td></tr>
+        <tr><td>Diktofon / mikrofon</td><td>USB, telefon</td><td class="cihaz">Səsli hesabat</td></tr>
+        <tr><td>Elektron tərəzi (çap)</td><td>Çəki + çek printeri</td><td class="cihaz">Çəki sənədi PDF</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Vacib fərq</span>
+    Üsul 1 cihazları <strong>avtomatikdir</strong> — insan lazım deyil.<br>
+    Üsul 2 cihazlarının çoxu <strong>insanla işləyir</strong> — mühasib şəkil çəkir, növbətçi səs yazır.<br><br>
+    Bu, təsadüfi deyil: telemetriya maşın işidir, sənəd insan işidir.
+  </div>
+</section>
+
+<!-- ═══ 10 ═══ -->
+<section id="s10">
+  <p class="sec-num">10</p>
+  <h2>Lokal saxlama — bazadan kənar necə</h2>
+
+  <p>Üsul 2-nin ürəyi budur: <strong>fayl bazada saxlanılmır</strong>. Bəs harada və necə?</p>
+
+  <div class="axin">
+    <p class="axin-bas u2">Üsul 2 — faylın yolu</p>
+    <div class="axin-sira">
+      <div class="qutu u2"><div class="i">📄</div><div class="ad">Fayl<br>yaranır</div><div class="al">skan/foto/video</div></div>
+      <span class="ox u2">▸</span>
+      <div class="qutu u2"><div class="i">📦</div><div class="ad">MinIO-ya<br>yazılır</div><div class="al">açar ilə</div></div>
+      <span class="ox u2">▸</span>
+      <div class="qutu u2"><div class="i">🔑</div><div class="ad">SHA-256<br>hesablanır</div><div class="al">barmaq izi</div></div>
+      <span class="ox u2">▸</span>
+      <div class="qutu u2"><div class="i">🗄️</div><div class="ad">Metadata<br>bazaya</div><div class="al">ad, yer, hash</div></div>
+      <span class="ox u2">▸</span>
+      <div class="qutu u2"><div class="i">🚚</div><div class="ad">Sync<br>Bakıya</div><div class="al">2 axın</div></div>
+    </div>
+  </div>
+
+  <h3>Lokal bazada nə saxlanılır</h3>
+
+  <p>Faylın <strong>özü yox</strong>, onun haqqında məlumat:</p>
+
+  <table class="tbl">
+    <thead><tr><th>Sahə</th><th>Nümunə</th><th>Nə üçün</th></tr></thead>
+    <tbody>
+      <tr><td>orijinal_ad</td><td class="u2-b">qaime_2026_07.pdf</td><td>İnsana göstərmək üçün</td></tr>
+      <tr><td>obyekt_acari</td><td class="u2-b">SIYEZEN/2026/07/13/uuid.pdf</td><td>MinIO-da yeri</td></tr>
+      <tr><td>mime_tipi</td><td class="u2-b">application/pdf</td><td>Fayl formatı</td></tr>
+      <tr><td>olcu_bayt</td><td class="u2-b">43288</td><td>Ölçü</td></tr>
+      <tr><td>sha256</td><td class="u2-b">6df094...</td><td>Bütövlük yoxlaması</td></tr>
+      <tr><td>metadata (JSONB)</td><td class="u2-b">{sətirlər, cəmi...}</td><td>AI-ın oxuduğu struktur</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout min">
+    <span class="k">Mərkəz faylı necə bərpa edir</span>
+    Bakıya <strong>yalnız metadata</strong> gəlir (kiçik, sürətli). Amma metadata-da <code class="inl">obyekt_acari</code> var.<br><br>
+    Fayl özü <strong>ayrı sync axını</strong> ilə mərkəz MinIO-ya köçürülür. SHA-256 hər iki tərəfdə yoxlanılır. Uyğun gələndə — <strong>fayl Bakıda tam bərpa olunub</strong>.<br><br>
+    Beləliklə mərkəz həm <em>məlumatı</em> (metadata), həm <em>faylın özünü</em> (MinIO) tam bilir.
+  </div>
+</section>
+
+<!-- ═══ 11 ═══ -->
+<section id="s11">
+  <p class="sec-num">11</p>
+  <h2>Hibrid hallar — iki üsul birləşir</h2>
+
+  <p>Ən dəyərli məlumat <strong>hər iki üsuldan</strong> gələndə yaranır. Nümunələr:</p>
+
+  <div class="kat">
+    <div class="kat-h hib">
+      <span class="ik">⚖️</span>
+      <span class="t">Çəki — sensor + sənəd</span>
+      <span class="rozet hib">Hibrid</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Üsul 1 verir</td><td>Sensor çəkisi</td><td class="cihaz">Fasiləsiz, real ölçmə</td></tr>
+        <tr><td>Üsul 2 verir</td><td>Çəki sənədi PDF</td><td class="cihaz">İmzalı, rəsmi qeyd</td></tr>
+        <tr><td>AI birləşdirir</td><td colspan="2">Sənəddə 5000 kq yazılıb, sensor 4700 deyir → <strong>uyğunsuzluq!</strong></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">Bu, sistemin ən güclü funksiyasıdır</span>
+    <strong>Sənəd yalan deyə bilər. Sensor yox.</strong><br><br>
+    Kimsə qaimədə 5000 kq yazır, amma tərəzi 4700 göstərir. Bu fərqi əl ilə heç kim tutmaz — məlumatlar iki ayrı yerdədir. AI isə <strong>hər ikisini görür</strong> və uyğunsuzluğu dərhal aşkarlayır.<br><br>
+    Bu, oğurluğu, səhvi, saxtakarlığı tutan mexanizmdir.
+  </div>
+
+  <div class="kat">
+    <div class="kat-h hib">
+      <span class="ik">🏭</span>
+      <span class="t">İstehsal partiyası — hər şey birləşir</span>
+      <span class="rozet hib">Hibrid</span>
+    </div>
+    <div class="kat-b">
+      <table class="sm">
+        <tr><td>Sensor (Üsul 1)</td><td>Temperatur, çəki, enerji</td><td class="cihaz">İstehsal dövründə</td></tr>
+        <tr><td>Resept (Üsul 2)</td><td>PDF sənəd</td><td class="cihaz">Nə qədər material olmalı</td></tr>
+        <tr><td>Məxaric qaiməsi (Üsul 2)</td><td>PDF</td><td class="cihaz">Faktiki nə sərf olundu</td></tr>
+        <tr><td>Lab nəticəsi (Üsul 2)</td><td>PDF</td><td class="cihaz">Protein, keyfiyyət</td></tr>
+        <tr><td>AI nəticə</td><td colspan="2">Resept vs faktiki vs sensor vs lab → <strong>tam sapma analizi</strong></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 12 ═══ -->
+<section id="s12">
+  <p class="sec-num">12</p>
+  <h2>Tam mənzərə — rəqəmsal əkiz</h2>
+
+  <p>İndi hər şeyi birləşdirək. Budur Siyəzən zavodunun Bakıdakı rəqəmsal əkizi:</p>
+
+  <div class="axin">
+    <p class="axin-bas" style="color:#c6d3df;">SİYƏZƏN ZAVODU → BAKI MƏRKƏZ</p>
+    <div class="axin-sira" style="flex-direction:column;gap:14px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;">
+        <div class="qutu u1" style="min-width:120px;"><div class="i">📡</div><div class="ad">Onlarla<br>sensor</div><div class="al">Üsul 1</div></div>
+        <span class="ox u1">▸</span>
+        <div class="qutu u1" style="min-width:120px;"><div class="i">🗄️</div><div class="ad">Edge baza</div><div class="al">telemetriya</div></div>
+        <span class="ox" style="color:#5bd08a;">▸</span>
+        <div class="qutu" style="border-color:#5bd08a;min-width:140px;"><div class="i">🏢</div><div class="ad">MƏRKƏZ<br>BAZA</div><div class="al">zarat_erp_2</div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;">
+        <div class="qutu u2" style="min-width:120px;"><div class="i">📄📷🎥</div><div class="ad">Sənəd,<br>foto, video</div><div class="al">Üsul 2</div></div>
+        <span class="ox u2">▸</span>
+        <div class="qutu u2" style="min-width:120px;"><div class="i">📦</div><div class="ad">Edge MinIO</div><div class="al">+ metadata</div></div>
+        <span class="ox" style="color:#a78bfa;">▸</span>
+        <div class="qutu" style="border-color:#a78bfa;min-width:140px;"><div class="i">📦</div><div class="ad">MƏRKƏZ<br>MinIO</div><div class="al">SHA yoxlanır</div></div>
+      </div>
+      <div style="text-align:center;color:#7d93a8;font-size:19px;">▼</div>
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;">
+        <div class="qutu" style="border-color:#2dd4bf;min-width:150px;"><div class="i">🤖</div><div class="ad">AI AGENTLƏR</div><div class="al">oxuyur, müqayisə edir</div></div>
+        <span class="ox" style="color:#2dd4bf;">▸</span>
+        <div class="qutu" style="border-color:#f5a524;min-width:150px;"><div class="i">👤</div><div class="ad">MÜDİRİYYƏT</div><div class="al">görür, qərar verir</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat">
+    <div class="s u1"><div class="n">~30</div><div class="l">telemetriya növü (Üsul 1)</div></div>
+    <div class="s u2"><div class="n">~40</div><div class="l">sənəd/media növü (Üsul 2)</div></div>
+    <div class="s"><div class="n">2</div><div class="l">boru xətti, 1 əkiz</div></div>
+  </div>
+
+  <div class="callout ok">
+    <span class="k">Nəticə</span>
+    Bu iki üsul birləşəndə <strong>zavodun tam rəqəmsal əkizi</strong> Bakıda yaranır:<br><br>
+    <strong>Nə baş verir</strong> (sensorlar) + <strong>nə qeydə alınır</strong> (sənədlər) = <strong>tam mənzərə</strong>.<br><br>
+    Müdiriyyət Bakıdan hər şeyi görür. AI hər şeyi analiz edir, uyğunsuzluqları tutur, təkliflər verir. Zavod Siyəzəndədir — amma <strong>idarəetmə Bakıdadır</strong>.
+  </div>
+</section>
+
+<!-- ═══ 13 ═══ -->
+<section id="s13">
+  <div class="xul">
+    <h3>Xülasə — altı fikir</h3>
+    <ul>
+      <li><strong>Rəqəmsal əkiz iki ayaq üstündədir:</strong> telemetriya (nə baş verir) və sənəd/media (nə qeydə alınır).</li>
+      <li><strong>Üsul 1 — telemetriya:</strong> kiçik, tez, sabit, faylsız. Sensor → MQTT → baza → sync. ~30 növ ölçmə.</li>
+      <li><strong>Üsul 2 — sənəd/media:</strong> böyük, seyrək, dəyişkən, fayllı. Fayl → MinIO, metadata → baza. ~40 növ sənəd.</li>
+      <li><strong>Fayl bazada saxlanılmır.</strong> MinIO-da yaşayır, bazada yalnız ünvanı və barmaq izi. Mərkəz ikisini birləşdirib tam bərpa edir.</li>
+      <li><strong>Hibrid hallar ən dəyərlidir.</strong> Sensor + sənəd birləşəndə: «sənəd 5000 deyir, sensor 4700» — saxtakarlıq tutulur.</li>
+      <li><strong>Sual sadədir:</strong> «bu, bir rəqəmdir, yoxsa bir fayl?» Rəqəm → Üsul 1. Fayl → Üsul 2.</li>
+    </ul>
+  </div>
+
+  <h3>Növbəti addım</h3>
+
+  <div class="callout min">
+    <span class="k">Tam ötürmə dashboard-u</span>
+    Bu kataloqu qurduqdan sonra, hər iki ötürmə üsulunu <strong>bir ekranda</strong> əhatə edən geniş dashboard yazacağıq:<br><br>
+    <ul>
+      <li>Üsul 1 — hansı sensorlar canlı, hansı gecikir</li>
+      <li>Üsul 2 — hansı sənədlər gəldi, hansı fayllar sync gözləyir</li>
+      <li>Hibrid — sensor/sənəd uyğunsuzluqları</li>
+      <li>Rəqəmsal əkizin <strong>tamlıq faizi</strong> — nə qədəri ötürülüb</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="d">Zarat Group · Siyəzən yem zavodu · Faza 3</p>
+  <p>Dərs — İki ötürmə üsulu və zavodun rəqəmsal əkizi</p>
+</footer>
+
+</body>
+</html>
