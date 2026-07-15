@@ -39,7 +39,7 @@ from pydantic import BaseModel
 from .agent_anbar import ANBAR_MUQAYISE
 from .agent_ocr import OCR_QAIME
 from .agent_resept import RESEPT_SERFIYYAT
-from .base import AgentCixisi, AgentGirisi
+from .base import AgentCixisi, AgentGirisi, anthropic_musteri, MODEL
 
 KOK = Path(__file__).resolve().parents[2]
 load_dotenv(KOK / "01_config" / ".env")
@@ -189,6 +189,18 @@ async def _jurnal_yazdir(agent_kod: str, model: str, sened_id: int,
     METRIKA["jurnal_yazilan"] += 1
 
 
+def _komekci_llm(sistem: str, user_metn: str) -> tuple[str, int, int]:
+    """Sinxron Claude çağırışı — asyncio.to_thread() vasitəsilə işlədir."""
+    cavab = anthropic_musteri.messages.create(
+        model=MODEL,
+        max_tokens=1000,
+        system=sistem,
+        messages=[{"role": "user", "content": user_metn}],
+    )
+    metn = cavab.content[0].text if cavab.content else ""
+    return metn, cavab.usage.input_tokens, cavab.usage.output_tokens
+
+
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 
 @asynccontextmanager
@@ -235,6 +247,11 @@ class Kontekst_Sorgu(BaseModel):
     sened_id:  int
     fayl_id:   int | None = None
     kontekst:  dict[str, Any] = {}
+
+
+class Komekci_Sorgu(BaseModel):
+    sual:     str
+    kontekst: str = "{}"
 
 
 # ── Endpointlər ───────────────────────────────────────────────────────────────
@@ -741,3 +758,113 @@ async def resept_icra(sorgu: Kontekst_Sorgu):
 
     return {"cixaris_id": cixaris_id, "netice": cixis.netice,
             "token": cixis.giris_token + cixis.cixis_token}
+
+
+@app.post("/komekci/sual")
+async def komekci_sual(sorgu: Komekci_Sorgu):
+    """Panel-dən gələn sualı real baza konteksti ilə Claude-a göndərir."""
+    conn = await _merkez()
+    hisseler: list[str] = []
+
+    async def _db_oxu(sql: str, params: tuple = ()) -> list:
+        try:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, params)
+                return await cur.fetchall()
+        except Exception as e:
+            log.warning("komekci DB sorğu xətası: %s", e)
+            return []
+
+    rows = await _db_oxu(
+        "SELECT kod, ad, qaliq, min_qaliq, vahid FROM zavod_anbar.qaliq ORDER BY kod"
+    )
+    if rows:
+        satirlar = "\n".join(
+            f"  {r[0]} | {r[1]} | qaliq={r[2]} {r[4] or ''} | min={r[3] or '-'}"
+            for r in rows
+        )
+        hisseler.append(f"ANBAR QALIQLARI:\n{satirlar}")
+
+    rows = await _db_oxu(
+        """SELECT novu, nomre, qarsi_teref, status, mebleg
+           FROM zavod_sened.sened ORDER BY id DESC LIMIT 15"""
+    )
+    if rows:
+        satirlar = "\n".join(
+            f"  {r[0]} #{r[1]} | {r[2]} | {r[3]} | {r[4]}"
+            for r in rows
+        )
+        hisseler.append(f"SON SƏNƏDLƏR (15):\n{satirlar}")
+
+    rows = await _db_oxu(
+        """SELECT seviyye, basliq, izah FROM zavod_ai.qerar
+           WHERE status='yeni' ORDER BY yaradilma DESC LIMIT 10"""
+    )
+    if rows:
+        satirlar = "\n".join(f"  [{r[0]}] {r[1]}: {r[2]}" for r in rows)
+        hisseler.append(f"AI QƏRARLARI (yeni, son 10):\n{satirlar}")
+
+    rows = await _db_oxu(
+        "SELECT novu, count(*), sum(mebleg_cemi) FROM zavod_maliyye.faktura GROUP BY novu"
+    )
+    if rows:
+        satirlar = "\n".join(f"  {r[0]}: say={r[1]}, cem={r[2]}" for r in rows)
+        hisseler.append(f"MALİYYƏ XÜLASƏSİ:\n{satirlar}")
+
+    rows = await _db_oxu("SELECT * FROM zavod_maliyye.debitor_kreditor LIMIT 10")
+    if rows:
+        satirlar = "\n".join("  " + " | ".join(str(v) for v in r) for r in rows)
+        hisseler.append(f"DEBİTOR/KREDİTOR:\n{satirlar}")
+
+    rows = await _db_oxu(
+        """SELECT material_ad, sapma_faiz, hokm FROM zavod_istehsal.sapma
+           WHERE hokm <> 'SERF_YOXDUR' LIMIT 10"""
+    )
+    if rows:
+        satirlar = "\n".join(f"  {r[0]}: {r[1]}% | {r[2]}" for r in rows)
+        hisseler.append(f"İSTEHSAL SAPMASI:\n{satirlar}")
+
+    rows = await _db_oxu(
+        """SELECT c.ad, c.vahid,
+                  (SELECT qiymet FROM zavod.olcme o WHERE o.cihaz_kod=c.kod
+                   AND o.zavod_kod='SIYEZEN' ORDER BY olcme_vaxti DESC LIMIT 1) AS son
+           FROM zavod_telemetriya.cihaz c WHERE c.aktiv"""
+    )
+    if rows:
+        satirlar = "\n".join(f"  {r[0]}: {r[2]} {r[1] or ''}" for r in rows)
+        hisseler.append(f"TELEMETRİYA (son vəziyyət):\n{satirlar}")
+
+    baza_kontekst = (
+        "\n\n".join(hisseler) if hisseler else "(baza məlumatı əldə edilmədi)"
+    )
+
+    sistem_prompt = (
+        "Sən Zarat Group-un Siyəzən yem zavodunun rəqəmsal əkiz sistemində "
+        "köməkçisən. Aşağıda zavodun cari vəziyyəti verilir: anbar qalıqları, "
+        "sənədlər, maliyyə, istehsal, telemetriya. İstifadəçinin sualına "
+        "YALNIZ bu məlumatlara əsasən, Azərbaycan dilində, qısa və dəqiq "
+        "cavab ver. Rəqəmləri konkret göstər. Məlumatda cavab yoxdursa, "
+        "'Bu barədə məlumat yoxdur' de. Uydurma."
+    )
+
+    user_metn = (
+        f"Panel konteksti: {sorgu.kontekst}\n\n"
+        f"Baza məlumatları:\n{baza_kontekst}\n\n"
+        f"Sual: {sorgu.sual}"
+    )
+
+    try:
+        cavab_metn, g, c = await asyncio.to_thread(
+            _komekci_llm, sistem_prompt, user_metn
+        )
+    except Exception as e:
+        log.error("komekci LLM xətası: %s", e)
+        return {"cavab": "Üzr istəyirəm, cavab hazırlana bilmədi.", "xeta": str(e)}
+
+    try:
+        await _jurnal_yazdir("KOMEKCI", MODEL, 0, g, c, 0)
+    except Exception:
+        pass
+
+    log.info("Köməkçi: sual=%r token=%d", sorgu.sual[:60], g + c)
+    return {"cavab": cavab_metn}
