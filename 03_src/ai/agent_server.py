@@ -193,12 +193,70 @@ def _komekci_llm(sistem: str, user_metn: str) -> tuple[str, int, int]:
     """Sinxron Claude çağırışı — asyncio.to_thread() vasitəsilə işlədir."""
     cavab = anthropic_musteri.messages.create(
         model=MODEL,
-        max_tokens=1000,
+        max_tokens=2500,
         system=sistem,
         messages=[{"role": "user", "content": user_metn}],
     )
     metn = cavab.content[0].text if cavab.content else ""
     return metn, cavab.usage.input_tokens, cavab.usage.output_tokens
+
+
+_KOMEKCI_SISTEM_PROMPT = (
+    "Sen Zarat Group Siyezen yem zavodunun reqemsal ekiz komekcisin. "
+    "Sene zavodun cari veziyyeti verilib: anbar qaliqlar, sened, maliyye, "
+    "istehsal, telemetriya. Istifadecinin sualina YALNIZ bu data esasinda "
+    "Azerbaycan dilinde cavab ver. Uydurmaq yasaqdir. Data yoxdursa "
+    "'Bu bared melumat yoxdur' de."
+    "\n\n"
+    "Cavabini YALNIZ JSON formatinda qaytar, baska hec ne yazma "
+    "(Markdown, izah, ```json cercivesi OLMAZ)."
+    "\n\n"
+    "JSON sxemi:"
+    "\n"
+    '{"xulase": "Qisa 1-2 cumle cavab (hemise olur)",'
+    ' "bloklar": [{"tip": "...", ...}]}'
+    "\n\n"
+    "Blok tipini sualin menzumuna gore sec:"
+    "\n- kpi: sadece say/fakt => {tip,basliq,data:[{etiket,qiymet,vahid,reng}]}"
+    "\n- cedvel: siyahi/muqayise => {tip,basliq,sutunlar:[...],setirler:[[...]]}"
+    "\n- bar: kemmiyyet muqayisesi => {tip,basliq,x:[...],y:[...],reng,vahid}"
+    "\n- xett: zaman/trend => {tip,basliq,x:[...],seriyalar:[{ad,y:[...]}],vahid}"
+    "\n- pie: pay/bolgu => {tip,basliq,etiketler:[...],qiymetler:[...]}"
+    "\n- qauge: faiz/dolluq => {tip,basliq,qiymet,min,max,vahid}"
+    "\n- metn: izah/tovsiye => {tip,basliq,data:'metn'}"
+    "\n\n"
+    "Bir cavabda 2-4 blok qaris (meselan kpi+cedvel+bar). "
+    "Reng adlari: teal, mavi, benovseyi, yasil, kehreba, qirmizi. "
+    "Reqemleri duzgun, real datadan got."
+)
+
+
+def _parse_komekci_json(metn: str) -> dict:
+    """Claude-in qaytardigi JSON-u parse edir; pozulsa fallback qaytarir."""
+    import json, re
+    temiz = metn.strip()
+    temiz = re.sub(r'^```(?:json)?\s*', '', temiz, flags=re.MULTILINE)
+    temiz = re.sub(r'```\s*$', '', temiz, flags=re.MULTILINE).strip()
+    try:
+        qayit = json.loads(temiz)
+        if isinstance(qayit, dict) and "xulase" in qayit:
+            return qayit
+    except json.JSONDecodeError:
+        pass
+    # JSON kod blokunun icinde axtarma
+    m = re.search(r'\{[\s\S]*"xulase"[\s\S]*\}', temiz)
+    if m:
+        try:
+            qayit = json.loads(m.group())
+            if isinstance(qayit, dict) and "xulase" in qayit:
+                return qayit
+        except json.JSONDecodeError:
+            pass
+    # Fallback: xam metni metn bloku kimi qaytar
+    return {
+        "xulase": metn[:300] if len(metn) > 300 else metn,
+        "bloklar": [{"tip": "metn", "basliq": "AI cavabi", "data": metn}],
+    }
 
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
@@ -825,46 +883,93 @@ async def komekci_sual(sorgu: Komekci_Sorgu):
         hisseler.append(f"İSTEHSAL SAPMASI:\n{satirlar}")
 
     rows = await _db_oxu(
-        """SELECT c.ad, c.vahid,
-                  (SELECT qiymet FROM zavod.olcme o WHERE o.cihaz_kod=c.kod
-                   AND o.zavod_kod='SIYEZEN' ORDER BY olcme_vaxti DESC LIMIT 1) AS son
+        """SELECT c.ad, c.vahid, c.min_norma, c.max_norma,
+                  (SELECT qiymet
+                   FROM zavod_telemetriya.olcme o
+                   WHERE o.cihaz_kod = c.kod AND o.zavod = 'siyezen'
+                   ORDER BY olcme_vaxti DESC LIMIT 1) AS son
            FROM zavod_telemetriya.cihaz c WHERE c.aktiv"""
     )
     if rows:
-        satirlar = "\n".join(f"  {r[0]}: {r[2]} {r[1] or ''}" for r in rows)
-        hisseler.append(f"TELEMETRİYA (son vəziyyət):\n{satirlar}")
+        satirlar = "\n".join(
+            f"  {r[0]}: {r[4]} {r[1] or ''} (min={r[2]}, max={r[3]})"
+            for r in rows
+        )
+        hisseler.append(f"TELEMETRIYA (son veziyyet):\n{satirlar}")
+
+    rows = await _db_oxu(
+        """SELECT c.ad,
+                  to_char(date_trunc('hour', o.olcme_vaxti), 'HH24:00') AS saat,
+                  round(avg(o.qiymet)::numeric, 2) AS orta
+           FROM zavod_telemetriya.olcme o
+           JOIN zavod_telemetriya.cihaz c ON c.kod = o.cihaz_kod
+           WHERE o.zavod = 'siyezen'
+             AND o.olcme_vaxti > now() - interval '24 hours'
+           GROUP BY c.ad, date_trunc('hour', o.olcme_vaxti)
+           ORDER BY c.ad, date_trunc('hour', o.olcme_vaxti)"""
+    )
+    if rows:
+        sensor_saatlar: dict[str, list[str]] = {}
+        for r in rows:
+            sensor_saatlar.setdefault(r[0], []).append(f"{r[1]}={r[2]}")
+        satirlar = "\n".join(
+            f"  {ad}: {', '.join(vals[-8:])}"
+            for ad, vals in list(sensor_saatlar.items())[:5]
+        )
+        hisseler.append(f"TELEMETRIYA 24 SAAT TREND:\n{satirlar}")
+
+    rows = await _db_oxu(
+        "SELECT novu, count(*) FROM zavod_sened.sened GROUP BY novu ORDER BY count(*) DESC"
+    )
+    if rows:
+        satirlar = "\n".join(f"  {r[0]}: {r[1]}" for r in rows)
+        hisseler.append(f"SENED NOV BOLGUSU:\n{satirlar}")
+
+    rows = await _db_oxu(
+        """SELECT novu, to_char(date_trunc('month', tarix), 'MM.YYYY') AS ay,
+                  round(sum(mebleg_cemi)::numeric, 0) AS cem
+           FROM zavod_maliyye.faktura
+           GROUP BY novu, date_trunc('month', tarix)
+           ORDER BY date_trunc('month', tarix), novu"""
+    )
+    if rows:
+        satirlar = "\n".join(f"  {r[0]} {r[1]}: {r[2]}" for r in rows)
+        hisseler.append(f"MALIYYE AYLIK:\n{satirlar}")
+
+    rows = await _db_oxu(
+        """SELECT novu, count(*),
+                  pg_size_pretty(sum(olcu_bayt)::bigint) AS hecm
+           FROM zavod_media.media GROUP BY novu"""
+    )
+    if rows:
+        satirlar = "\n".join(f"  {r[0]}: say={r[1]}, hecm={r[2]}" for r in rows)
+        hisseler.append(f"MEDIA BOLGUSU:\n{satirlar}")
 
     baza_kontekst = (
         "\n\n".join(hisseler) if hisseler else "(baza məlumatı əldə edilmədi)"
     )
 
-    sistem_prompt = (
-        "Sən Zarat Group-un Siyəzən yem zavodunun rəqəmsal əkiz sistemində "
-        "köməkçisən. Aşağıda zavodun cari vəziyyəti verilir: anbar qalıqları, "
-        "sənədlər, maliyyə, istehsal, telemetriya. İstifadəçinin sualına "
-        "YALNIZ bu məlumatlara əsasən, Azərbaycan dilində, qısa və dəqiq "
-        "cavab ver. Rəqəmləri konkret göstər. Məlumatda cavab yoxdursa, "
-        "'Bu barədə məlumat yoxdur' de. Uydurma."
-    )
-
     user_metn = (
         f"Panel konteksti: {sorgu.kontekst}\n\n"
-        f"Baza məlumatları:\n{baza_kontekst}\n\n"
+        f"Baza melumatlari:\n{baza_kontekst}\n\n"
         f"Sual: {sorgu.sual}"
     )
 
     try:
         cavab_metn, g, c = await asyncio.to_thread(
-            _komekci_llm, sistem_prompt, user_metn
+            _komekci_llm, _KOMEKCI_SISTEM_PROMPT, user_metn
         )
     except Exception as e:
-        log.error("komekci LLM xətası: %s", e)
-        return {"cavab": "Üzr istəyirəm, cavab hazırlana bilmədi.", "xeta": str(e)}
+        log.error("komekci LLM xetasi: %s", e)
+        return {
+            "xulase": "Uzr isteyirem, cavab hazirlanamadi.",
+            "bloklar": [{"tip": "metn", "basliq": "Xeta", "data": str(e)}],
+        }
 
     try:
         await _jurnal_yazdir("KOMEKCI", MODEL, 0, g, c, 0)
     except Exception:
         pass
 
-    log.info("Köməkçi: sual=%r token=%d", sorgu.sual[:60], g + c)
-    return {"cavab": cavab_metn}
+    log.info("Komekci: sual=%r token=%d", sorgu.sual[:60], g + c)
+    return _parse_komekci_json(cavab_metn)
